@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type test struct {
@@ -16,24 +17,17 @@ var testdb = []test{
 }
 
 func main() {
-	router := gin.Default()
+	router := echo.New()
+	router.Debug = true
+	router.Use(middleware.Logger())
 	router.GET("/testdb", getTest)
-	router.POST("/testdb", postTest)
 
-	router.Run("localhost:8080")
+	router.Logger.Debug(router.Start("localhost:8080"))
+
 
 }
 
-func getTest(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, testdb)
+func getTest(c echo.Context) error {
+	return c.JSONPretty(http.StatusOK, testdb, "    ")
 }
 
-func postTest(c *gin.Context) {
-	var newUser test
-
-	if err := c.BindJSON(&newUser); err != nil {
-		return
-	}
-	testdb = append(testdb, newUser)
-	c.IndentedJSON(http.StatusOK, newUser)
-}
