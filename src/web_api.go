@@ -33,17 +33,10 @@ func main() {
 	var logger = middleware.RequestLoggerConfig{
 		LogStatus: true,
 		LogURI: true,
+		LogRemoteIP: true,
 		LogMethod: true,
 		LogLatency: true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			fmt.Printf("%v %v | ", v.Method, v.URI)
-			color := colorGreen
-			if v.Status != 200 {
-				color = colorRed
-			}
-			fmt.Printf("%v%v%v | %v\n", color, v.Status, colorReset, v.Latency)
-			return nil
-		},
+		LogValuesFunc: logger,
 	}
 
 	router.Use(middleware.RequestLoggerWithConfig(logger))
@@ -52,7 +45,16 @@ func main() {
 }
 
 func getTest(c echo.Context) error {
-	return c.JSONPretty(http.StatusOK, testdb, "    ")
+	return c.JSON(http.StatusOK, testdb)
 }
 
+func logger(c echo.Context, v middleware.RequestLoggerValues) error {
+	fmt.Printf("%v | %v | %v %v | ", v.StartTime.Format("2006-01-02 15:04:05"), v.RemoteIP, v.Method, v.URI)
+	color := colorGreen
+	if v.Status != 200 {
+		color = colorRed
+	}
+	fmt.Printf("%v%v%v | %v\n", color, v.Status, colorReset, v.Latency)
+	return nil
+}
 
