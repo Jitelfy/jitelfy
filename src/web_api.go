@@ -17,6 +17,7 @@ var testdb = []test{
 	{Id: "0", Username: "alexei"},
 	{Id: "1", Username: "k z 3"},
 	{Id: "2", Username: "fuck you abdullah"},
+	{id: "3", Username: "single toothbrush from costco"}
 }
 
 const (
