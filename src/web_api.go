@@ -8,35 +8,41 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var id int = 1
+
+type Post struct {
+	Id    int    `json:"id"`
+	Text  string `json:"text"`
+	Embed string `'json:"embed"`
+	Song  string `json:"song"`
+}
 type test struct {
 	Id       string `json:"id" bson:"id"`
 	Username string `json:"username" bson:"username"`
 }
 
-var testdb = []test{
-	{Id: "0", Username: "alexei"},
-	{Id: "1", Username: "k z 3"},
-	{Id: "2", Username: "fuck you abdullah"},
-	{Id: "3", Username: "single toothbrush from costco"},
+var postdb = []Post{
+	{Id: 0, Text: "Test post", Embed: "URL", Song: "Song"},
 }
 
 const (
 	colorReset = "\033[0m"
-	colorRed = "\033[31m"
+	colorRed   = "\033[31m"
 	colorGreen = "\033[32m"
 )
 
 func main() {
 	router := echo.New()
 	router.Debug = true
-	router.GET("/testdb", getTest)
+	router.GET("/postdb", getPost)
+	router.POST("/postdb", createPost)
 
 	var logger = middleware.RequestLoggerConfig{
-		LogStatus: true,
-		LogURI: true,
-		LogRemoteIP: true,
-		LogMethod: true,
-		LogLatency: true,
+		LogStatus:     true,
+		LogURI:        true,
+		LogRemoteIP:   true,
+		LogMethod:     true,
+		LogLatency:    true,
 		LogValuesFunc: logger,
 	}
 
@@ -45,8 +51,8 @@ func main() {
 	router.Logger.Debug(router.Start("localhost:8080"))
 }
 
-func getTest(c echo.Context) error {
-	return c.JSON(http.StatusOK, testdb)
+func getPost(c echo.Context) error {
+	return c.JSON(http.StatusOK, postdb)
 }
 
 func logger(c echo.Context, v middleware.RequestLoggerValues) error {
@@ -59,3 +65,21 @@ func logger(c echo.Context, v middleware.RequestLoggerValues) error {
 	return nil
 }
 
+func createPost(c echo.Context) error {
+	post := Post{}
+	// error checking for valid json
+	if err := c.Bind(&post); err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	post = Post{
+		Id:    id,
+		Text:  post.Text,
+		Embed: post.Embed,
+		Song:  post.Song,
+	}
+	id = id + 1
+
+	postdb = append(postdb, post)
+	return c.JSON(http.StatusOK, postdb)
+}
