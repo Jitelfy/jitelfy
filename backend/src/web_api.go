@@ -12,6 +12,8 @@ import (
 var id int = 2
 
 type Post struct {
+	// these ids structs will be replaced
+	// with mongodb ids
 	Id       int    `json:"id"`
 	UserId   int    `json:"userid"`
 	ParentId int    `json:"parentid"`
