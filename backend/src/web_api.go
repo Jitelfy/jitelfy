@@ -37,7 +37,8 @@ func main() {
 	router := echo.New()
 	router.Debug = true
 	router.GET("/postdb", getPost)
-	router.POST("/postdb", createPost)
+	router.POST("/post/global", createPost)
+	router.POST("/post/comment", createComment)
 	postdb = make(map[int]Post)
 	postdb[1] = Post{
 		Id:    1,
@@ -82,10 +83,16 @@ func createPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
+	if post.ParentId != 0 {
+		return c.JSON(http.StatusBadRequest, "post must be top level")
+	}
+
+	if post.ChildIds != nil {
+		return c.JSON(http.StatusBadRequest, "post cannot have children")
+	}
+
 	post = Post{
 		Id:       id,
-		ParentId: post.ParentId,
-		ChildIds: post.ChildIds,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
@@ -93,17 +100,41 @@ func createPost(c echo.Context) error {
 	}
 	id = id + 1
 
-	// maybe replace with post request with a parent id parameter
-	if post.ParentId != 0 {
-		parent, ok := postdb[post.ParentId]
-		if ok {
-			parent.ChildIds = append(parent.ChildIds, post.Id)
-			postdb[parent.Id] = parent
-		} else {
-			return c.JSON(http.StatusBadRequest, "parent does not exist")
-		}
+	postdb[post.Id] = post
+	return c.JSON(http.StatusOK, postdb)
+}
 
+func createComment(c echo.Context) error {
+	post := Post{}
+	// error checking for valid json
+	if err := c.Bind(&post); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
+
+	if post.ParentId == 0 {
+		return c.JSON(http.StatusBadRequest, "post must have parent")
+	}
+
+	if post.ChildIds != nil {
+		return c.JSON(http.StatusBadRequest, "post cannot have children")
+	}
+
+	post = Post{
+		Id:       id,
+		ParentId: post.ParentId,
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     post.Song,
+	}
+	id = id + 1
+
+	var parent, ok = postdb[post.ParentId]
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "parent does not exist")
+	}
+	parent.ChildIds = append(parent.ChildIds, post.Id)
+
 	postdb[post.Id] = post
 	return c.JSON(http.StatusOK, postdb)
 }
