@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var id int = 1
@@ -32,6 +36,32 @@ const (
 )
 
 func main() {
+
+	// mongodb
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI("mongodb+srv://jitelfy:JitelfyForever33@jitelfycluster.hgw9u.mongodb.net/" +
+		"?retryWrites=true&w=majority&appName=JitelfyCluster").SetServerAPIOptions(serverAPI)
+
+	// create a client, connect to server
+	client, err := mongo.Connect(context.TODO(), opts)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}()
+	// Send a ping to confirm a successful connection
+	if err := client.Database("admin").RunCommand(context.TODO(),
+		bson.D{{"ping", 1}}).Err(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Jitelfy successfully connected to Cluster Server.")
+
 	router := echo.New()
 	router.Debug = true
 	router.GET("/postdb", getPost)
