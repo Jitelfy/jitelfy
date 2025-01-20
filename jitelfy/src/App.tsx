@@ -1,27 +1,53 @@
 function App() {
   return (
-    <div className="h-screen bg-gray-200 flex flex-col">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 bg-white border-b border-gray-300">
-        <h1 className="text-3xl font-bold text-black">Jitelfy</h1>
-        {/* Placeholder for icons like Home, Notifications, etc. */}
-        <div className="flex space-x-4">
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-        </div>
-      </div>
+    <div className="h-screen bg-gray-900 flex flex-col items-center justify-center">
+      {/* Logo */}
+      <h1 className="text-4xl font-bold text-white mb-6">Jitelfy</h1>
 
-      {/* Main Content (Landing Page) */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="text-center">
-          <h2 className="text-4xl font-bold text-black mb-4">Hi GUYSS</h2>
-          <p className="text-lg text-gray-700 mb-6">We're cooked + I'm carrying.</p>
-          <button className="px-6 py-2 bg-blue-500 text-white text-lg font-semibold rounded-full hover:bg-blue-600">
-            Let's get this vic-roy
-          </button>
+      {/* Login Form */}
+      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
+        {/* Username Input */}
+        <input
+          type="text"
+          placeholder="Username"
+          className="w-full p-3 mb-4 border border-gray-700 rounded-lg text-white bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        {/* Password Input */}
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full p-3 mb-4 border border-gray-700 rounded-lg text-white bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        {/* Login Button */}
+        <button className="w-full p-3 mb-4 bg-black text-white rounded-lg hover:bg-gray-700">
+          Login
+        </button>
+
+        {/* Text for the Or */}
+        <div className="flex items-center justify-center mb-4">
+          <hr className="w-1/3" />
+          <span className="mx-2 text-gray-500">or</span>
+          <hr className="w-1/3" />
         </div>
+
+        {/* Login with Spotify Button, later we'll make this with spotify api  */}
+        <button className="w-full p-3 mb-4 bg-green-500 text-white rounded-lg hover:bg-green-600">
+          Login with Spotify
+        </button>
+
+        {/* Sign up button */}
+        <p className="text-center text-sm text-gray-400">
+          Don't have an account?{" "}
+          <a href="#" className="text-blue-500 hover:underline">
+            Sign Up
+          </a>
+        </p>
       </div>
     </div>
   );
 }
 
 export default App;
+
