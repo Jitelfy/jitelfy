@@ -39,8 +39,8 @@ func main() {
 
 	// mongodb
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI("mongodb+srv://Cluster02108:cWtfbWBcT0l6@cluster02108.iwt8a.mongodb.net/" +
-		"?retryWrites=true&w=majority&appName=Cluster02108").SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI("mongodb+srv://jitelfy:JitelfyForever33@jitelfycluster.hgw9u.mongodb.net/" +
+		"?retryWrites=true&w=majority&appName=JitelfyCluster").SetServerAPIOptions(serverAPI)
 
 	// create a client, connect to server
 	client, err := mongo.Connect(context.TODO(), opts)
@@ -57,7 +57,7 @@ func main() {
 		bson.D{{"ping", 1}}).Err(); err != nil {
 		panic(err)
 	}
-	fmt.Println("Jitelfy successfully connected to DB.")
+	fmt.Println("Jitelfy successfully connected to Cluster Server.")
 
 	router := echo.New()
 	router.Debug = true
