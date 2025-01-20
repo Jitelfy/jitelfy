@@ -29,7 +29,9 @@ type Post struct {
 	Song     string `json:"song"`
 }
 
+// need to figure out if comment and post ids should be separated
 var postdb map[int]Post
+var commentdb map[int]Post
 
 const (
 	colorReset = "\033[0m"
@@ -66,10 +68,11 @@ func main() {
 
 	router := echo.New()
 	router.Debug = true
-	router.GET("/postdb", getPost)
-	router.POST("/post/global", createPost)
-	router.POST("/post/comment", createComment)
+	router.GET("/posts/top", getPosts)
+	router.POST("/posts/top", createPost)
+	router.POST("/posts/comment", createComment)
 	postdb = make(map[int]Post)
+	commentdb = make(map[int]Post)
 	postdb[1] = Post{
 		Id:    1,
 		Time:  time.Now().Format(time.RFC3339),
@@ -92,7 +95,7 @@ func main() {
 	router.Logger.Debug(router.Start("localhost:8080"))
 }
 
-func getPost(c echo.Context) error {
+func getPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, postdb)
 }
 
@@ -131,7 +134,7 @@ func createPost(c echo.Context) error {
 	id = id + 1
 
 	postdb[post.Id] = post
-	return c.JSON(http.StatusOK, postdb)
+	return c.JSON(http.StatusOK, post)
 }
 
 func createComment(c echo.Context) error {
@@ -161,10 +164,13 @@ func createComment(c echo.Context) error {
 
 	var parent, ok = postdb[post.ParentId]
 	if !ok {
-		return c.JSON(http.StatusBadRequest, "parent does not exist")
+		parent, ok = commentdb[post.ParentId]
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "parent does not exist")
+		}
 	}
 	parent.ChildIds = append(parent.ChildIds, post.Id)
 
-	postdb[post.Id] = post
-	return c.JSON(http.StatusOK, postdb)
+	commentdb[post.Id] = post
+	return c.JSON(http.StatusOK, post)
 }
