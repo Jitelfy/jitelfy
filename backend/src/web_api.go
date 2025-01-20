@@ -1,7 +1,5 @@
 package main
 
-# kz3
-
 import (
 	"fmt"
 	"net/http"
