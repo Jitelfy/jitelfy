@@ -90,7 +90,7 @@ const FeedPage = () => {
           </div>
           <p className="text-white">Post content here...</p>
         </div>
-        {/* Feed Content, for now this is just going to be boiletplate "posts"*/}
+        {/* Feed Content, for now this is just going to be boiletplate posts */}
         <div className="bg-gray-800 p-4 rounded-lg mb-6">
           <div className="flex items-center mb-2">
             <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
