@@ -62,22 +62,45 @@ const LoginPage = ({ onLogin }: { onLogin: () => void }) => {
   );
 };
 
-const FeedPage = () => {
+const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
   return (
     <div className="h-screen bg-gray-900 flex">
-      {/* Sidebar */}
+      {/* Sidebar - Left */}
       <div className="w-60 bg-gray-800 p-6">
         <h2 className="text-white text-xl mb-6">Jitelfy</h2>
         <ul>
-          <li className="text-white mb-4">Home</li>
-          <li className="text-white mb-4">Explore</li>
-          <li className="text-white mb-4">Activity</li>
-          <li className="text-white mb-4">More</li>
-          <li className="text-white mb-4">Your Name</li>
+          <li className="mb-4">
+            <button className="text-white w-full text-left hover:underline">
+              Home
+            </button>
+          </li>
+          <li className="mb-4">
+            <button className="text-white w-full text-left hover:underline">
+              Explore
+            </button>
+          </li>
+          <li className="mb-4">
+            <button className="text-white w-full text-left hover:underline">
+              Activity
+            </button>
+          </li>
+          <li className="mb-4">
+            <button className="text-white w-full text-left hover:underline">
+              More
+            </button>
+          </li>
+          <li className="mb-4">
+            <button
+              className="text-white w-full text-left hover:underline"
+              onClick={onProfileClick}
+            >
+              Your Name
+            </button>
+          </li>
         </ul>
       </div>
 
-      {/* Feed */}
+      {/* Feed - Main Content */}
       <div className="flex-1 bg-gray-900 p-6 overflow-auto">
         {/* Feed Content */}
         <div className="bg-gray-800 p-4 rounded-lg mb-6">
@@ -90,21 +113,22 @@ const FeedPage = () => {
           </div>
           <p className="text-white">Post content here...</p>
         </div>
-        {/* Feed Content, for now this is just going to be boiletplate posts */}
-        <div className="bg-gray-800 p-4 rounded-lg mb-6">
-          <div className="flex items-center mb-2">
-            <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
-            <div>
-              <p className="text-white font-bold">Name</p>
-              <p className="text-gray-400 text-sm">Currently listening to</p>
-            </div>
+      </div>
+
+      {/* Sidebar - Right */}
+      <div className="w-80 bg-gray-800 p-6 overflow-auto">
+        <h2 className="text-white text-xl mb-4">Friends Listening</h2>
+        {/* Friends List */}
+        {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
+          <div key={index} className="bg-gray-700 p-4 rounded-lg mb-4">
+            <p className="text-white">{friend}: Currently listening to...</p>
           </div>
-          <p className="text-white">Post content here...</p>
-        </div>
+        ))}
       </div>
     </div>
   );
 };
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
