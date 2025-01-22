@@ -75,7 +75,6 @@ const SignUpPage = ({ onBackToLogin }: { onBackToLogin: () => void}) => {
   );
 };
 
-
 const LoginPage = ({ onLogin, onSignUp }: { onLogin: () => void; onSignUp: () => void }) => {
   return (
     <div className="h-screen bg-gray-900 flex flex-col items-center justify-center">
@@ -197,30 +196,84 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
   );
 };
 
+const ProfilePage = () => {
+  return (
+    <div className="h-screen bg-gray-900 flex">
+      {/* Sidebar - Left */}
+      <div className="w-60 bg-gray-800 p-6">
+        <div className="flex items-center mb-6">
+          <h2 className="text-white text-xl">Jitelfy</h2>
+          <span className="ml-2 text-white">🎵</span>
+        </div>
+        <ul>
+          <li className="text-white mb-4 cursor-pointer">Home</li>
+          <li className="text-white mb-4 cursor-pointer">Explore</li>
+          <li className="text-white mb-4 cursor-pointer">Activity</li>
+          <li className="text-white mb-4 cursor-pointer">Settings</li>
+        </ul>
+      </div>
+
+      {/* Main Content - Middle */}
+      <div className="flex-1 bg-gray-900 p-6 overflow-auto">
+        <div className="bg-gray-800 p-6 rounded-lg flex flex-col items-center">
+          <div className="relative w-full">
+            <div className="w-full h-48 bg-green-500 flex items-center justify-center">
+              <h1 className="text-4xl font-bold text-white">WE'RE COOKED</h1>
+            </div>
+            <div className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-gray-600 rounded-full border-4 border-gray-900"></div>
+          </div>
+          <div className="text-center mt-16">
+            <p className="text-2xl text-white font-bold">First Last</p>
+            <p className="text-gray-400">@username</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar - Right */}
+      <div className="w-80 bg-gray-800 p-6 overflow-auto">
+        <h2 className="text-white text-xl mb-4">Friends Listening</h2>
+        {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
+          <div key={index} className="bg-gray-700 p-4 rounded-lg mb-4">
+            <p className="text-white">{friend}: Currently listening to...</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState('login');
+  const [isProfilePage, setIsProfilePage] = useState(false);
+  const [isSignUpPage, setIsSignUpPage] = useState(false); 
 
   const handleLogin = () => {
     setIsLoggedIn(true);
+    setIsSignUpPage(false); // Ensure Sign-Up state is reset
   };
 
-  if (isLoggedIn) {
-    return <FeedPage />;
-  }
+  const handleSignUp = () => {
+    setIsSignUpPage(true); // Show Sign-Up page
+  };
+
+  const handleBackToLogin = () => {
+    setIsSignUpPage(false); // Back to Login page
+  };
+
+  const handleProfileClick = () => {
+    setIsProfilePage(true);
+  };
 
   return (
     <div>
-      {currentPage === 'login' ? (
-        <LoginPage 
-          onLogin={handleLogin} 
-          onSignUp={() => setCurrentPage('signup')} 
-        />
+      {isLoggedIn && !isProfilePage ? (
+        <FeedPage onProfileClick={handleProfileClick} />
+      ) : isProfilePage ? (
+        <ProfilePage />
+      ) : isSignUpPage ? (
+        <SignUpPage onBackToLogin={handleBackToLogin} />
       ) : (
-        <SignUpPage 
-          onBackToLogin={() => setCurrentPage('login')} 
-        />
+        <LoginPage onLogin={handleLogin} onSignUp={handleSignUp} />
       )}
     </div>
   );
