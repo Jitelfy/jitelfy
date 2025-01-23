@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 	"strconv"
+	"slices"
+	"maps"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -101,7 +103,7 @@ func main() {
 }
 
 func getPosts(c echo.Context) error {
-	return c.JSON(http.StatusOK, postdb)
+	return c.JSON(http.StatusOK, slices.Collect(maps.Values(postdb)))
 }
 
 func logger(c echo.Context, v middleware.RequestLoggerValues) error {
