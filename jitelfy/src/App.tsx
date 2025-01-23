@@ -129,8 +129,45 @@ const LoginPage = ({ onLogin, onSignUp }: { onLogin: () => void; onSignUp: () =>
   );
 };
 
+const BASE_URL = 'localhost:8080';
+
+interface Post {
+	Id:      string;
+	UserId:  string;
+	ParentId: string;
+	ChildIds: string[];
+	LikeIds:  string[];
+	Time:     string;
+	Text:     string;
+	Embed:    string;
+	Song:     string;
+}
+
+async function getContent(path: string): Promise<string> {
+    const response = await fetch(`$(BASE_URL)$(path)`);
+
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    }
+
+
+    return await response.json();
+}
+
+async function getPosts(): Promise<Post[]> {
+
+    const posts: Post[] = await getContent('/posts/top')
+    .then( 
+          function(response) {
+              return JSON.parse(response);
+          }
+    );
+    return posts;
+}
+
 const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
-  return (
+    const posts = getPosts();
+    return (
     <div className="h-screen bg-gray-900 flex">
       {/* Sidebar - Left */}
       <div className="w-60 bg-gray-800 p-6">
@@ -177,8 +214,9 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
               <p className="text-white font-bold">Name</p>
               <p className="text-gray-400 text-sm">Currently listening to</p>
             </div>
-          </div>
-          <p className="text-white">Post content here...</p>
+            </div>
+          <p id='post1' className="text-white">
+          </p>
         </div>
       </div>
 
