@@ -5,39 +5,35 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"strconv"
-	"slices"
-	"maps"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var id int = 2
 
 type Post struct {
 	// these ids structs will be replaced
 	// with mongodb ids
-	Id       int    `json:"id"`
-	UserId   int    `json:"userid"`
-	ParentId int    `json:"parentid"`
-	ChildIds []int  `json:"childids"`
-	LikeIds  []int  `json:"likeids"`
-	Time     string `json:"time"`
-	Text     string `json:"text"`
-	Embed    string `json:"embed"`
-	Song     string `json:"song"`
+	Id       primitive.ObjectID    `json:"id" bson:"_id"`
+	UserId   int    `json:"userid" bson:"userid"`
+	ParentId primitive.ObjectID    `json:"parentid" bson:"parentid"`
+	ChildIds []primitive.ObjectID  `json:"childids" bson:"childids"`
+	LikeIds  []int  `json:"likeids" bson:"likeids"`
+	Time     string `json:"time" bson:"time"`
+	Text     string `json:"text" bson:"text"`
+	Embed    string `json:"embed" bson:"embed"`
+	Song     string `json:"song" bson:"song"`
 }
 
 // need to figure out if comment and post ids should be separated
 // if i want a way to get all top level posts, i think it makes the
 // most sense to separate them but it makes all other purposes
 // a bit more annoying having to check both maps
-var postdb map[int]Post
-var commentdb map[int]Post
+var postColl *mongo.Collection
 
 const (
 	colorReset = "\033[0m"
@@ -65,12 +61,15 @@ func main() {
 		}
 	}()
 	// Send a ping to confirm a successful connection
-	if err := client.Database("admin").RunCommand(context.TODO(),
+	var db = client.Database("jitelfy")
+	if err := db.RunCommand(context.TODO(),
 		bson.D{{"ping", 1}}).Err(); err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println("Jitelfy successfully connected to Cluster Server.")
+
+	postColl = db.Collection("posts")
 
 	router := echo.New()
 	router.Debug = true
@@ -78,15 +77,6 @@ func main() {
 	router.GET("/posts/comments", getComments)
 	router.POST("/posts/top", createPost)
 	router.POST("/posts/comments", createComment)
-	postdb = make(map[int]Post)
-	commentdb = make(map[int]Post)
-	postdb[1] = Post{
-		Id:    1,
-		Time:  time.Now().Format(time.RFC3339),
-		Text:  "Test post",
-		Embed: "URL",
-		Song:  "Song",
-	}
 
 	var logger = middleware.RequestLoggerConfig{
 		LogStatus:     true,
@@ -103,7 +93,19 @@ func main() {
 }
 
 func getPosts(c echo.Context) error {
-	return c.JSON(http.StatusOK, slices.Collect(maps.Values(postdb)))
+	
+	filter := bson.D{{"parentid", primitive.NilObjectID}}
+	var cursor, err = postColl.Find(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
+	}
+	var result []Post
+	err = cursor.All(context.TODO(), &result)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not parse posts")
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
 
 func logger(c echo.Context, v middleware.RequestLoggerValues) error {
@@ -123,7 +125,7 @@ func createPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	if post.ParentId != 0 {
+	if post.ParentId != primitive.NilObjectID {
 		return c.JSON(http.StatusBadRequest, "post must be top level")
 	}
 
@@ -132,22 +134,29 @@ func createPost(c echo.Context) error {
 	}
 
 	post = Post{
-		Id:       id,
+		Id:    	  primitive.NewObjectID(),
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     post.Song,
 	}
-	id = id + 1
 
-	postdb[post.Id] = post
+	var bsonpost, err = bson.Marshal(post)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+	}
+	_, err = postColl.InsertOne(context.TODO(), bsonpost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+	}
+
 	return c.JSON(http.StatusOK, post)
 }
 
 func createComment(c echo.Context) error {
 	post := Post{}
 
-	var parentId, err = strconv.Atoi(c.QueryParam("parent"))
+	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
 	}
@@ -162,57 +171,45 @@ func createComment(c echo.Context) error {
 	}
 
 	post = Post{
-		Id:       id,
+		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     post.Song,
 	}
-	id = id + 1
 
-	var parent, ok = postdb[parentId]
-	if !ok {
-		parent, ok = commentdb[parentId]
-		if !ok {
-			return c.JSON(http.StatusBadRequest, "parent does not exist")
-		}
-		parent.ChildIds = append(parent.ChildIds, post.Id)
-		commentdb[parentId] = parent
-	} else {
-		parent.ChildIds = append(parent.ChildIds, post.Id)
-		postdb[parentId] = parent
 
+	var bsonpost []byte 
+	bsonpost, err = bson.Marshal(post)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
 	}
-
-	commentdb[post.Id] = post
+	_, err = postColl.InsertOne(context.TODO(), bsonpost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+	}
 
 	return c.JSON(http.StatusOK, post)
 }
 
 func getComments(c echo.Context) error {
 
-	var parentId, err = strconv.Atoi(c.QueryParam("parent"))
+	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
 	}
-
-	// check for if parent exists
-	var parent, ok = postdb[parentId]
-	if !ok {
-		parent, ok = commentdb[parentId]
-		if !ok {
-			return c.JSON(http.StatusBadRequest, "parent does not exist")
-		}
+	
+	filter := bson.D{{"parentid", parentId}}
+	var cursor *mongo.Cursor
+	cursor, err = postColl.Find(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
 	}
-
 	var result []Post
-
-	for _, childId := range parent.ChildIds {
-		var child, ok = commentdb[childId]
-		if ok {
-			result = append(result, child)
-		}
+	err = cursor.All(context.TODO(), &result)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
 	return c.JSON(http.StatusOK, result)
