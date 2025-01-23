@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -12,22 +14,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var id int = 1
+var id int = 2
 
 type Post struct {
-	Id    int    `json:"id"`
-	Text  string `json:"text"`
-	Embed string `'json:"embed"`
-	Song  string `json:"song"`
-}
-type test struct {
-	Id       string `json:"id" bson:"id"`
-	Username string `json:"username" bson:"username"`
+	// these ids structs will be replaced
+	// with mongodb ids
+	Id       int    `json:"id"`
+	UserId   int    `json:"userid"`
+	ParentId int    `json:"parentid"`
+	ChildIds []int  `json:"childids"`
+	LikeIds  []int  `json:"likeids"`
+	Time     string `json:"time"`
+	Text     string `json:"text"`
+	Embed    string `json:"embed"`
+	Song     string `json:"song"`
 }
 
-var postdb = []Post{
-	{Id: 0, Text: "Test post", Embed: "URL", Song: "Song"},
-}
+// need to figure out if comment and post ids should be separated
+// if i want a way to get all top level posts, i think it makes the
+// most sense to separate them but it makes all other purposes
+// a bit more annoying having to check both maps
+var postdb map[int]Post
+var commentdb map[int]Post
 
 const (
 	colorReset = "\033[0m"
@@ -64,8 +72,19 @@ func main() {
 
 	router := echo.New()
 	router.Debug = true
-	router.GET("/postdb", getPost)
-	router.POST("/postdb", createPost)
+	router.GET("/posts/top", getPosts)
+	router.GET("/posts/comments", getComments)
+	router.POST("/posts/top", createPost)
+	router.POST("/posts/comments", createComment)
+	postdb = make(map[int]Post)
+	commentdb = make(map[int]Post)
+	postdb[1] = Post{
+		Id:    1,
+		Time:  time.Now().Format(time.RFC3339),
+		Text:  "Test post",
+		Embed: "URL",
+		Song:  "Song",
+	}
 
 	var logger = middleware.RequestLoggerConfig{
 		LogStatus:     true,
@@ -81,7 +100,7 @@ func main() {
 	router.Logger.Debug(router.Start("localhost:8080"))
 }
 
-func getPost(c echo.Context) error {
+func getPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, postdb)
 }
 
@@ -99,17 +118,101 @@ func createPost(c echo.Context) error {
 	post := Post{}
 	// error checking for valid json
 	if err := c.Bind(&post); err != nil {
-		return c.String(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+
+	if post.ParentId != 0 {
+		return c.JSON(http.StatusBadRequest, "post must be top level")
+	}
+
+	if post.ChildIds != nil {
+		return c.JSON(http.StatusBadRequest, "post cannot have children")
 	}
 
 	post = Post{
-		Id:    id,
-		Text:  post.Text,
-		Embed: post.Embed,
-		Song:  post.Song,
+		Id:       id,
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     post.Song,
 	}
 	id = id + 1
 
-	postdb = append(postdb, post)
-	return c.JSON(http.StatusOK, postdb)
+	postdb[post.Id] = post
+	return c.JSON(http.StatusOK, post)
+}
+
+func createComment(c echo.Context) error {
+	post := Post{}
+
+	var parentId, err = strconv.Atoi(c.QueryParam("parent"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
+	}
+
+	// error checking for valid json
+	if err := c.Bind(&post); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+
+	if post.ChildIds != nil {
+		return c.JSON(http.StatusBadRequest, "post cannot have children")
+	}
+
+	post = Post{
+		Id:       id,
+		ParentId: parentId,
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     post.Song,
+	}
+	id = id + 1
+
+	var parent, ok = postdb[parentId]
+	if !ok {
+		parent, ok = commentdb[parentId]
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "parent does not exist")
+		}
+		parent.ChildIds = append(parent.ChildIds, post.Id)
+		commentdb[parentId] = parent
+	} else {
+		parent.ChildIds = append(parent.ChildIds, post.Id)
+		postdb[parentId] = parent
+
+	}
+
+	commentdb[post.Id] = post
+
+	return c.JSON(http.StatusOK, post)
+}
+
+func getComments(c echo.Context) error {
+
+	var parentId, err = strconv.Atoi(c.QueryParam("parent"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
+	}
+
+	// check for if parent exists
+	var parent, ok = postdb[parentId]
+	if !ok {
+		parent, ok = commentdb[parentId]
+		if !ok {
+			return c.JSON(http.StatusBadRequest, "parent does not exist")
+		}
+	}
+
+	var result []Post
+
+	for _, childId := range parent.ChildIds {
+		var child, ok = commentdb[childId]
+		if ok {
+			result = append(result, child)
+		}
+	}
+
+	return c.JSON(http.StatusOK, result)
+	
 }
