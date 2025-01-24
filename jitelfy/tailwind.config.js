@@ -5,6 +5,10 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    fontFamily: {
+      Satoshi: ["Satoshi", "sans-serif"]
+
+    },
     extend: {},
   },
   plugins: [],

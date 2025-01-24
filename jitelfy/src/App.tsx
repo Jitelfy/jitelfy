@@ -79,7 +79,7 @@ const LoginPage = ({ onLogin, onSignUp }: { onLogin: () => void; onSignUp: () =>
   return (
     <div className="h-screen bg-gray-900 flex flex-col items-center justify-center">
       {/* Logo */}
-      <h1 className="text-4xl font-bold text-white mb-6">Jitelfy</h1>
+      <h1 className="text-4xl font-Satoshi text-white mb-6">Jitelfy</h1>
 
       {/* Login Form */}
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
@@ -198,7 +198,7 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
     <div className="h-screen bg-gray-900 flex">
       {/* Sidebar - Left */}
       <div className="w-60 bg-gray-800 p-6">
-        <h2 className="text-white text-xl mb-6">Jitelfy</h2>
+        <h2 className="text-white font-Satoshi text-xl mb-6">Jitelfy</h2>
         <ul>
           <li className="mb-4">
             <button className="text-white w-full text-left hover:underline">
