@@ -251,6 +251,15 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
               </div>
             </div>
             <p className="text-white mb-2">{post.text}</p>
+            {post.embed && (
+                <div className="mt-4">
+                <img
+                src={post.embed}
+                className="w-full h-40"
+                  loading="lazy"
+                ></img>
+                </div>
+            )}
             {post.song && (
               <div className="mt-4">
                 <iframe
