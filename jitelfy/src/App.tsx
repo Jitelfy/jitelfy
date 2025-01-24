@@ -172,15 +172,12 @@ async function getContent(path: string): Promise<string> {
   return mockResponse;
 }
 
+// Parse fake API responses, later get the real ones via the backend
 async function getPosts(): Promise<Post[]> {
-
-    const posts: Post[] = await getContent('/posts/top')
-    .then( 
-          function(response) {
-              return JSON.parse(response);
-          }
-    );
-    return posts;
+  const posts: Post[] = await getContent("/posts/top").then((response) =>
+    JSON.parse(response)
+  );
+  return posts;
 }
 
 const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
