@@ -129,29 +129,47 @@ const LoginPage = ({ onLogin, onSignUp }: { onLogin: () => void; onSignUp: () =>
   );
 };
 
-const BASE_URL = 'localhost:8080';
+const BASE_URL = "localhost:8080";
 
 interface Post {
-	Id:      string;
-	UserId:  string;
-	ParentId: string;
-	ChildIds: string[];
-	LikeIds:  string[];
-	Time:     string;
-	Text:     string;
-	Embed:    string;
-	Song:     string;
+  Id: string;
+  UserId: string;
+  ParentId: string;
+  ChildIds: string[];
+  LikeIds: string[];
+  Time: string;
+  Text: string;
+  Embed: string;
+  Song: string;
 }
 
+// Simulate the API response
 async function getContent(path: string): Promise<string> {
-    const response = await fetch(`$(BASE_URL)$(path)`);
-
-    if (!response.ok) {
-        throw new Error(response.statusText);
-    }
-
-
-    return await response.json();
+  console.log(`Simulating API call to: ${BASE_URL}${path}`);
+  // Fake response data
+  const mockResponse = JSON.stringify([
+    {
+      Id: "1",
+      UserId: "SuperSingingSimon",
+      ParentId: "",
+      ChildIds: [],
+      LikeIds: ["like1", "like2"],
+      Time: "2025-01-22T14:30:00Z",
+      Text: "Please PLEASE listen to my song",
+      Embed: "https://open.spotify.com/embed/track/4Se3fXoHJkcraQzJXo2IYn",
+    },
+    {
+      Id: "3",
+      UserId: "KayZee3",
+      ParentId: "",
+      ChildIds: [],
+      LikeIds: [],
+      Time: "2025-01-21T19:45:00Z",
+      Text: "Hi guys i like to eat onion",
+      Embed: "https://open.spotify.com/embed/track/7BaxYnTazocAOK3istsW1z",
+    },
+  ]);
+  return mockResponse;
 }
 
 async function getPosts(): Promise<Post[]> {
