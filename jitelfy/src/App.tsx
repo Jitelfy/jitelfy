@@ -168,6 +168,16 @@ async function getContent(path: string): Promise<string> {
       Text: "Hi guys i like to eat onion",
       Embed: "https://open.spotify.com/embed/track/7BaxYnTazocAOK3istsW1z",
     },
+    {
+      Id: "10",
+      UserId: "MagicianMike",
+      ParentId: "",
+      ChildIds: [],
+      LikeIds: [],
+      Time: "2025-01-12T19:45:00Z",
+      Text: "Watch my magic tricks",
+      Embed: "https://open.spotify.com/embed/track/4NsPgRYUdHu2Q5JRNgXYU5?si=305b5e7d25b946f3",
+    }
   ]);
   return mockResponse;
 }
