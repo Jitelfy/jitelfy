@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SignUpPage = ({ onBackToLogin }: { onBackToLogin: () => void}) => {
   return (
@@ -181,8 +181,20 @@ async function getPosts(): Promise<Post[]> {
 }
 
 const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
-    const posts = getPosts();
-    return (
+  
+  // State to store fetched posts.
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  // Fetch posts when the component mounts
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const fetchedPosts = await getPosts();
+      setPosts(fetchedPosts);
+    };
+    fetchPosts();
+  }, []);
+
+  return (
     <div className="h-screen bg-gray-900 flex">
       {/* Sidebar - Left */}
       <div className="w-60 bg-gray-800 p-6">
@@ -221,24 +233,37 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
 
       {/* Feed - Main Content */}
       <div className="flex-1 bg-gray-900 p-6 overflow-auto">
-        {/* Feed Content */}
-        <div className="bg-gray-800 p-4 rounded-lg mb-6">
-          <div className="flex items-center mb-2">
-            <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
-            <div>
-              <p className="text-white font-bold">Name</p>
-              <p className="text-gray-400 text-sm">Currently listening to</p>
+        <h1 className="text-white text-2xl font-bold mb-4">Feed</h1>
+        {posts.map((post) => (
+          <div key={post.Id} className="bg-gray-800 p-4 rounded-lg mb-6">
+            <div className="flex items-center mb-2">
+              <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
+              <div>
+                <p className="text-white font-bold">{post.UserId}</p>
+                <p className="text-gray-400 text-sm">
+                  {new Date(post.Time).toLocaleString()}
+                </p>
+              </div>
             </div>
-            </div>
-          <p id='post1' className="text-white">
-          </p>
-        </div>
+            <p className="text-white mb-2">{post.Text}</p>
+            <p className="text-gray-400 italic">{post.Song}</p>
+            {post.Embed && (
+              <div className="mt-4">
+                <iframe
+                  src={post.Embed}
+                  className="w-full h-40"
+                  title={`Embed for ${post.Id}`}
+                  allowFullScreen
+                ></iframe>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Sidebar - Right */}
       <div className="w-80 bg-gray-800 p-6 overflow-auto">
         <h2 className="text-white text-xl mb-4">Friends Listening</h2>
-        {/* Friends List */}
         {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
           <div key={index} className="bg-gray-700 p-4 rounded-lg mb-4">
             <p className="text-white">{friend}: Currently listening to...</p>
