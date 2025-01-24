@@ -14,19 +14,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type User struct {
+	Id        primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId    int                  `json:"userId" bson:"userId"`
+	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
+	Following []primitive.ObjectID `json:"following" bson:"following"`
+}
 
 type Post struct {
 	// these ids structs will be replaced
 	// with mongodb ids
-	Id       primitive.ObjectID    `json:"id" bson:"_id"`
-	UserId   int    `json:"userid" bson:"userid"`
-	ParentId primitive.ObjectID    `json:"parentid" bson:"parentid"`
-	ChildIds []primitive.ObjectID  `json:"childids" bson:"childids"`
-	LikeIds  []int  `json:"likeids" bson:"likeids"`
-	Time     string `json:"time" bson:"time"`
-	Text     string `json:"text" bson:"text"`
-	Embed    string `json:"embed" bson:"embed"`
-	Song     string `json:"song" bson:"song"`
+	Id       primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId   int                  `json:"userid" bson:"userid"`
+	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
+	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
+	LikeIds  []int                `json:"likeids" bson:"likeids"`
+	Time     string               `json:"time" bson:"time"`
+	Text     string               `json:"text" bson:"text"`
+	Embed    string               `json:"embed" bson:"embed"`
+	Song     string               `json:"song" bson:"song"`
 }
 
 // need to figure out if comment and post ids should be separated
@@ -93,7 +99,7 @@ func main() {
 }
 
 func getPosts(c echo.Context) error {
-	
+
 	filter := bson.D{{"parentid", primitive.NilObjectID}}
 	var cursor, err = postColl.Find(context.TODO(), filter)
 	if err != nil {
@@ -134,11 +140,11 @@ func createPost(c echo.Context) error {
 	}
 
 	post = Post{
-		Id:    	  primitive.NewObjectID(),
-		Time:     time.Now().Format(time.RFC3339),
-		Text:     post.Text,
-		Embed:    post.Embed,
-		Song:     post.Song,
+		Id:    primitive.NewObjectID(),
+		Time:  time.Now().Format(time.RFC3339),
+		Text:  post.Text,
+		Embed: post.Embed,
+		Song:  post.Song,
 	}
 
 	var bsonpost, err = bson.Marshal(post)
@@ -179,8 +185,7 @@ func createComment(c echo.Context) error {
 		Song:     post.Song,
 	}
 
-
-	var bsonpost []byte 
+	var bsonpost []byte
 	bsonpost, err = bson.Marshal(post)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
@@ -199,7 +204,7 @@ func getComments(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
 	}
-	
+
 	filter := bson.D{{"parentid", parentId}}
 	var cursor *mongo.Cursor
 	cursor, err = postColl.Find(context.TODO(), filter)
@@ -213,5 +218,5 @@ func getComments(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, result)
-	
+
 }
