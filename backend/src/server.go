@@ -56,26 +56,7 @@ func main() {
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
 
-	var logger = middleware.RequestLoggerConfig{
-		LogStatus:     true,
-		LogURI:        true,
-		LogRemoteIP:   true,
-		LogMethod:     true,
-		LogLatency:    true,
-		LogValuesFunc: logger,
-	}
-
-	router.Use(middleware.RequestLoggerWithConfig(logger))
+	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 
 	router.Logger.Debug(router.Start("localhost:8080"))
-}
-
-func logger(c echo.Context, v middleware.RequestLoggerValues) error {
-	fmt.Printf("%v | %v | %v %v | ", v.StartTime.Format("2006-01-02 15:04:05"), v.RemoteIP, v.Method, v.URI)
-	color := colorGreen
-	if v.Status != 200 {
-		color = colorRed
-	}
-	fmt.Printf("%v%v%v | %v\n", color, v.Status, colorReset, v.Latency)
-	return nil
 }
