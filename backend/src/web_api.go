@@ -86,6 +86,10 @@ func main() {
 		LogLatency:    true,
 		LogValuesFunc: logger,
 	}
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+  AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+}));
 
 	router.Use(middleware.RequestLoggerWithConfig(logger))
 
