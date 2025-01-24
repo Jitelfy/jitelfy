@@ -129,22 +129,23 @@ const LoginPage = ({ onLogin, onSignUp }: { onLogin: () => void; onSignUp: () =>
   );
 };
 
-const BASE_URL = "localhost:8080";
+const BASE_URL = "http://localhost:8080";
 
 interface Post {
-  Id: string;
-  UserId: string;
-  ParentId: string;
-  ChildIds: string[];
-  LikeIds: string[];
-  Time: string;
-  Text: string;
-  Embed: string;
-  Song: string;
+  id: string;
+  userId: string;
+  parentId: string;
+  childIds: string[];
+  likeIds: string[];
+  time: string;
+  text: string;
+  embed: string;
+  song: string;
 }
 
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
+    /*
   console.log(`Simulating API call to: ${BASE_URL}${path}`);
   // Fake response data
   const mockResponse = JSON.stringify([
@@ -180,6 +181,9 @@ async function getContent(path: string): Promise<string> {
     }
   ]);
   return mockResponse;
+  */
+ const content = await fetch(`${BASE_URL}${path}`);
+ return content.text();
 }
 
 // Parse fake API responses, later get the real ones via the backend
@@ -187,6 +191,7 @@ async function getPosts(): Promise<Post[]> {
   const posts: Post[] = await getContent("/posts/top").then((response) =>
     JSON.parse(response)
   );
+  console.log(posts);
   return posts;
 }
 
@@ -245,25 +250,25 @@ const FeedPage = ({ onProfileClick }: { onProfileClick: () => void }) => {
       <div className="flex-1 bg-gray-900 p-6 overflow-auto">
         <h1 className="text-white text-2xl font-bold mb-4">Feed</h1>
         {posts.map((post) => (
-          <div key={post.Id} className="bg-gray-800 p-4 rounded-lg mb-6">
+          <div key={post.id} className="bg-gray-800 p-4 rounded-lg mb-6">
             <div className="flex items-center mb-2">
               <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
               <div>
-                <p className="text-white font-bold">{post.UserId}</p>
+                <p className="text-white font-bold">{post.userId}</p>
                 <p className="text-gray-400 text-sm">
-                  {new Date(post.Time).toLocaleString()}
+                  {new Date(post.time).toLocaleString()}
                 </p>
               </div>
             </div>
-            <p className="text-white mb-2">{post.Text}</p>
-            <p className="text-gray-400 italic">{post.Song}</p>
-            {post.Embed && (
+            <p className="text-white mb-2">{post.text}</p>
+            {post.song && (
               <div className="mt-4">
                 <iframe
-                  src={post.Embed}
+                  src={post.song}
                   className="w-full h-40"
-                  title={`Embed for ${post.Id}`}
+                  title={`Song for ${post.id}`}
                   allowFullScreen
+                  loading="lazy"
                 ></iframe>
               </div>
             )}
