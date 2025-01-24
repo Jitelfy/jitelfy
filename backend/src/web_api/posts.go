@@ -1,25 +1,23 @@
-package main
+package web_api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type User struct {
-	Id        primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId    int                  `json:"userId" bson:"userId"`
-	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
-	Following []primitive.ObjectID `json:"following" bson:"following"`
-}
+var PostColl *mongo.Collection
+
+const (
+	colorReset = "\033[0m"
+	colorRed   = "\033[31m"
+	colorGreen = "\033[32m"
+)
 
 type Post struct {
 	// these ids structs will be replaced
@@ -35,73 +33,10 @@ type Post struct {
 	Song     string               `json:"song" bson:"song"`
 }
 
-// need to figure out if comment and post ids should be separated
-// if i want a way to get all top level posts, i think it makes the
-// most sense to separate them but it makes all other purposes
-// a bit more annoying having to check both maps
-var postColl *mongo.Collection
-
-const (
-	colorReset = "\033[0m"
-	colorRed   = "\033[31m"
-	colorGreen = "\033[32m"
-)
-
-func main() {
-
-	// mongodb
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI("mongodb+srv://jitelfy:JitelfyForever33@jitelfycluster.hgw9u.mongodb.net/" +
-		"?retryWrites=true&w=majority&appName=JitelfyCluster").SetServerAPIOptions(serverAPI)
-
-	// create a client, connect to server
-	client, err := mongo.Connect(context.TODO(), opts)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			fmt.Println(err)
-			return
-		}
-	}()
-	// Send a ping to confirm a successful connection
-	var db = client.Database("jitelfy")
-	if err := db.RunCommand(context.TODO(),
-		bson.D{{"ping", 1}}).Err(); err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("Jitelfy successfully connected to Cluster Server.")
-
-	postColl = db.Collection("posts")
-
-	router := echo.New()
-	router.Debug = true
-	router.GET("/posts/top", getPosts)
-	router.GET("/posts/comments", getComments)
-	router.POST("/posts/top", createPost)
-	router.POST("/posts/comments", createComment)
-
-	var logger = middleware.RequestLoggerConfig{
-		LogStatus:     true,
-		LogURI:        true,
-		LogRemoteIP:   true,
-		LogMethod:     true,
-		LogLatency:    true,
-		LogValuesFunc: logger,
-	}
-
-	router.Use(middleware.RequestLoggerWithConfig(logger))
-
-	router.Logger.Debug(router.Start("localhost:8080"))
-}
-
-func getPosts(c echo.Context) error {
+func GetPosts(c echo.Context) error {
 
 	filter := bson.D{{"parentid", primitive.NilObjectID}}
-	var cursor, err = postColl.Find(context.TODO(), filter)
+	var cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
 	}
@@ -114,17 +49,7 @@ func getPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func logger(c echo.Context, v middleware.RequestLoggerValues) error {
-	fmt.Printf("%v | %v | %v %v | ", v.StartTime.Format("2006-01-02 15:04:05"), v.RemoteIP, v.Method, v.URI)
-	color := colorGreen
-	if v.Status != 200 {
-		color = colorRed
-	}
-	fmt.Printf("%v%v%v | %v\n", color, v.Status, colorReset, v.Latency)
-	return nil
-}
-
-func createPost(c echo.Context) error {
+func CreatePost(c echo.Context) error {
 	post := Post{}
 	// error checking for valid json
 	if err := c.Bind(&post); err != nil {
@@ -151,7 +76,7 @@ func createPost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
 	}
-	_, err = postColl.InsertOne(context.TODO(), bsonpost)
+	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
 	}
@@ -159,7 +84,7 @@ func createPost(c echo.Context) error {
 	return c.JSON(http.StatusOK, post)
 }
 
-func createComment(c echo.Context) error {
+func CreateComment(c echo.Context) error {
 	post := Post{}
 
 	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
@@ -190,7 +115,7 @@ func createComment(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
 	}
-	_, err = postColl.InsertOne(context.TODO(), bsonpost)
+	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
 	}
@@ -198,7 +123,7 @@ func createComment(c echo.Context) error {
 	return c.JSON(http.StatusOK, post)
 }
 
-func getComments(c echo.Context) error {
+func GetComments(c echo.Context) error {
 
 	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
 	if err != nil {
@@ -207,7 +132,7 @@ func getComments(c echo.Context) error {
 
 	filter := bson.D{{"parentid", parentId}}
 	var cursor *mongo.Cursor
-	cursor, err = postColl.Find(context.TODO(), filter)
+	cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
 	}

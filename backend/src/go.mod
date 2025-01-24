@@ -1,4 +1,4 @@
-module web_api
+module server
 
 go 1.21
 
