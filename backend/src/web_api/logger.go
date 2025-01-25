@@ -15,6 +15,12 @@ var Log = middleware.RequestLoggerConfig{
 	LogValuesFunc: Logger,
 }
 
+const (
+	colorReset = "\033[0m"
+	colorRed   = "\033[31m"
+	colorGreen = "\033[32m"
+)
+
 func Logger(c echo.Context, v middleware.RequestLoggerValues) error {
 	fmt.Printf("%v | %v | %v %v | ", v.StartTime.Format("2006-01-02 15:04:05"), v.RemoteIP, v.Method, v.URI)
 	color := colorGreen

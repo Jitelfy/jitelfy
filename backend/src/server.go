@@ -12,12 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	colorReset = "\033[0m"
-	colorRed   = "\033[31m"
-	colorGreen = "\033[32m"
-)
-
 func main() {
 
 	// mongodb
@@ -38,7 +32,7 @@ func main() {
 		}
 	}()
 	// Send a ping to confirm a successful connection
-	var db = client.Database("jitelfy")
+	var db = client.Database("admin")
 	if err := db.RunCommand(context.TODO(),
 		bson.D{{"ping", 1}}).Err(); err != nil {
 		fmt.Println(err)
