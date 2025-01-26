@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,20 +14,14 @@ import (
 
 var PostColl *mongo.Collection
 
-const (
-	colorReset = "\033[0m"
-	colorRed   = "\033[31m"
-	colorGreen = "\033[32m"
-)
-
 type Post struct {
 	// these ids structs will be replaced
 	// with mongodb ids
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId   int                  `json:"userid" bson:"userid"`
+	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
 	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
-	LikeIds  []int                `json:"likeids" bson:"likeids"`
+	LikeIds  []primitive.ObjectID `json:"likeids" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
@@ -64,12 +59,26 @@ func CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
 	}
 
+	if post.UserId == primitive.NilObjectID {
+		return c.JSON(http.StatusBadRequest, "post must have user associated")
+	}
+
+	if post.Song == "" {
+		return c.JSON(http.StatusBadRequest, "top level posts must have song")
+	}
+	var song = post.Song
+	if !strings.Contains(song, "https://open.spotify.com/track/") {
+		return c.JSON(http.StatusBadRequest, "invalid song link")
+	}
+	song = strings.Replace(song, "/track/", "/embed/track/", 1)
+
 	post = Post{
-		Id:    primitive.NewObjectID(),
-		Time:  time.Now().Format(time.RFC3339),
-		Text:  post.Text,
-		Embed: post.Embed,
-		Song:  post.Song,
+		Id:     primitive.NewObjectID(),
+		UserId: post.UserId,
+		Time:   time.Now().Format(time.RFC3339),
+		Text:   post.Text,
+		Embed:  post.Embed,
+		Song:   post.Song,
 	}
 
 	var bsonpost, err = bson.Marshal(post)
@@ -104,6 +113,7 @@ func CreateComment(c echo.Context) error {
 	post = Post{
 		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
+		UserId:   post.UserId,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,

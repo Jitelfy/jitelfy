@@ -12,12 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	colorReset = "\033[0m"
-	colorRed   = "\033[31m"
-	colorGreen = "\033[32m"
-)
-
 func main() {
 
 	// mongodb
@@ -36,6 +30,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("disconnected from cluster")
 	}()
 	// Send a ping to confirm a successful connection
 	var db = client.Database("jitelfy")
@@ -56,7 +51,14 @@ func main() {
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
 
+	router.GET("/users", web_api.GetUser)
+	router.POST("/users", web_api.MakeUser)
+
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	router.Logger.Debug(router.Start("localhost:8080"))
 }
