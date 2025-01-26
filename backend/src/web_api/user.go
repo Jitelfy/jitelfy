@@ -15,6 +15,7 @@ var UserColl *mongo.Collection
 type User struct {
 	Id        primitive.ObjectID   `json:"id" bson:"_id"`
 	Username  string               `json:"username" bson:"username"`
+	Icon	  string  			   `json:"icon" bson:"icon"`
 	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following []primitive.ObjectID `json:"following" bson:"following"`
 }

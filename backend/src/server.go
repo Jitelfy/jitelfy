@@ -30,6 +30,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("disconnected from cluster")
 	}()
 	// Send a ping to confirm a successful connection
 	var db = client.Database("jitelfy")
@@ -54,6 +55,10 @@ func main() {
 	router.POST("/users", web_api.MakeUser)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	router.Logger.Debug(router.Start("localhost:8080"))
 }

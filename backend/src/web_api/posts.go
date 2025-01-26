@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -57,6 +58,19 @@ func CreatePost(c echo.Context) error {
 	if post.ChildIds != nil {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
 	}
+
+	if post.UserId == primitive.NilObjectID {
+		return c.JSON(http.StatusBadRequest, "post must have user associated")
+	}
+
+	if post.Song == "" {
+		return c.JSON(http.StatusBadRequest, "top level posts must have song")
+	}
+	var song = post.Song
+	if !strings.Contains(song, "https://open.spotify.com/track/") {
+		return c.JSON(http.StatusBadRequest, "invalid song link")
+	}
+	song = strings.Replace(song, "/track/", "/embed/track/", 1)
 
 	post = Post{
 		Id:     primitive.NewObjectID(),
