@@ -13,15 +13,14 @@ import (
 
 var PostColl *mongo.Collection
 
-
 type Post struct {
 	// these ids structs will be replaced
 	// with mongodb ids
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId   int                  `json:"userid" bson:"userid"`
+	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
 	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
-	LikeIds  []int                `json:"likeids" bson:"likeids"`
+	LikeIds  []primitive.ObjectID `json:"likeids" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
@@ -60,11 +59,12 @@ func CreatePost(c echo.Context) error {
 	}
 
 	post = Post{
-		Id:    primitive.NewObjectID(),
-		Time:  time.Now().Format(time.RFC3339),
-		Text:  post.Text,
-		Embed: post.Embed,
-		Song:  post.Song,
+		Id:     primitive.NewObjectID(),
+		UserId: post.UserId,
+		Time:   time.Now().Format(time.RFC3339),
+		Text:   post.Text,
+		Embed:  post.Embed,
+		Song:   post.Song,
 	}
 
 	var bsonpost, err = bson.Marshal(post)
@@ -99,6 +99,7 @@ func CreateComment(c echo.Context) error {
 	post = Post{
 		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
+		UserId:   post.UserId,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,

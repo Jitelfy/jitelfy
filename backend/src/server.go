@@ -32,7 +32,7 @@ func main() {
 		}
 	}()
 	// Send a ping to confirm a successful connection
-	var db = client.Database("admin")
+	var db = client.Database("jitelfy")
 	if err := db.RunCommand(context.TODO(),
 		bson.D{{"ping", 1}}).Err(); err != nil {
 		fmt.Println(err)
@@ -49,6 +49,9 @@ func main() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
+
+	router.GET("/users", web_api.GetUser)
+	router.POST("/users", web_api.MakeUser)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 
