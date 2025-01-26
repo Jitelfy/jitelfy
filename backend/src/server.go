@@ -6,13 +6,17 @@ import (
 	"server/web_api"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	echoadapter "github.com/awslabs/aws-lambda-go-api-proxy/echo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func main() {
+var echoLambda *echoadapter.EchoLambdaV2
+
+func init() {
 
 	// mongodb
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -54,11 +58,15 @@ func main() {
 	router.GET("/users", web_api.GetUser)
 	router.POST("/users", web_api.MakeUser)
 
-	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
-	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
-	}))
 
-	router.Logger.Debug(router.Start("localhost:8080"))
+	echoLambda = echoadapter.NewV2(router)
+
+}
+
+func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	return echoLambda.ProxyWithContext(ctx, req)
+}
+
+func main() {
+	lambda.Start(handler)
 }
