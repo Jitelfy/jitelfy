@@ -264,7 +264,7 @@ const FeedPage = () => {
     </div>
 
       {/* Feed - Main Content */}
-      <div className="flex-1 bg-gray-900 p-6 overflow-auto">
+      <div className="flex-1 bg-gray-900 p-6 overflow-auto hide-scrollbar">
         <h1 className="text-white text-2xl mb-4">Feed</h1>
         {posts.map((post) => (
           <div key={post.post.id} className="bg-gray-800 p-4 rounded-lg mb-6">
