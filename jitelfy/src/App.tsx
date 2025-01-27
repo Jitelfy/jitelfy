@@ -143,6 +143,19 @@ interface Post {
   song: string;
 }
 
+interface User {
+    id: string;
+    username: string;
+    icon: string;
+    following: string[];
+    followers: string[];
+}
+
+interface PackagedPost {
+    post: Post;
+    user: User;
+}
+
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
     /*
@@ -176,18 +189,22 @@ async function getContent(path: string): Promise<string> {
  return content.text();
 }
 
-// Parse fake API responses, later get the real ones via the backend
-async function getPosts(): Promise<Post[]> {
-  const posts: Post[] = await getContent("/posts/top").then((response) =>
-    JSON.parse(response)
-  );
-  console.log(posts);
-  return posts;
+async function getPosts(): Promise<PackagedPost[]> {
+    const response = getContent("/posts/top");
+    const posts: PackagedPost[] = JSON.parse(await response);
+    console.log(posts);
+    return posts;
+}
+
+async function getUser(path: string): Promise<User> {
+    const response = getContent("/users?" + path);
+    const user: User = JSON.parse(await response);
+    return user;
 }
 
 const FeedPage = () => {
   // State to store fetched posts.
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PackagedPost[]>([]);
 
   // Fetch posts when the component mounts
   useEffect(() => {
@@ -236,34 +253,37 @@ const FeedPage = () => {
       <div className="flex-1 bg-gray-900 p-6 overflow-auto">
         <h1 className="text-white text-2xl font-bold mb-4">Feed</h1>
         {posts.map((post) => (
-          <div key={post.id} className="bg-gray-800 p-4 rounded-lg mb-6">
-            <div className="flex items-center mb-2">
-              <div className="w-12 h-12 bg-gray-600 rounded-full mr-4"></div>
+          <div key={post.post.id} className="bg-gray-800 p-4 rounded-lg mb-6">
+            <div className="flex items-center">
               <div>
-                <p className="text-white font-bold">{post.userId}</p>
+              <img
+                className="size-12 rounded-full mb-2 mr-3"
+                src={post.user.icon}
+                ></img>
+              </div>
+              <div>
+                <p className="text-white font-bold">{post.user.username}</p>
                 <p className="text-gray-400 text-sm">
-                  {new Date(post.time).toLocaleString()}
+                  {new Date(post.post.time).toLocaleString()}
                 </p>
               </div>
             </div>
-            <p className="text-white mb-2">{post.text}</p>
-            {post.embed && (
-                <div className="mt-4">
+            <p className="text-white mb-2">{post.post.text}</p>
+            {post.post.embed && (
+                <div className="mt-2">
                 <img
-                src={post.embed}
-                className="w-full h-40"
-                  loading="lazy"
+                src={post.post.embed}
+                className="w-full h-40 rounded-md"
                 ></img>
                 </div>
             )}
-            {post.song && (
+            {post.post.song && (
               <div className="mt-4">
                 <iframe
-                  src={post.song}
-                  className="w-full h-40"
-                  title={`Song for ${post.id}`}
+                  src={post.post.song}
+                  className="w-full h-20"
+                  title={`Song for ${post.post.id}`}
                   allowFullScreen
-                  loading="lazy"
                 ></iframe>
               </div>
             )}
