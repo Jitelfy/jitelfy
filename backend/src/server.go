@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"fmt"
 	"server/web_api"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var echoLambda *echoadapter.EchoLambdaV2
+var client *mongo.Client
 
 func init() {
 
@@ -29,13 +31,6 @@ func init() {
 		fmt.Println(err)
 		return
 	}
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println("disconnected from cluster")
-	}()
 	// Send a ping to confirm a successful connection
 	var db = client.Database("jitelfy")
 	if err := db.RunCommand(context.TODO(),
@@ -47,6 +42,10 @@ func init() {
 
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
+
+	echo.NotFoundHandler = func(c echo.Context) error {
+		return c.String(http.StatusBadRequest, c.Request().URL.String())
+	}
 
 	router := echo.New()
 	router.Debug = true
@@ -63,10 +62,19 @@ func init() {
 
 }
 
-func handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	return echoLambda.ProxyWithContext(ctx, req)
+func handler(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	return echoLambda.Proxy(req)
 }
 
 func main() {
+	defer func() {
+		var err error
+		if err = client.Disconnect(context.TODO()); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("disconnected from cluster")
+	}()
+
 	lambda.Start(handler)
 }

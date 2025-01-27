@@ -129,7 +129,7 @@ const LoginPage = () => {
   );
 };
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "https://mafjre94nh.execute-api.us-west-2.amazonaws.com"
 
 interface Post {
   id: string;
