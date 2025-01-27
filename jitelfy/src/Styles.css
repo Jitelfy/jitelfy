@@ -2,9 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+}
+
 /* colours */
 :root {
     --white: #ffffff;
+
+    --background-main: #111827;
+    --background-secondary: #21283b;
+    --background-tertiary: #424a5e;
+
+    --text-main: #ffffff;
+    --text-secondary: #959595;
+    --text-tertiary: #000000;
+
+    --accent-green: #0f970f;
+    --accent-green-light: #37c637;
+    --accent-blue: #1845da;
+    --accent-blue-light: #3354c8;
 }
 
 /* load custom fonts */
