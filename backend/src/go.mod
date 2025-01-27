@@ -1,4 +1,4 @@
-module test/web_api
+module server
 
 go 1.18
 
