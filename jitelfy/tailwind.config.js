@@ -6,10 +6,14 @@ export default {
   ],
   theme: {
     fontFamily: {
-      Satoshi: ["Satoshi", "sans-serif"]
-
+      Satoshi: ["Satoshi", "sans-serif"],
+      Inter: ["Inter", "sans-serif"],
     },
-    extend: {},
+    extend: {
+      colors: {
+        "white": "var(--white)",
+      }
+    },
   },
   plugins: [],
 }

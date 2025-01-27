@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* colours */
+:root {
+    --white: #ffffff;
+}
+
 /* load custom fonts */
 @font-face {
     font-family: "Satoshi";
@@ -20,6 +25,15 @@
     }
     p {
         font-family: "Inter", sans-serif;
-        font-weight: normal;
+        font-weight: 400;
+    }
+
+    li {
+        display: flex;
+        flex-direction: row;
+
+        gap: 0.5rem;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
     }
 }
