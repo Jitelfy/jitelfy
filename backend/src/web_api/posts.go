@@ -28,6 +28,11 @@ type Post struct {
 	Song     string               `json:"song" bson:"song"`
 }
 
+type PostUserPackage struct {
+	Postjson Post `json:"post"`
+	Userjson User `json:"user"`
+}
+
 func GetPosts(c echo.Context) error {
 
 	filter := bson.D{{"parentid", primitive.NilObjectID}}
@@ -41,7 +46,28 @@ func GetPosts(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
-	return c.JSON(http.StatusOK, result)
+	var packagedresults []PostUserPackage
+
+	for _, post := range result {
+		filter = bson.D{{"_id", post.UserId}}
+		var result = UserColl.FindOne(context.TODO(), filter)
+		var user User
+		if err = result.Decode(&user); err != nil {
+			if err == mongo.ErrNoDocuments {
+				return c.JSON(http.StatusBadRequest, "could not find user")
+			} else {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+		}
+		var packagedpost = PostUserPackage{
+			Postjson: post,
+			Userjson: user,
+		}
+		packagedresults = append(packagedresults, packagedpost)
+
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
 }
 
 func CreatePost(c echo.Context) error {
@@ -68,29 +94,29 @@ func CreatePost(c echo.Context) error {
 	}
 	var song = post.Song
 	if !strings.Contains(song, "https://open.spotify.com/track/") {
-		return c.JSON(http.StatusBadRequest, "invalid song link")
-	}
-	song = strings.Replace(song, "/track/", "/embed/track/", 1)
+	return c.JSON(http.StatusBadRequest, "invalid song link")
+}
+song = strings.Replace(song, "/track/", "/embed/track/", 1)
 
-	post = Post{
-		Id:     primitive.NewObjectID(),
-		UserId: post.UserId,
-		Time:   time.Now().Format(time.RFC3339),
-		Text:   post.Text,
-		Embed:  post.Embed,
-		Song:   post.Song,
-	}
+post = Post{
+	Id:     primitive.NewObjectID(),
+	UserId: post.UserId,
+	Time:   time.Now().Format(time.RFC3339),
+	Text:   post.Text,
+	Embed:  post.Embed,
+	Song:   post.Song,
+}
 
-	var bsonpost, err = bson.Marshal(post)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-	}
-	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
-	}
+var bsonpost, err = bson.Marshal(post)
+if err != nil {
+	return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+}
+_, err = PostColl.InsertOne(context.TODO(), bsonpost)
+if err != nil {
+	return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+}
 
-	return c.JSON(http.StatusOK, post)
+return c.JSON(http.StatusOK, post)
 }
 
 func CreateComment(c echo.Context) error {

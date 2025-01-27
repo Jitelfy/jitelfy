@@ -14,6 +14,7 @@ var UserColl *mongo.Collection
 
 type User struct {
 	Id        primitive.ObjectID   `json:"id" bson:"_id"`
+	DisplayName string			   `json:"displayname" bson:"displayname"`
 	Username  string               `json:"username" bson:"username"`
 	Icon	  string  			   `json:"icon" bson:"icon"`
 	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
@@ -28,8 +29,7 @@ func GetUser(c echo.Context) error {
 	}
 
 	filter := bson.D{{"_id", userid}}
-	var result *mongo.SingleResult
-	result = UserColl.FindOne(context.TODO(), filter)
+	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
 		if err == mongo.ErrNoDocuments {
