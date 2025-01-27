@@ -202,7 +202,7 @@ const FeedPage = () => {
     <div className="h-screen bg-gray-900 flex">
     {/* Sidebar - Left */}
     <div className="w-60 bg-gray-800 p-6">
-      <h2 className="text-white text-xl mb-6">Jitelfy</h2>
+      <h1 className="text-white text-xl mb-6">Jitelfy</h1>
       <ul>
         <li className="mb-4">
           <Link to="/feed" className="text-white w-full text-left hover:underline">
@@ -273,7 +273,7 @@ const FeedPage = () => {
 
       {/* Sidebar - Right */}
       <div className="w-80 bg-gray-800 p-6 overflow-auto">
-        <h2 className="text-white text-xl mb-4">Friends Listening</h2>
+        <h1 className="text-white text-xl mb-4">Friends Listening</h1>
         {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
           <div key={index} className="bg-gray-700 p-4 rounded-lg mb-4">
             <p className="text-white">{friend}: Currently listening to...</p>
@@ -290,7 +290,7 @@ const ProfilePage = () => {
       {/* Sidebar - Left */}
       <div className="w-60 bg-gray-800 p-6">
         <div className="flex items-center mb-6">
-          <h2 className="text-white text-xl">Jitelfy</h2>
+          <h1 className="text-white text-xl">Jitelfy</h1>
           <span className="ml-2 text-white">🎵</span>
         </div>
         <ul>
@@ -327,7 +327,7 @@ const ProfilePage = () => {
 
       {/* Sidebar - Right */}
       <div className="w-80 bg-gray-800 p-6 overflow-auto">
-        <h2 className="text-white text-xl mb-4">Friends Listening</h2>
+        <h1 className="text-white text-xl mb-4">Friends Listening</h1>
         {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
           <div key={index} className="bg-gray-700 p-4 rounded-lg mb-4">
             <p className="text-white">{friend}: Currently listening to...</p>

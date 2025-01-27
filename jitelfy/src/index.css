@@ -2,7 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* load custom fonts */
 @font-face {
     font-family: "Satoshi";
     src: url("fonts/Satoshi-Variable.ttf");
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("fonts/Inter-VariableFont_opsz,wght.ttf");
+}
+
+@layer base {
+    h1 {
+        font-family: "Satoshi", sans-serif;
+        font-weight: bold;
+    }
+    p {
+        font-family: "Inter", sans-serif;
+        font-weight: normal;
+    }
 }
