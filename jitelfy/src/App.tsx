@@ -160,7 +160,6 @@ interface PackagedPost {
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
     /*
-  console.log(`Simulating API call to: ${BASE_URL}${path}`);
   // Fake response data
   const mockResponse = JSON.stringify([
     {
@@ -193,12 +192,11 @@ async function getContent(path: string): Promise<string> {
 async function getPosts(): Promise<PackagedPost[]> {
     const response = getContent("/posts/top");
     const posts: PackagedPost[] = JSON.parse(await response);
-    console.log(posts);
     return posts;
 }
 
 async function getUser(path: string): Promise<User> {
-    const response = getContent("/users?" + path);
+    const response = getContent("/users?userid=" + path);
     const user: User = JSON.parse(await response);
     return user;
 }
@@ -323,6 +321,17 @@ const FeedPage = () => {
 };
 
 const ProfilePage = () => {
+  const [userData, setUserData] = useState<User>();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = await getUser("67957a921a129c6d1aeb8691");
+      setUserData(user);
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <div className="h-screen bg-background-main flex">
       {/* Sidebar - Left */}
@@ -380,11 +389,11 @@ const ProfilePage = () => {
             <div className="w-full h-48 bg-green-500 flex items-center justify-center">
               <h1 className="text-4xl text-text-main">WE'RE COOKED</h1>
             </div>
-            <div className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></div>
+            <img src={userData?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
           </div>
           <div className="text-center mt-16">
-            <h2 className="text-2xl text-text-main">First Last</h2>
-            <p className="text-text-main">@username</p>
+            <h2 className="text-2xl text-text-main">{userData?.displayname || 'FirstName LastName'}</h2>
+            <p className="text-text-secondary">@{userData?.username || '@username'}</p>
           </div>
         </div>
       </div>
