@@ -160,7 +160,6 @@ interface PackagedPost {
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
     /*
-  console.log(`Simulating API call to: ${BASE_URL}${path}`);
   // Fake response data
   const mockResponse = JSON.stringify([
     {
@@ -193,14 +192,12 @@ async function getContent(path: string): Promise<string> {
 async function getPosts(): Promise<PackagedPost[]> {
     const response = getContent("/posts/top");
     const posts: PackagedPost[] = JSON.parse(await response);
-    console.log(posts);
     return posts;
 }
 
 async function getUser(path: string): Promise<User> {
     const response = getContent("/users?userid=" + path);
     const user: User = JSON.parse(await response);
-    console.log(user);
     return user;
 }
 
@@ -329,7 +326,6 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       const user = await getUser("67957a921a129c6d1aeb8691");
-      console.log(user);
       setUserData(user);
     };
 
@@ -397,7 +393,7 @@ const ProfilePage = () => {
           </div>
           <div className="text-center mt-16">
             <h2 className="text-2xl text-text-main">{userData?.displayname || 'FirstName LastName'}</h2>
-            <p className="text-text-main">@{userData?.username || '@username'}</p>
+            <p className="text-text-secondary">@{userData?.username || '@username'}</p>
           </div>
         </div>
       </div>
