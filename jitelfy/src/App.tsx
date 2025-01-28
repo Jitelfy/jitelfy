@@ -220,7 +220,7 @@ const FeedPage = () => {
     <div className="h-screen bg-background-main flex">
 
     {/* Sidebar - Left */}
-    <div className="w-60 bg-background-secondary p-6">
+    <div className="w-1/5 bg-background-secondary pl-6 pt-6 flex flex-col items-start justify-start">
       <h1 className="text-text-main text-2xl mb-6">Jitelfy</h1>
       <ul>
         <li>
@@ -257,16 +257,28 @@ const FeedPage = () => {
             <p>Settings</p>
           </Link>
         </li>
-        <li>
-          <Link to="/profile" className="text-text-main w-full text-left hover:underline">
-            <p>Your Name</p>
-          </Link>
-        </li>
       </ul>
+
+      {/* Profile section */}
+      <Link to="/profile" className="bg-background-secondary rounded-lg border-2 border-background-tertiary p-5 hover:bg-background-tertiary">
+        <div className="flex justify-self-end">
+          <img
+              className="size-12 rounded-full mb-2 mr-3"
+              src="https://miro.medium.com/v2/resize:fit:1080/0*A7MUqyCLvZDcHkfM.jpg"
+          ></img>
+          <div>
+            <p className="text-text-main font-bold">Your Name</p>
+            <p className="text-text-secondary">@username</p>
+          </div>
+          <svg className="self-top justify-end" width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z" fill="white"/>
+          </svg>
+        </div>
+      </Link>
     </div>
 
       {/* Feed - Main Content */}
-      <div className="flex-1 bg-gray-900 p-6 overflow-auto hide-scrollbar">
+      <div className="flex-1 bg-background-main p-6 overflow-auto hide-scrollbar">
         <h1 className="text-white text-2xl mb-4">Feed</h1>
         {posts.map((post) => (
           <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
@@ -286,7 +298,7 @@ const FeedPage = () => {
                 </p>
               </div>
             </div>
-            <p className="text-text-main mb-2">{post.post.text}</p>
+            <p className="mt-2 text-text-main mb-2">{post.post.text}</p>
             {post.post.embed && (
                 <div className="mt-2">
                 <img
@@ -296,7 +308,7 @@ const FeedPage = () => {
                 </div>
             )}
             {post.post.song && (
-              <div className="mt-4">
+              <div className="mt-2">
                 <iframe
                   src={post.post.song}
                   className="w-full h-20"
@@ -310,7 +322,7 @@ const FeedPage = () => {
       </div>
 
       {/* Sidebar - Right */}
-      <div className="w-80 bg-background-secondary p-6 overflow-auto">
+      <div className="w-1/4 bg-background-secondary p-6 overflow-auto">
         <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
         {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
           <div key={index} className="bg-background-tertiary p-4 rounded-lg mb-4">
