@@ -132,6 +132,7 @@ const LoginPage = () => {
 
 const BASE_URL = "http://localhost:8080";
 
+
 interface Post {
   id: string;
   userId: string;
@@ -144,7 +145,7 @@ interface Post {
   song: string;
 }
 
-interface User {
+export interface User {
     id: string;
     displayname: string;
     username: string;
@@ -157,6 +158,8 @@ interface PackagedPost {
     post: Post;
     user: User;
 }
+
+export let current_user: User;
 
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
@@ -218,13 +221,13 @@ const FeedPage = () => {
         <div className="h-screen bg-background-main flex">
 
         {/* Sidebar - Left */}
-        {Quicklinks()}
-        {/* Feed - Main Content */}
-        <div className="flex-1 grid grid-auto-flow auto-rows-auto mx-10">
-        <h1 className="text-white text-2xl row-start-1 row-span-1 my-6">Feed</h1>
-        <div className="flex-1 bg-gray-900 overflow-auto hide-scrollbar">
+        {Quicklinks(current_user)}
+      {/* Feed - Main Content */}
+        <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
+        <h1 className="text-white text-2xl sticky top-0 my-6 mx-10">Feed</h1>
+      <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
         {posts.map((post) => (
-            <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
+            <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
             <div className="flex items-center">
             <div>
             <img
@@ -241,7 +244,7 @@ const FeedPage = () => {
             </p>
             </div>
             </div>
-            <p className="text-text-main mb-2">{post.post.text}</p>
+            <p className="mt-2 text-text-main mb-2">{post.post.text}</p>
             {post.post.embed && (
                 <div className="mt-2">
                 <img
@@ -251,7 +254,7 @@ const FeedPage = () => {
                 </div>
             )}
             {post.post.song && (
-              <div className="mt-4">
+              <div className="mt-2">
                 <iframe
                   src={post.post.song}
                   className="w-full h-20"
@@ -263,7 +266,7 @@ const FeedPage = () => {
           </div>
         ))}
       </div>
-        </div>
+      </div>
 
       {/* Sidebar - Right */}
       {FriendActivity()}
@@ -272,22 +275,11 @@ const FeedPage = () => {
 };
 
 const ProfilePage = () => {
-  const [userData, setUserData] = useState<User>();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const user = await getUser("67957a921a129c6d1aeb8691");
-      setUserData(user);
-    };
-
-    fetchUserData();
-  }, []);
-
-  if (userData == null) {
+  if (current_user == null) {
       return (
           <div className="h-screen bg-background-main flex">
           {/* Sidebar - Left */}
-          {Quicklinks()}
+          {Quicklinks(current_user)}
           <div className="flex-1 bg-background-main p-6 overflow-auto">
           <div className="relative w-full">
           </div>
@@ -301,7 +293,7 @@ const ProfilePage = () => {
   return (
     <div className="h-screen bg-background-main flex">
     {/* Sidebar - Left */}
-    {Quicklinks()}
+    {Quicklinks(current_user)}
 
       {/* Main Content - Middle */}
       <div className="flex-1 bg-background-main p-6 overflow-auto">
@@ -310,11 +302,11 @@ const ProfilePage = () => {
             <div className="w-full h-48 bg-green-500 flex items-center justify-center">
               <h1 className="text-4xl text-text-main">WE'RE COOKED</h1>
             </div>
-            <img src={userData?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
+            <img src={current_user?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
           </div>
           <div className="text-center mt-16">
-            <h2 className="text-2xl text-text-main">{userData?.displayname || 'user cannot be loaded'}</h2>
-            <p className="text-text-secondary">@{userData?.username || 'username'}</p>
+            <h2 className="text-2xl text-text-main">{current_user?.displayname || 'user cannot be loaded'}</h2>
+            <p className="text-text-secondary">@{current_user?.username || 'username'}</p>
           </div>
         </div>
       </div>
@@ -326,6 +318,22 @@ const ProfilePage = () => {
 };
 
 function App() {
+  const [user, setUserData] = useState<User>();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const userData = await getUser("67957a921a129c6d1aeb8691");
+      setUserData(userData);
+    };
+
+    fetchUserData();
+  }, []);
+
+  if (user != null) {
+      current_user = user;
+  }
+
+
   return (
     <BrowserRouter>
       <Routes>
