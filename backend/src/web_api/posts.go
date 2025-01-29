@@ -15,8 +15,6 @@ import (
 var PostColl *mongo.Collection
 
 type Post struct {
-	// these ids structs will be replaced
-	// with mongodb ids
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
@@ -33,9 +31,61 @@ type PostUserPackage struct {
 	Userjson User `json:"user"`
 }
 
+/* I think this will be faster with many many posts but right now
+is a bit slower than consuming the iterator
+
+i.e. we may use this version once the time to get the entire post collection
+becomes big enough that treating it as a stream will be faster
 func GetPosts(c echo.Context) error {
 
-	filter := bson.D{{"parentid", primitive.NilObjectID}}
+	filter := bson.D{{Key: "parentid", Value: primitive.NilObjectID}}
+	var cursor, err = PostColl.Find(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
+	}
+	defer func() {
+		cursor.Close(context.TODO())
+	}()
+
+	var packagedresults []PostUserPackage
+
+	var ch = make(chan *PostUserPackage)
+	var count = 0
+
+	for cursor.Next(context.TODO()) {
+		var currpost Post
+		count += 1
+		if err = cursor.Decode(&currpost); err == nil {
+			go func(post Post) {
+				var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+				var result = UserColl.FindOne(context.TODO(), userfilter)
+				var user User
+				if user_err := result.Decode(&user); user_err != nil {
+					ch <- nil
+				}
+				ch <- &PostUserPackage{
+					Postjson: post,
+					Userjson: user,
+				}
+			}(currpost)
+		}
+	}
+
+	for i := 0; i < count; i++ {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults = append(packagedresults, *packagedpost)
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
+}
+*/
+
+func GetPosts(c echo.Context) error {
+
+	filter := bson.D{{Key: "parentid", Value: primitive.NilObjectID}}
 	var cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
@@ -52,19 +102,12 @@ func GetPosts(c echo.Context) error {
 
 	for _, currpost := range result {
 		go func(post Post) {
-			filter = bson.D{{"_id", post.UserId}}
-			var result = UserColl.FindOne(context.TODO(), filter)
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			var result = UserColl.FindOne(context.TODO(), userfilter)
 			var user User
-			result.Decode(&user)
-			/*
-			if err = result.Decode(&user); err != nil {
-				if err == mongo.ErrNoDocuments {
-					return c.JSON(http.StatusBadRequest, "could not find user")
-				} else {
-					return c.JSON(http.StatusBadRequest, err.Error())
-				}
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
 			}
-			*/
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -73,11 +116,17 @@ func GetPosts(c echo.Context) error {
 	}
 
 	for idx := range result {
-		packagedresults[idx] = *<-ch
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
 }
+
+
 
 func CreatePost(c echo.Context) error {
 	post := Post{}
@@ -103,29 +152,29 @@ func CreatePost(c echo.Context) error {
 	}
 	var song = post.Song
 	if !strings.Contains(song, "https://open.spotify.com/track/") {
-	return c.JSON(http.StatusBadRequest, "invalid song link")
-}
-song = strings.Replace(song, "/track/", "/embed/track/", 1)
+		return c.JSON(http.StatusBadRequest, "invalid song link")
+	}
+	song = strings.Replace(song, "/track/", "/embed/track/", 1)
 
-post = Post{
-	Id:     primitive.NewObjectID(),
-	UserId: post.UserId,
-	Time:   time.Now().Format(time.RFC3339),
-	Text:   post.Text,
-	Embed:  post.Embed,
-	Song:   post.Song,
-}
+	post = Post{
+		Id:     primitive.NewObjectID(),
+		UserId: post.UserId,
+		Time:   time.Now().Format(time.RFC3339),
+		Text:   post.Text,
+		Embed:  post.Embed,
+		Song:   song,
+	}
 
-var bsonpost, err = bson.Marshal(post)
-if err != nil {
-	return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-}
-_, err = PostColl.InsertOne(context.TODO(), bsonpost)
-if err != nil {
-	return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
-}
+	var bsonpost, err = bson.Marshal(post)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+	}
+	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+	}
 
-return c.JSON(http.StatusOK, post)
+	return c.JSON(http.StatusOK, post)
 }
 
 func CreateComment(c echo.Context) error {
@@ -175,7 +224,7 @@ func GetComments(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
 	}
 
-	filter := bson.D{{"parentid", parentId}}
+	filter := bson.D{{Key: "parentid", Value: parentId}}
 	var cursor *mongo.Cursor
 	cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
@@ -187,6 +236,32 @@ func GetComments(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
-	return c.JSON(http.StatusOK, result)
+	var packagedresults = make([]PostUserPackage, len(result))
 
+	var ch = make(chan *PostUserPackage)
+
+	for _, currpost := range result {
+		go func(post Post) {
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			var result = UserColl.FindOne(context.TODO(), userfilter)
+			var user User
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
+			}
+			ch <- &PostUserPackage{
+				Postjson: post,
+				Userjson: user,
+			}
+		}(currpost)
+	}
+
+	for idx := range result {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
 }
