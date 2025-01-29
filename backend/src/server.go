@@ -7,6 +7,7 @@ import (
 	"server/web_api"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	echoadapter "github.com/awslabs/aws-lambda-go-api-proxy/echo"
@@ -38,7 +39,6 @@ func init() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Jitelfy successfully connected to Cluster Server.")
 
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
@@ -48,7 +48,6 @@ func init() {
 	}
 
 	router := echo.New()
-	router.Debug = true
 	router.GET("/posts/top", web_api.GetPosts)
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
@@ -57,6 +56,10 @@ func init() {
 	router.GET("/users", web_api.GetUser)
 	router.POST("/users", web_api.MakeUser)
 
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	echoLambda = echoadapter.NewV2(router)
 
@@ -70,10 +73,8 @@ func main() {
 	defer func() {
 		var err error
 		if err = client.Disconnect(context.TODO()); err != nil {
-			fmt.Println(err)
 			return
 		}
-		fmt.Println("disconnected from cluster")
 	}()
 
 	lambda.Start(handler)
