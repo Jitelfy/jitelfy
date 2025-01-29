@@ -35,7 +35,7 @@ type PostUserPackage struct {
 
 func GetPosts(c echo.Context) error {
 
-	filter := bson.D{{"parentid", primitive.NilObjectID}}
+	filter := bson.D{{Key: "parentid", Value: primitive.NilObjectID}}
 	var cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
@@ -52,19 +52,12 @@ func GetPosts(c echo.Context) error {
 
 	for _, currpost := range result {
 		go func(post Post) {
-			filter = bson.D{{"_id", post.UserId}}
-			var result = UserColl.FindOne(context.TODO(), filter)
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			var result = UserColl.FindOne(context.TODO(), userfilter)
 			var user User
-			result.Decode(&user)
-			/*
-			if err = result.Decode(&user); err != nil {
-				if err == mongo.ErrNoDocuments {
-					return c.JSON(http.StatusBadRequest, "could not find user")
-				} else {
-					return c.JSON(http.StatusBadRequest, err.Error())
-				}
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
 			}
-			*/
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -73,7 +66,11 @@ func GetPosts(c echo.Context) error {
 	}
 
 	for idx := range result {
-		packagedresults[idx] = *<-ch
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
@@ -113,7 +110,7 @@ post = Post{
 	Time:   time.Now().Format(time.RFC3339),
 	Text:   post.Text,
 	Embed:  post.Embed,
-	Song:   post.Song,
+	Song:   song,
 }
 
 var bsonpost, err = bson.Marshal(post)
@@ -175,7 +172,7 @@ func GetComments(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
 	}
 
-	filter := bson.D{{"parentid", parentId}}
+	filter := bson.D{{Key: "parentid", Value: parentId}}
 	var cursor *mongo.Cursor
 	cursor, err = PostColl.Find(context.TODO(), filter)
 	if err != nil {
@@ -187,6 +184,34 @@ func GetComments(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
-	return c.JSON(http.StatusOK, result)
+	var packagedresults = make([]PostUserPackage, len(result))
+
+	var ch = make(chan *PostUserPackage)
+
+	for _, currpost := range result {
+		go func(post Post) {
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			var result = UserColl.FindOne(context.TODO(), userfilter)
+			var user User
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
+			}
+			ch <- &PostUserPackage{
+				Postjson: post,
+				Userjson: user,
+			}
+		}(currpost)
+	}
+
+	for idx := range result {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
+
 
 }
