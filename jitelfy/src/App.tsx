@@ -163,32 +163,6 @@ export let current_user: User;
 
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
-    /*
-  // Fake response data
-  const mockResponse = JSON.stringify([
-    {
-      Id: "1",
-      UserId: "SuperSingingSimon",
-      ParentId: "",
-      ChildIds: [],
-      LikeIds: ["like1", "like2"],
-      Time: "2025-01-22T14:30:00Z",
-      Text: "Please PLEASE listen to my song",
-      Embed: "https://open.spotify.com/embed/track/4Se3fXoHJkcraQzJXo2IYn",
-    },
-    {
-      Id: "3",
-      UserId: "KayZee3",
-      ParentId: "",
-      ChildIds: [],
-      LikeIds: [],
-      Time: "2025-01-21T19:45:00Z",
-      Text: "Hi guys i like to eat onion",
-      Embed: "https://open.spotify.com/embed/track/7BaxYnTazocAOK3istsW1z",
-    },
-  ]);
-  return mockResponse;
-  */
  const content = await fetch(`${BASE_URL}${path}`);
  return content.text();
 }
