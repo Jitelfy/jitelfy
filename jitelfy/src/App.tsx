@@ -135,7 +135,7 @@ const BASE_URL = "http://localhost:8080";
 
 interface Post {
   id: string;
-  userId: string;
+  userid: string;
   parentId: string;
   childIds: string[];
   likeIds: string[];
