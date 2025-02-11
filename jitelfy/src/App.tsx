@@ -182,6 +182,11 @@ const FeedPage = () => {
     // State to store fetched posts.
     const [posts, setPosts] = useState<PackagedPost[]>([]);
 
+    // State variables for new post text and song that goes in the feed
+    const [newPostText, setNewPostText] = useState("");
+    const [newPostSong, setNewPostSong] = useState("");
+
+
     // Fetch posts when the component mounts
     useEffect(() => {
         const fetchPosts = async () => {
