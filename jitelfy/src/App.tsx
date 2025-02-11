@@ -178,6 +178,7 @@ async function getUser(path: string): Promise<User> {
     const user: User = JSON.parse(await response);
     return user;
 }
+
 const FeedPage = () => {
     // State to store fetched posts.
     const [posts, setPosts] = useState<PackagedPost[]>([]);
@@ -186,8 +187,30 @@ const FeedPage = () => {
     const [newPostText, setNewPostText] = useState("");
     const [newPostSong, setNewPostSong] = useState("");
 
+    const handleSubmitPost = async (e: React.FormEvent) => {
+      e.preventDefault();
+  
+      // Build the post data with keys expected from the backend
+      const postData = {
+          userid: "67957a921a129c6d1aeb8691", // Hardcoded jacks user id (must be lowercase)
+          text: newPostText,
+          song: newPostSong,
+      };
+  
+      // Send the POST request
+      await fetch(`${BASE_URL}/posts/top`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postData)
+      });
+  
+      // Refresh posts and clear the form fields
+      const fetchedPosts = await getPosts();
+      setPosts(fetchedPosts);
+      setNewPostText("");
+      setNewPostSong("");
+    };
 
-    // Fetch posts when the component mounts
     useEffect(() => {
         const fetchPosts = async () => {
             const fetchedPosts = await getPosts();
