@@ -31,6 +31,14 @@ type PostUserPackage struct {
 	Userjson User `json:"user"`
 }
 
+// CreatePostRequest is used to bind the incoming JSON when creating a post
+type CreatePostRequest struct {
+    Userid string `json:"userid"` // will be a hex string from the frontend
+    Text   string `json:"text"`
+    Embed  string `json:"embed"` 
+    Song   string `json:"song"`
+}
+
 /* I think this will be faster with many many posts but right now
 is a bit slower than consuming the iterator
 
@@ -129,53 +137,59 @@ func GetPosts(c echo.Context) error {
 
 
 func CreatePost(c echo.Context) error {
-	post := Post{}
+	var post CreatePostRequest
+
 	// error checking for valid json
 	if err := c.Bind(&post); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	if post.ParentId != primitive.NilObjectID {
+    if post.Song == "" {
+        return c.JSON(http.StatusBadRequest, "top level posts must have song")
+    }
+
+    if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
+        return c.JSON(http.StatusBadRequest, "invalid song link")
+    }
+
+    song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
+
+	// Convert the userid from string to a primitive.ObjectID.
+    userOID, err := primitive.ObjectIDFromHex(post.Userid)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid user id")
+    }
+	
+	// Build the final Post object
+    newPost := Post{
+        Id:       primitive.NewObjectID(),
+        UserId:   userOID,
+        ParentId: primitive.NilObjectID,
+        Time:     time.Now().Format(time.RFC3339),
+        Text:     post.Text,
+        Embed:    post.Embed,
+        Song:     song,
+    }
+
+    if newPost.ParentId != primitive.NilObjectID {
 		return c.JSON(http.StatusBadRequest, "post must be top level")
-	}
-
-	if post.ChildIds != nil {
+    	}
+    if newPost.ChildIds != nil {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
-	}
+    	}
 
-	if post.UserId == primitive.NilObjectID {
-		return c.JSON(http.StatusBadRequest, "post must have user associated")
-	}
-
-	if post.Song == "" {
-		return c.JSON(http.StatusBadRequest, "top level posts must have song")
-	}
-	var song = post.Song
-	if !strings.Contains(song, "https://open.spotify.com/track/") {
-		return c.JSON(http.StatusBadRequest, "invalid song link")
-	}
-	song = strings.Replace(song, "/track/", "/embed/track/", 1)
-
-	post = Post{
-		Id:     primitive.NewObjectID(),
-		UserId: post.UserId,
-		Time:   time.Now().Format(time.RFC3339),
-		Text:   post.Text,
-		Embed:  post.Embed,
-		Song:   song,
-	}
-
-	var bsonpost, err = bson.Marshal(post)
+	bsonPost, err := bson.Marshal(newPost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
 	}
-	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
+	_, err = PostColl.InsertOne(context.TODO(), bsonPost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
 	}
-
-	return c.JSON(http.StatusOK, post)
+	
+	return c.JSON(http.StatusOK, newPost)
 }
+
 
 func CreateComment(c echo.Context) error {
 	post := Post{}
