@@ -192,7 +192,7 @@ const FeedPage = () => {
   
       // Build the post data with keys expected from the backend
       const postData = {
-          userid: "67957a921a129c6d1aeb8691", // Hardcoded jacks user id (must be lowercase)
+          userid: "679579fdc5f8a584dd34c5e6", // Hardcoded MY user id (must be lowercase)
           text: newPostText,
           song: newPostSong,
       };
@@ -226,8 +226,37 @@ const FeedPage = () => {
         {Quicklinks(current_user)}
       {/* Feed - Main Content */}
         <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
+        
         <h1 className="text-white text-2xl sticky top-0 my-6 mx-10">Feed</h1>
+
       <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+
+      {/* Create Post Form */}
+        <div className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
+          <form onSubmit={handleSubmitPost} className="space-y-4">
+            {/* Replace adjustable textarea with a fixed input */}
+              <input
+                type="text"
+                value={newPostText}
+                onChange={(e) => setNewPostText(e.target.value)}
+                placeholder="What is up guys"
+                className="w-full p-3 bg-background-main text-text-main rounded-lg border border-background-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue"
+            />
+            <input
+                type="text"
+                value={newPostSong}
+                onChange={(e) => setNewPostSong(e.target.value)}
+                placeholder="put song link here "
+                className="w-full p-3 bg-background-main text-text-main rounded-lg border border-background-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue"
+            />
+            <button
+                type="submit"
+                className="bg-accent-blue-light text-text-main px-6 py-2 rounded-lg hover:bg-accent-blue transition-colors"
+            >
+                Post
+            </button>
+        </form>
+    </div>
         {posts.map((post) => (
             <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
             <div className="flex items-center">
