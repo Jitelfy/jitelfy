@@ -179,126 +179,134 @@ async function getUser(path: string): Promise<User> {
     return user;
 }
 
+
 const FeedPage = () => {
-    // State to store fetched posts.
-    const [posts, setPosts] = useState<PackagedPost[]>([]);
+  // State to store fetched posts.
+  const [posts, setPosts] = useState<PackagedPost[]>([]);
 
-    // State variables for new post text and song that goes in the feed
-    const [newPostText, setNewPostText] = useState("");
-    const [newPostSong, setNewPostSong] = useState("");
+  // State variables for new post text and song that goes in the feed
+  const [newPostText, setNewPostText] = useState("");
+  const [newPostSong, setNewPostSong] = useState("");
 
-    const handleSubmitPost = async (e: React.FormEvent) => {
-      e.preventDefault();
-  
-      // Build the post data with keys expected from the backend
-      const postData = {
-          userid: "679579fdc5f8a584dd34c5e6", // Hardcoded MY user id (must be lowercase)
-          text: newPostText,
-          song: newPostSong,
-      };
-  
-      // Send the POST request
-      await fetch(`${BASE_URL}/posts/top`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(postData)
-      });
-  
-      // Refresh posts and clear the form fields
-      const fetchedPosts = await getPosts();
-      setPosts(fetchedPosts);
-      setNewPostText("");
-      setNewPostSong("");
+  const handleSubmitPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Build the post data with keys expected from the backend
+    const postData = {
+      userid: "679579fdc5f8a584dd34c5e6", // Hardcoded MY user id (must be lowercase)
+      text: newPostText,
+      song: newPostSong,
     };
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            const fetchedPosts = await getPosts();
-            setPosts(fetchedPosts);
-        };
-        fetchPosts();
-    }, []);
+    // Send the POST request
+    await fetch(`${BASE_URL}/posts/top`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(postData),
+    });
 
-    return (
-        <div className="h-screen bg-background-main flex">
+    // Refresh posts and clear the form fields
+    const fetchedPosts = await getPosts();
+    setPosts(fetchedPosts);
+    setNewPostText("");
+    setNewPostSong("");
+  };
 
-        {/* Sidebar - Left */}
-        {Quicklinks(current_user)}
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const fetchedPosts = await getPosts();
+      setPosts(fetchedPosts);
+    };
+    fetchPosts();
+  }, []);
+
+  return (
+    <div className="h-screen bg-background-main flex">
+
+      {/* Sidebar - Left */}
+      {Quicklinks(current_user)}
+
       {/* Feed - Main Content */}
-        <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
-        
+      <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
         <h1 className="text-white text-2xl sticky top-0 my-6 mx-10">Feed</h1>
+        <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
-      <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
-
-      {/* Create Post Form */}
-        <div className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
-          <form onSubmit={handleSubmitPost} className="space-y-4">
-            {/* Replace adjustable textarea with a fixed input */}
+          {/* Create Post Form */}
+          <div className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
+            <form onSubmit={handleSubmitPost} className="space-y-4">
+              {}
               <input
                 type="text"
                 value={newPostText}
                 onChange={(e) => setNewPostText(e.target.value)}
                 placeholder="What is up guys"
                 className="w-full p-3 bg-background-main text-text-main rounded-lg border border-background-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue"
-            />
-            <input
+              />
+              <input
                 type="text"
                 value={newPostSong}
                 onChange={(e) => setNewPostSong(e.target.value)}
-                placeholder="put song link here "
+                placeholder="put song link here"
                 className="w-full p-3 bg-background-main text-text-main rounded-lg border border-background-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue"
-            />
-            <button
+              />
+              <button
                 type="submit"
                 className="bg-accent-blue-light text-text-main px-6 py-2 rounded-lg hover:bg-accent-blue transition-colors"
-            >
+              >
                 Post
-            </button>
-        </form>
-    </div>
-        {posts.map((post) => (
-            <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6 mx-10">
-            <div className="flex items-center">
-            <div>
-            <img
-            className="size-12 rounded-full mb-2 mr-3"
-            src={post.user.icon}
-            ></img>
-            </div>
-            <div>
-            {/* Display name, @username, timestamp posted */}
-            <p className="text-text-main font-bold">{post.user.displayname}</p>
-            <p className="text-text-secondary font-normal">@{post.user.username}</p>
-            <p className="text-text-secondary text-sm">
-            {new Date(post.post.time).toLocaleString()}
-            </p>
-            </div>
-            </div>
-            <p className="mt-2 text-text-main mb-2">{post.post.text}</p>
-            {post.post.embed && (
-                <div className="mt-2">
-                <img
-                src={post.post.embed}
-                className="w-full h-40 rounded-md"
-                ></img>
-                </div>
-            )}
-            {post.post.song && (
-              <div className="mt-2">
-                <iframe
-                  src={post.post.song}
-                  className="w-full h-20"
-                  title={`Song for ${post.post.id}`}
-                  allowFullScreen
-                ></iframe>
-              </div>
-            )}
+              </button>
+            </form>
           </div>
-        ))}
+          {posts.map((post) => (
+            <div
+              key={post.post.id}
+              className="bg-background-secondary p-4 rounded-lg mb-6 mx-10"
+            >
+              <div className="flex items-center">
+                <div>
+                  <img
+                    className="size-12 rounded-full mb-2 mr-3"
+                    src={post.user.icon}
+                    alt=""
+                  />
+                </div>
+                <div>
+                  {/* Display name, @username, timestamp posted */}
+                  <p className="text-text-main font-bold">
+                    {post.user.displayname}
+                  </p>
+                  <p className="text-text-secondary font-normal">
+                    @{post.user.username}
+                  </p>
+                  <p className="text-text-secondary text-sm">
+                    {new Date(post.post.time).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 text-text-main mb-2">{post.post.text}</p>
+              {post.post.embed && (
+                <div className="mt-2">
+                  <img
+                    src={post.post.embed}
+                    className="w-full h-40 rounded-md"
+                    alt=""
+                  />
+                </div>
+              )}
+              {post.post.song && (
+                <div className="mt-2">
+                  <iframe
+                    src={post.post.song}
+                    className="w-full h-20"
+                    title={`Song for ${post.post.id}`}
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      </div>
-
       {/* Sidebar - Right */}
       {FriendActivity()}
     </div>
