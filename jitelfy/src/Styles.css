@@ -23,13 +23,14 @@
     --background-tertiary: #424a5e;
 
     --text-main: #ffffff;
-    --text-secondary: #959595;
+    --text-secondary: #7e7e7e;
     --text-tertiary: #000000;
 
     --accent-green: #0f970f;
     --accent-green-light: #37c637;
     --accent-blue: #1845da;
     --accent-blue-light: #3354c8;
+    --accent-red: #ea1f33;
 }
 
 
