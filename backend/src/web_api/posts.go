@@ -31,6 +31,14 @@ type PostUserPackage struct {
 	Userjson User `json:"user"`
 }
 
+// CreatePostRequest is used to bind the incoming JSON when creating a post
+type CreatePostRequest struct {
+    Userid string `json:"userid"` // will be a hex string from the frontend
+    Text   string `json:"text"`
+    Embed  string `json:"embed"` 
+    Song   string `json:"song"`
+}
+
 /* I think this will be faster with many many posts but right now
 is a bit slower than consuming the iterator
 
