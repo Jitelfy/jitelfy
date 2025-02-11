@@ -3,8 +3,8 @@ package web_api
 import (
 	"context"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -278,4 +278,20 @@ func GetComments(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
+}
+
+func DeletePost(c echo.Context) error {
+	var Id, err = primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
+	}
+
+	filter := bson.D{{"_id", Id}}
+	var result *mongo.DeleteResult
+	result, err = PostColl.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not delete post")
+	}
+
+	return c.JSON(http.StatusOK, result)
 }

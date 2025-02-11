@@ -54,6 +54,8 @@ func main() {
 	router.GET("/users", web_api.GetUser)
 	router.POST("/users", web_api.MakeUser)
 
+	router.DELETE("/posts", web_api.DeletePost)
+
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
