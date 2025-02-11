@@ -280,7 +280,7 @@ func GetComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
-func deletePost(c echo.Context) error {
+func DeletePost(c echo.Context) error {
 	var Id, err = primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
