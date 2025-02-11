@@ -212,19 +212,6 @@ const FeedPage = () => {
     setNewPostSong("");
   };
 
-  const handleDeletePost = async (id: string) => {
-      // Send the DELETE request
-      await fetch(`${BASE_URL}/posts/?id=${id}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-      });
-
-      // Refresh posts and clear the form fields
-      const fetchedPosts = await getPosts();
-      setPosts(fetchedPosts);
-  };
-
   useEffect(() => {
     const fetchPosts = async () => {
       const fetchedPosts = await getPosts();
