@@ -160,7 +160,7 @@ func CreatePost(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, "invalid user id")
     }
 	
-	// Build the final Post object.
+	// Build the final Post object
     newPost := Post{
         Id:       primitive.NewObjectID(),
         UserId:   userOID,
