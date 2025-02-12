@@ -119,6 +119,12 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, "incorrect password")
 	}
+	result.Token, err = createToken(result.Username, result.User)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create token")
+	}
+	// buddy im doing this to not send back the password btw
+	result.Password = ""
 
 	return c.JSON(http.StatusOK, result)
 }
