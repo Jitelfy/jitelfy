@@ -2,10 +2,12 @@ package signup_api
 
 import (
 	"context"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
 	"net/http"
 )
 
@@ -46,4 +48,13 @@ func MakeAccount(c echo.Context) error {
 	}
 	_, err = AccColl.InsertOne(context.Background(), bsonAcc)
 	return c.JSON(http.StatusCreated, account)
+}
+
+func LoginAccount(c echo.Context) error {
+	account := Account{}
+	if err := c.Bind(&account); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid request")
+	}
+
+	token := jwt.New(jwt.SigningMethodHS256)
 }
