@@ -269,8 +269,15 @@ const FeedPage = () => {
           {posts.map((post) => (
             <div
               key={post.post.id}
-              className="bg-background-secondary p-4 rounded-lg mb-6 mx-10"
+              className="bg-background-secondary p-4 rounded-lg mb-6 mx-10 relative"
             >
+              {/* Delete button for testing */}
+              <button
+                onClick={() => handleDeletePost(post.post.id)}
+                className="absolute top-2 right-2 text-text-secondary hover:text-red-500"
+              >
+                X
+              </button>
               <div className="flex items-center">
                 <div>
                   <img
@@ -316,6 +323,8 @@ const FeedPage = () => {
           ))}
         </div>
       </div>
+
+
       {/* Sidebar - Right */}
       {FriendActivity()}
     </div>
