@@ -54,7 +54,7 @@ func main() {
 	router.GET("/users", web_api.GetUser)
 	router.POST("/users", web_api.MakeUser)
 
-	router.DELETE("/posts", web_api.DeletePost)
+	router.DELETE("/posts/:id", web_api.DeletePost)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
