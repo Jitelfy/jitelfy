@@ -212,6 +212,15 @@ const FeedPage = () => {
     setNewPostSong("");
   };
 
+  const handleDeletePost = async (id: string) => {
+    await fetch(`${BASE_URL}/posts/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+    const fetchedPosts = await getPosts();
+    setPosts(fetchedPosts);
+  };
+
   useEffect(() => {
     const fetchPosts = async () => {
       const fetchedPosts = await getPosts();
