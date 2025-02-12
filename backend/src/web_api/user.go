@@ -3,6 +3,7 @@ package web_api
 import (
 	"context"
 	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -127,4 +128,10 @@ func Login(c echo.Context) error {
 	result.Password = ""
 
 	return c.JSON(http.StatusOK, result)
+}
+
+func UserIdFromToken(c echo.Context) string {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	return claims["id"].(string)
 }
