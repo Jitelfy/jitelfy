@@ -25,6 +25,7 @@ var AccColl *mongo.Collection
 
 type Account struct {
 	User     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Username string             `json:"username" bson:"username"`
 	Token    string             `json:"token" bson:"token"`
 	Password string             `json:"password" bson:"password"`
 }
@@ -86,6 +87,7 @@ func MakeUser(c echo.Context) error {
 
 	account := Account{
 		User:     user.Id,
+		Username: req.Username,
 		Password: encryptedPass,
 	}
 
@@ -95,4 +97,23 @@ func MakeUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+func Login(c echo.Context) error {
+	req := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+	filter := bson.D{{"username", req.Username}}
+	var result Account
+	err := AccColl.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "incorrect username man")
+
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
