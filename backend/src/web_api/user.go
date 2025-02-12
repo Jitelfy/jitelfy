@@ -114,6 +114,10 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "incorrect username man")
 
 	}
+	err = VerifyPassword(result.Password, req.Password)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, "incorrect password")
+	}
 
 	return c.JSON(http.StatusOK, result)
 }
