@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"server/signup_api"
 	"server/web_api"
 
 	"github.com/labstack/echo/v4"
@@ -43,6 +44,7 @@ func main() {
 
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
+	signup_api.AccColl = db.Collection("accounts")
 
 	router := echo.New()
 	router.Debug = true
