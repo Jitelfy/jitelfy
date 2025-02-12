@@ -1,4 +1,4 @@
-package signup_api
+package web_api
 
 import (
 	"golang.org/x/crypto/bcrypt"

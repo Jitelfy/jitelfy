@@ -13,12 +13,20 @@ import (
 var UserColl *mongo.Collection
 
 type User struct {
-	Id        primitive.ObjectID   `json:"id" bson:"_id"`
-	DisplayName string			   `json:"displayname" bson:"displayname"`
-	Username  string               `json:"username" bson:"username"`
-	Icon	  string  			   `json:"icon" bson:"icon"`
-	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
-	Following []primitive.ObjectID `json:"following" bson:"following"`
+	Id          primitive.ObjectID   `json:"id" bson:"_id"`
+	DisplayName string               `json:"displayname" bson:"displayname"`
+	Username    string               `json:"username" bson:"username"`
+	Icon        string               `json:"icon" bson:"icon"`
+	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
+	Following   []primitive.ObjectID `json:"following" bson:"following"`
+}
+
+var AccColl *mongo.Collection
+
+type Account struct {
+	User     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Token    string             `json:"token" bson:"token"`
+	Password string             `json:"password" bson:"password"`
 }
 
 func GetUser(c echo.Context) error {
@@ -43,30 +51,47 @@ func GetUser(c echo.Context) error {
 }
 
 func MakeUser(c echo.Context) error {
-	user := User{}
-	// error checking for valid json
-	if err := c.Bind(&user); err != nil {
+	req := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	if user.Username == "" {
-		return c.JSON(http.StatusBadRequest, "user missing username")
+	if req.Username == "" {
+		return c.JSON(http.StatusBadRequest, "username is required")
+	}
+	if req.Password == "" {
+		return c.JSON(http.StatusBadRequest, "password is required")
 	}
 
-	user = User{
+	user := User{
 		Id:        primitive.NewObjectID(),
-		Username:  user.Username,
-		Followers: user.Followers,
-		Following: user.Following,
+		Username:  req.Username,
+		Followers: []primitive.ObjectID{},
+		Following: []primitive.ObjectID{},
 	}
 
-	var bsonuser, err = bson.Marshal(user)
+	_, err := UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
-	_, err = UserColl.InsertOne(context.TODO(), bsonuser)
+
+	encryptedPass, err := HashPassword(req.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, "password hashing failed")
+	}
+
+	account := Account{
+		User:     user.Id,
+		Password: encryptedPass,
+	}
+
+	_, err = AccColl.InsertOne(context.TODO(), account)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create account")
 	}
 
 	return c.JSON(http.StatusOK, user)
