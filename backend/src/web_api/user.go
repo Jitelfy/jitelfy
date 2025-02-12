@@ -2,6 +2,7 @@ package web_api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,7 @@ func GetUser(c echo.Context) error {
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user")
 		} else {
 			return c.JSON(http.StatusBadRequest, err.Error())
