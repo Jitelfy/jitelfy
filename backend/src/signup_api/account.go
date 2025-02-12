@@ -28,16 +28,22 @@ func MakeAccount(c echo.Context) error {
 	if account.Password == "" {
 		return c.JSON(http.StatusBadRequest, "invalid request")
 	}
+
+	encryptedPass, err := HashPassword(account.Password)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "password hashing failed")
+	}
+
 	account = Account{
 		User:     account.User,
 		Token:    account.Token,
-		Password: account.Password,
+		Password: encryptedPass,
 	}
 
-	var bsonacc, err = bson.Marshal(account)
-	if err != nil {
+	var bsonAcc, err2 = bson.Marshal(account)
+	if err2 != nil {
 		return c.JSON(http.StatusInternalServerError, "bson marshaling error")
 	}
-	_, err = AccColl.InsertOne(context.Background(), bsonacc)
+	_, err = AccColl.InsertOne(context.Background(), bsonAcc)
 	return c.JSON(http.StatusCreated, account)
 }
