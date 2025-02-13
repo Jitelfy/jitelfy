@@ -213,7 +213,7 @@ const FeedPage = () => {
   };
 
   const handleDeletePost = async (id: string) => {
-    await fetch(`${BASE_URL}/posts/${id}`, {
+    await fetch(`${BASE_URL}/posts?id=${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
