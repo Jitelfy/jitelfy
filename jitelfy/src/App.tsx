@@ -226,17 +226,10 @@ const FeedPage = () => {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
-    const index = fetchedPosts.findIndex((post: PackagedPost) => {
-        if (post.post.id === id) {
-            return true;
-        }
-        return false;
-    });
-    if (index > -1) {
-        fetchedPosts.splice(index, 1);
-    }
-    /* abdullah please fix this */
-    setPosts(fetchedPosts);
+
+    // Remove the deleted post from state without refetching
+    setPosts((prevPosts) => prevPosts.filter((post) => 
+      post.post.id !== id));
   };
 
   useEffect(() => {
