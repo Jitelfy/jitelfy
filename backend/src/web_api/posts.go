@@ -266,7 +266,7 @@ func GetComments(c echo.Context) error {
 }
 
 func DeletePost(c echo.Context) error {
-	var Id, err = primitive.ObjectIDFromHex(c.Param("id"))
+	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
@@ -280,3 +280,17 @@ func DeletePost(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+/*
+func LikePost(c echo.Context) error {
+	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
+	}
+
+
+
+
+
+}
+*/
