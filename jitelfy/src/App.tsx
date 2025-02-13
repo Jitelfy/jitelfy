@@ -214,9 +214,7 @@ const FeedPage = () => {
 
     // Refresh posts and clear the form fields
     //setNewPostText("");
-    console.log(fetchedPosts);
     fetchedPosts.unshift({...newPost});
-    console.log(fetchedPosts);
     setPosts(fetchedPosts);
     setNewPostSong("");
 
@@ -228,7 +226,16 @@ const FeedPage = () => {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
-    const fetchedPosts = await getPosts();
+    const index = fetchedPosts.findIndex((post: PackagedPost) => {
+        if (post.post.id === id) {
+            return true;
+        }
+        return false;
+    });
+    if (index > -1) {
+        fetchedPosts.splice(index, 1);
+    }
+    /* abdullah please fix this */
     setPosts(fetchedPosts);
   };
 
@@ -236,7 +243,6 @@ const FeedPage = () => {
     const fetchPosts = async () => {
       fetchedPosts = (await getPosts());
       setPosts(fetchedPosts);
-      console.log(fetchedPosts);
     };
     fetchPosts();
   }, []);
