@@ -180,13 +180,16 @@ async function getUser(path: string): Promise<User> {
 }
 
 
+let fetchedPosts: Array<PackagedPost>;
+
 const FeedPage = () => {
   // State to store fetched posts.
-  const [posts, setPosts] = useState<PackagedPost[]>([]);
+  const [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
   // State variables for new post text and song that goes in the feed
   //const [newPostText, setNewPostText] = useState("");
   const [newPostSong, setNewPostSong] = useState("");
+
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,17 +201,25 @@ const FeedPage = () => {
       song: newPostSong,
     };
 
+
     // Send the POST request
-    await fetch(`${BASE_URL}/posts/top`, {
+    const newPostPost = await fetch(`${BASE_URL}/posts/top`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(postData),
     });
 
+    const newPost: PackagedPost = {
+        post: JSON.parse(await newPostPost.text()),
+        user: await getUser(postData.userid)
+    };
+
     // Refresh posts and clear the form fields
-    const fetchedPosts = await getPosts();
-    setPosts(fetchedPosts);
     //setNewPostText("");
+    console.log(fetchedPosts);
+    fetchedPosts.unshift({...newPost});
+    console.log(fetchedPosts);
+    setPosts(fetchedPosts);
     setNewPostSong("");
 
     (document.getElementById("posttext") as HTMLInputElement).value = "";
@@ -216,8 +227,9 @@ const FeedPage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const fetchedPosts = await getPosts();
+      fetchedPosts = (await getPosts());
       setPosts(fetchedPosts);
+      console.log(fetchedPosts);
     };
     fetchPosts();
   }, []);
@@ -237,8 +249,8 @@ const FeedPage = () => {
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
             {/* Post header */}
-            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-5">
-                <div className="flex flex-row mb-3">
+            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
+                <div className="flex flex-row mb-1">
                     <img
                         className="size-14 rounded-full mr-3"
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo_m-w-rVy38CwdkPiGEZEQ-8TE0_0dis2HA&s"

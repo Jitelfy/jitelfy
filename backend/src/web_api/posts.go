@@ -30,15 +30,6 @@ type PostUserPackage struct {
 	Postjson Post `json:"post"`
 	Userjson User `json:"user"`
 }
-
-// CreatePostRequest is used to bind the incoming JSON when creating a post
-type CreatePostRequest struct {
-    Userid string `json:"userid"` // will be a hex string from the frontend
-    Text   string `json:"text"`
-    Embed  string `json:"embed"` 
-    Song   string `json:"song"`
-}
-
 /* I think this will be faster with many many posts but right now
 is a bit slower than consuming the iterator
 
@@ -137,7 +128,7 @@ func GetPosts(c echo.Context) error {
 
 
 func CreatePost(c echo.Context) error {
-	var post CreatePostRequest
+	var post Post
 
 	// error checking for valid json
 	if err := c.Bind(&post); err != nil {
@@ -154,16 +145,10 @@ func CreatePost(c echo.Context) error {
 
     song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
-	// Convert the userid from string to a primitive.ObjectID.
-    userOID, err := primitive.ObjectIDFromHex(post.Userid)
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, "invalid user id")
-    }
-	
 	// Build the final Post object
     newPost := Post{
         Id:       primitive.NewObjectID(),
-        UserId:   userOID,
+        UserId:   post.UserId,
         ParentId: primitive.NilObjectID,
         Time:     time.Now().Format(time.RFC3339),
         Text:     post.Text,
