@@ -227,7 +227,7 @@ const FeedPage = () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    // Remove the deleted post from state without refetching
+    // Remove the deleted post from state without refetching/reloading
     setPosts((prevPosts) => prevPosts.filter((post) => 
       post.post.id !== id));
   };
