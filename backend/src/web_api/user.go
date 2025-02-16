@@ -21,15 +21,8 @@ type User struct {
 	Icon        string               `json:"icon" bson:"icon"`
 	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following   []primitive.ObjectID `json:"following" bson:"following"`
-}
-
-var AccColl *mongo.Collection
-
-type Account struct {
-	User     primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Username string             `json:"username" bson:"username"`
-	Token    string             `json:"token" bson:"token"`
-	Password string             `json:"password" bson:"password"`
+	Token       string               `json:"token" bson:"token"`
+	Password    string               `json:"password" bson:"password"`
 }
 
 func GetUser(c echo.Context) error {
@@ -70,32 +63,22 @@ func MakeUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "password is required")
 	}
 
-	user := User{
-		Id:        primitive.NewObjectID(),
-		Username:  req.Username,
-		Followers: []primitive.ObjectID{},
-		Following: []primitive.ObjectID{},
-	}
-
-	_, err := UserColl.InsertOne(context.TODO(), user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create user")
-	}
-
 	encryptedPass, err := HashPassword(req.Password)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "password hashing failed")
 	}
 
-	account := Account{
-		User:     user.Id,
-		Username: req.Username,
-		Password: encryptedPass,
+	user := User{
+		Id:        primitive.NewObjectID(),
+		Username:  req.Username,
+		Followers: []primitive.ObjectID{},
+		Following: []primitive.ObjectID{},
+		Password:  encryptedPass,
 	}
 
-	_, err = AccColl.InsertOne(context.TODO(), account)
+	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create account")
+		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -110,17 +93,16 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 	filter := bson.D{{"username", req.Username}}
-	var result Account
-	err := AccColl.FindOne(context.TODO(), filter).Decode(&result)
+	var result User
+	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "incorrect username man")
-
 	}
 	err = VerifyPassword(result.Password, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, "incorrect password")
 	}
-	result.Token, err = createToken(result.Username, result.User)
+	result.Token, err = createToken(result.Username, result.Id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create token")
 	}
