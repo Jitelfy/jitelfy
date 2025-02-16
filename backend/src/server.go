@@ -43,7 +43,6 @@ func main() {
 
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
-	web_api.AccColl = db.Collection("accounts")
 
 	router := echo.New()
 	router.Debug = true
