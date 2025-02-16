@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var secretKey = []byte("cd9af1596c8eaa983b2ebc00b57d62c4e8e1292c399aa8c678e79b2832661713")
+var SecretKey = []byte("cd9af1596c8eaa983b2ebc00b57d62c4e8e1292c399aa8c678e79b2832661713")
 
 func createToken(username string, id primitive.ObjectID) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -16,7 +16,7 @@ func createToken(username string, id primitive.ObjectID) (string, error) {
 		"exp":      time.Now().Add(time.Hour).Unix(),
 		"iat":      time.Now().Unix(),
 	})
-	token, err := claims.SignedString(secretKey)
+	token, err := claims.SignedString(SecretKey)
 	if err != nil {
 		return "signing error", err
 	}

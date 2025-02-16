@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"server/web_api"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.mongodb.org/mongo-driver/bson"
@@ -50,16 +51,24 @@ func main() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
-
 	router.GET("/users", web_api.GetUser)
-	router.POST("/users", web_api.MakeUser)
-
+	router.POST("/signup", web_api.MakeUser)
+	router.POST("/login", web_api.Login)
 	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
+	router.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(web_api.SecretKey),
+		Skipper: func(c echo.Context) bool {
+			if c.Path() == "/login" || c.Path() == "/signup" {
+				return true
+			}
+			return false
+		},
 	}))
 
 	router.Logger.Debug(router.Start("localhost:8080"))
