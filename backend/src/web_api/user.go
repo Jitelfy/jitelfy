@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
 )
 
 var UserColl *mongo.Collection
@@ -102,10 +101,12 @@ func Login(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, "incorrect password")
 	}
+	// generate token
 	result.Token, err = createToken(result.Username, result.Id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create token")
 	}
+
 	// buddy im doing this to not send back the password btw
 	result.Password = ""
 

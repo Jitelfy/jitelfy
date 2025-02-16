@@ -13,7 +13,7 @@ func createToken(username string, id primitive.ObjectID) (string, error) {
 		"username": username,
 		"id":       id,
 		"issuer":   "jitelfy",
-		"exp":      time.Now().Add(time.Hour).Unix(),
+		"exp":      time.Now().Add(time.Hour * 12).Unix(),
 		"iat":      time.Now().Unix(),
 	})
 	token, err := claims.SignedString(SecretKey)
