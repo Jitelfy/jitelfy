@@ -213,8 +213,10 @@ const FeedPage = () => {
     };
 
     // Refresh posts and clear the form fields
-    //setNewPostText("");
     fetchedPosts.unshift({...newPost});
+    fetchedPosts.sort(
+      (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+    );
     setPosts(fetchedPosts);
     setNewPostSong("");
 
@@ -234,7 +236,13 @@ const FeedPage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      fetchedPosts = (await getPosts());
+      const fetched = await getPosts();
+
+      // Sort posts by newest first
+      fetched.sort(
+        (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+      );
+      fetchedPosts = fetched;
       setPosts(fetchedPosts);
     };
     fetchPosts();
