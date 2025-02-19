@@ -2,23 +2,26 @@ package web_api
 
 import (
 	"context"
-	"net/http"
-
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
 )
 
 var UserColl *mongo.Collection
 
 type User struct {
-	Id        primitive.ObjectID   `json:"id" bson:"_id"`
-	DisplayName string			   `json:"displayname" bson:"displayname"`
-	Username  string               `json:"username" bson:"username"`
-	Icon	  string  			   `json:"icon" bson:"icon"`
-	Followers []primitive.ObjectID `json:"followers" bson:"followers"`
-	Following []primitive.ObjectID `json:"following" bson:"following"`
+	Id          primitive.ObjectID   `json:"id" bson:"_id"`
+	DisplayName string               `json:"displayname" bson:"displayname"`
+	Username    string               `json:"username" bson:"username"`
+	Icon        string               `json:"icon" bson:"icon"`
+	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
+	Following   []primitive.ObjectID `json:"following" bson:"following"`
+	Token       string               `json:"token" bson:"token"`
+	Password    string               `json:"password" bson:"password"`
 }
 
 func GetUser(c echo.Context) error {
@@ -32,7 +35,7 @@ func GetUser(c echo.Context) error {
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user")
 		} else {
 			return c.JSON(http.StatusBadRequest, err.Error())
@@ -43,31 +46,75 @@ func GetUser(c echo.Context) error {
 }
 
 func MakeUser(c echo.Context) error {
-	user := User{}
-	// error checking for valid json
-	if err := c.Bind(&user); err != nil {
+	req := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+
+	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	if user.Username == "" {
-		return c.JSON(http.StatusBadRequest, "user missing username")
+	if req.Username == "" {
+		return c.JSON(http.StatusBadRequest, "username is required")
+	}
+	if req.Password == "" {
+		return c.JSON(http.StatusBadRequest, "password is required")
 	}
 
-	user = User{
+	encryptedPass, err := HashPassword(req.Password)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "password hashing failed")
+	}
+
+	user := User{
 		Id:        primitive.NewObjectID(),
-		Username:  user.Username,
-		Followers: user.Followers,
-		Following: user.Following,
+		Username:  req.Username,
+		Followers: []primitive.ObjectID{},
+		Following: []primitive.ObjectID{},
+		Password:  encryptedPass,
 	}
 
-	var bsonuser, err = bson.Marshal(user)
+	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-	}
-	_, err = UserColl.InsertOne(context.TODO(), bsonuser)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
 
 	return c.JSON(http.StatusOK, user)
+}
+
+func Login(c echo.Context) error {
+	req := struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+	filter := bson.D{{"username", req.Username}}
+	var result User
+	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "incorrect username man")
+	}
+	err = VerifyPassword(result.Password, req.Password)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, "incorrect password")
+	}
+	// generate token
+	result.Token, err = createToken(result.Username, result.Id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create token")
+	}
+
+	// buddy im doing this to not send back the password btw
+	result.Password = ""
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func UserIdFromToken(c echo.Context) string {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	return claims["id"].(string)
 }
