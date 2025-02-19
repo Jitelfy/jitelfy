@@ -47,6 +47,7 @@ func GetUser(c echo.Context) error {
 
 func MakeUser(c echo.Context) error {
 	req := struct {
+		DisplayName string `json:"displayname"`
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}{}
@@ -69,6 +70,7 @@ func MakeUser(c echo.Context) error {
 
 	user := User{
 		Id:        primitive.NewObjectID(),
+		DisplayName: req.DisplayName,
 		Username:  req.Username,
 		Followers: []primitive.ObjectID{},
 		Following: []primitive.ObjectID{},
@@ -79,6 +81,8 @@ func MakeUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
+
+	user.Password = ""
 
 	return c.JSON(http.StatusOK, user)
 }
@@ -108,6 +112,7 @@ func Login(c echo.Context) error {
 	}
 
 	// buddy im doing this to not send back the password btw
+	// we know kevin you damn brick
 	result.Password = ""
 
 	return c.JSON(http.StatusOK, result)

@@ -64,7 +64,10 @@ func main() {
 	router.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(web_api.SecretKey),
 		Skipper: func(c echo.Context) bool {
-			if c.Path() == "/login" || c.Path() == "/signup" {
+			if c.Path() == "/signup" || c.Path() == "/login" {
+				return true
+			}
+			if c.Request().Method == "GET" && c.Path() != "/users" {
 				return true
 			}
 			return false

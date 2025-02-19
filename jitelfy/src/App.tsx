@@ -78,6 +78,27 @@ const SignUpPage = () => {
 };
 
 const LoginPage = () => {
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Build the post data with keys expected from the backend
+    const loginData = {
+        username: (document.getElementById("username") as HTMLInputElement).value,
+        password: (document.getElementById("password") as HTMLInputElement).value,
+    };
+
+    // Send the POST request
+    current_user = JSON.parse(await (await fetch(`${BASE_URL}/login`, {
+      method: "POST", // probably shouldn't be a post tbh
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(loginData),
+    })).text());
+
+    console.log(current_user);
+
+  };
+
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
       {/* Logo */}
@@ -87,6 +108,7 @@ const LoginPage = () => {
       <div className="bg-background-secondary p-8 rounded-lg shadow-lg w-96">
         {/* Username Input */}
         <input
+          id="username"
           type="text"
           placeholder="Username"
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent-blue"
@@ -94,17 +116,18 @@ const LoginPage = () => {
 
         {/* Password Input */}
         <input
+          id="password"
           type="password"
           placeholder="Password"
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent-blue"
         />
 
         {/* Login Button */}
-        <Link to="/feed"
+        <button onClick={handleLogin}
           className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light inline-block text-center"
         >
           Login
-        </Link>
+        </button>
 
         {/* Text for the Or */}
         <div className="flex items-center justify-center mb-4">
@@ -150,6 +173,7 @@ export interface User {
     icon: string;
     following: string[];
     followers: string[];
+    token: string;
 }
 
 interface PackagedPost {
@@ -161,7 +185,9 @@ export let current_user: User;
 
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
- const content = await fetch(`${BASE_URL}${path}`);
+ const content = await fetch(`${BASE_URL}${path}`, {
+      headers: { "Authentication": "Bearer" + current_user.token },
+ });
  return content.text();
 }
 
@@ -478,21 +504,6 @@ const ProfilePage = () => {
 };
 
 function App() {
-  const [user, setUserData] = useState<User>();
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const userData = await getUser("67957a921a129c6d1aeb8691");
-      setUserData(userData);
-    };
-
-    fetchUserData();
-  }, []);
-
-  if (user != null) {
-      current_user = user;
-  }
-
 
   return (
     <BrowserRouter>
