@@ -213,8 +213,10 @@ const FeedPage = () => {
     };
 
     // Refresh posts and clear the form fields
-    //setNewPostText("");
     fetchedPosts.unshift({...newPost});
+    fetchedPosts.sort(
+      (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+    );
     setPosts(fetchedPosts);
     setNewPostSong("");
 
