@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Quicklinks, FriendActivity } from './components/Sidebars.tsx'
 
 const SignUpPage = () => {
+  const navigate = useNavigate();
+
+  const handleSignUp = () => {
+    navigate("/feed");
+  };
+
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
       {/* Logo */}
@@ -49,6 +55,7 @@ const SignUpPage = () => {
 
       {/* Sign-Up Button */}
       <button
+        onClick={handleSignUp}
         className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue">
         <p>Create Account</p>
       </button>
@@ -78,14 +85,23 @@ const SignUpPage = () => {
 };
 
 const LoginPage = () => {
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const username = (document.getElementById("username") as HTMLInputElement).value;
+    const password = (document.getElementById("password") as HTMLInputElement).value;
+
+    if (!username || !password) {
+      alert("enter both username and password."); // TODO: replace this ugly ass alert 
+      return;
+    }
+
     // Build the post data with keys expected from the backend
     const loginData = {
-        username: (document.getElementById("username") as HTMLInputElement).value,
-        password: (document.getElementById("password") as HTMLInputElement).value,
+        username: username,
+        password: password,
     };
 
     // Send the POST request
@@ -96,7 +112,7 @@ const LoginPage = () => {
     })).text());
 
     console.log(current_user);
-
+    navigate("/feed");
   };
 
   return (
