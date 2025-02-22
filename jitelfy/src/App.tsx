@@ -197,8 +197,6 @@ interface PackagedPost {
     user: User;
 }
 
-export let current_user: User;
-
 // Simulate the API response
 async function getContent(path: string): Promise<string> {
  const content = await fetch(`${BASE_URL}${path}`, {
