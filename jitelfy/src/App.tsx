@@ -202,25 +202,25 @@ interface PackagedPost {
     user: User;
 }
 
-// Simulate the API response
-async function getContent(path: string): Promise<string> {
- const content = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Authentication": "Bearer" + current_user.token },
- });
- return content.text();
+async function getContent(path: string, token: string): Promise<string> {
+  const content = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Authorization": "Bearer " + token },
+  });
+  return content.text();
 }
 
-async function getPosts(): Promise<PackagedPost[]> {
-    const response = getContent("/posts/top");
-    const posts: PackagedPost[] = JSON.parse(await response);
-    return posts;
+async function getPosts(token: string): Promise<PackagedPost[]> {
+  const response = getContent("/posts/top", token);
+  const posts: PackagedPost[] = JSON.parse(await response);
+  return posts;
 }
 
-async function getUser(path: string): Promise<User> {
-    const response = getContent("/users?userid=" + path);
-    const user: User = JSON.parse(await response);
-    return user;
+async function getUser(path: string, token: string): Promise<User> {
+  const response = getContent("/users?userid=" + path, token);
+  const user: User = JSON.parse(await response);
+  return user;
 }
+
 
 
 let fetchedPosts: Array<PackagedPost>;
