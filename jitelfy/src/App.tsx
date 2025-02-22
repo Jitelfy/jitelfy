@@ -46,15 +46,6 @@ const SignUpPage = () => {
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-white bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
 
-      {/* Date of Birth */}
-      <div className="mb-4">
-      <label className="block text-text-secondary text-sm mb-2"><p>Date of Birth</p></label>
-        <input
-          type="date"
-          className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-        />
-      </div>
-
       {/* Sign-Up Button */}
       <button
         onClick={handleSignUp}
@@ -209,8 +200,6 @@ async function getUser(path: string, token: string): Promise<User> {
   const user: User = JSON.parse(await response);
   return user;
 }
-
-
 
 let fetchedPosts: Array<PackagedPost>;
 
