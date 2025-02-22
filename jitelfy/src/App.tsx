@@ -6,6 +6,11 @@ import { UserContext } from "./UserContext";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSignUp = () => {
     navigate("/feed");
