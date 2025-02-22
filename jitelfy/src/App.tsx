@@ -87,6 +87,8 @@ const SignUpPage = () => {
 };
 
 const LoginPage = () => {
+  
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -107,15 +109,16 @@ const LoginPage = () => {
     };
 
     // Send the POST request
-    current_user = JSON.parse(await (await fetch(`${BASE_URL}/login`, {
-      method: "POST", // probably shouldn't be a post tbh
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(loginData),
-    })).text());
-
-    console.log(current_user);
+    });
+    const loggedInUser: User = JSON.parse(await response.text());
+    setUser(loggedInUser);
+    console.log(loggedInUser);
     navigate("/feed");
-  };
+    
 
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
