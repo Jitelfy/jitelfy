@@ -12,8 +12,39 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSignUp = () => {
-    navigate("/feed");
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    // Basic validation
+    if (!displayName || !username || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+  
+    // signup data
+    const signUpData = {
+      displayname: displayName,
+      username: username,
+      password: password,
+    };
+  
+    // Send the POST request
+    const response = await fetch(`${BASE_URL}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(signUpData),
+    });
+  
+    if (!response.ok) {
+      const message = await response.text();
+      setError("Signup failed: " + message);
+      return;
+    }
+    navigate("/login");
   };
 
   return (
