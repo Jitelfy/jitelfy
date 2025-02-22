@@ -51,64 +51,73 @@ const SignUpPage = () => {
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
       {/* Logo */}
       <h1 className="text-4xl text-text-main mb-6">Jitelfy</h1>
-
-      {/* Sign Up Form */}
-      <div className="bg-background-secondary p-8 rounded-lg shadow-lg w-96">
-        {/* Email Input */}
+      
+      {/* Signup Form */}
+      <form 
+        onSubmit={handleSignUp} 
+        className="bg-background-secondary p-8 rounded-lg shadow-lg w-96"
+      >
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        
+        {/* Display Name Input */}
         <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 mb-4 border border-s-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-
+          type="text"
+          placeholder="Display Name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+        
         {/* Username Input */}
         <input
-            type="text"
-            placeholder="Username"
-            className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+        />
         
         {/* Password Input */}
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
-
+        
         {/* Confirm Password Input */}
         <input
           type="password"
           placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-white bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
 
-      {/* Sign-Up Button */}
-      <button
-        onClick={handleSignUp}
-        className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue">
-        <p>Create Account</p>
-      </button>
-
-      {/* Text for the Or */}
-      <div className="flex items-center justify-center mb-4">
-        <hr className="w-1/3" />
-        <span className="mx-2 text-text-secondary"><p>or</p></span>
-        <hr className="w-1/3" />
-      </div>
-
-      {/* Sign Up with Spotify Button */}
-      <button className="w-full p-3 mb-4 bg-accent-green-light text-text-main rounded-lg hover:bg-accent-green">
-        <p>Sign Up with Spotify</p>
-      </button>
-
+        {/* Sign-Up Button */}
+        <button
+          type="submit"
+          className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue"
+        >
+          <p>Create Account</p>
+        </button>
+        
+        {/* Divider */}
+        <div className="flex items-center justify-center mb-4">
+          <hr className="w-1/3" />
+          <span className="mx-2 text-text-secondary">or</span>
+          <hr className="w-1/3" />
+        </div>
+        
         {/* Sign Up Link */}
         <p className="text-center text-sm text-text-secondary">
-          <p>Already have an account?{" "}</p>
+          Already have an account?{" "}
           <Link to="/login" className="text-accent-blue hover:underline">
-            <p>Log In</p>
+            Log In
           </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
 };
