@@ -59,7 +59,7 @@ func main() {
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(web_api.SecretKey),
