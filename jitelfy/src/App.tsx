@@ -1,117 +1,151 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Quicklinks, FriendActivity } from './components/Sidebars.tsx'
+import { useContext } from "react";
+import { UserContext } from "./UserContext";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSignUp = () => {
-    navigate("/feed");
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    // Basic validation
+    if (!displayName || !username || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+  
+    // signup data
+    const signUpData = {
+      displayname: displayName,
+      username: username,
+      password: password,
+    };
+  
+    // Send the POST request
+    const response = await fetch(`${BASE_URL}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(signUpData),
+    });
+  
+    if (!response.ok) {
+      const message = await response.text();
+      setError("Signup failed: " + message);
+      return;
+    }
+    navigate("/login");
   };
 
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
       {/* Logo */}
       <h1 className="text-4xl text-text-main mb-6">Jitelfy</h1>
-
-      {/* Sign Up Form */}
-      <div className="bg-background-secondary p-8 rounded-lg shadow-lg w-96">
-        {/* Email Input */}
+      
+      {/* Signup Form */}
+      <form 
+        onSubmit={handleSignUp} 
+        className="bg-background-secondary p-8 rounded-lg shadow-lg w-96"
+      >
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        
+        {/* Display Name Input */}
         <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 mb-4 border border-s-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-
+          type="text"
+          placeholder="Display Name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+        
         {/* Username Input */}
         <input
-            type="text"
-            placeholder="Username"
-            className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+        />
         
         {/* Password Input */}
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
-
+        
         {/* Confirm Password Input */}
         <input
           type="password"
           placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-white bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
 
-      {/* Date of Birth */}
-      <div className="mb-4">
-      <label className="block text-text-secondary text-sm mb-2"><p>Date of Birth</p></label>
-        <input
-          type="date"
-          className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
-        />
-      </div>
-
-      {/* Sign-Up Button */}
-      <button
-        onClick={handleSignUp}
-        className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue">
-        <p>Create Account</p>
-      </button>
-
-      {/* Text for the Or */}
-      <div className="flex items-center justify-center mb-4">
-        <hr className="w-1/3" />
-        <span className="mx-2 text-text-secondary"><p>or</p></span>
-        <hr className="w-1/3" />
-      </div>
-
-      {/* Sign Up with Spotify Button */}
-      <button className="w-full p-3 mb-4 bg-accent-green-light text-text-main rounded-lg hover:bg-accent-green">
-        <p>Sign Up with Spotify</p>
-      </button>
-
+        {/* Sign-Up Button */}
+        <button
+          type="submit"
+          className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue"
+        >
+          <p>Create Account</p>
+        </button>
+        
+        {/* Divider */}
+        <div className="flex items-center justify-center mb-4">
+          <hr className="w-1/3" />
+          <span className="mx-2 text-text-secondary">or</span>
+          <hr className="w-1/3" />
+        </div>
+        
         {/* Sign Up Link */}
         <p className="text-center text-sm text-text-secondary">
-          <p>Already have an account?{" "}</p>
+          Already have an account?{" "}
           <Link to="/login" className="text-accent-blue hover:underline">
-            <p>Log In</p>
+            Log In
           </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
 };
 
 const LoginPage = () => {
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const username = (document.getElementById("username") as HTMLInputElement).value;
     const password = (document.getElementById("password") as HTMLInputElement).value;
 
     if (!username || !password) {
-      alert("enter both username and password."); // TODO: replace this ugly ass alert 
+      alert("enter both username and password.");
       return;
     }
 
-    // Build the post data with keys expected from the backend
-    const loginData = {
-        username: username,
-        password: password,
-    };
+    const loginData = { username, password };
 
-    // Send the POST request
-    current_user = JSON.parse(await (await fetch(`${BASE_URL}/login`, {
-      method: "POST", // probably shouldn't be a post tbh
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(loginData),
-    })).text());
-
-    console.log(current_user);
+    });
+    const loggedInUser: User = JSON.parse(await response.text());
+    setUser(loggedInUser);
+    console.log(loggedInUser);
     navigate("/feed");
   };
 
@@ -139,29 +173,25 @@ const LoginPage = () => {
         />
 
         {/* Login Button */}
-        <button onClick={handleLogin}
+        <button 
+          onClick={handleLogin}
           className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light inline-block text-center"
         >
           Login
         </button>
 
-        {/* Text for the Or */}
+        {/* Divider */}
         <div className="flex items-center justify-center mb-4">
           <hr className="w-1/3" />
-          <span className="mx-2 text-text-secondary"><p>or</p></span>
+          <span className="mx-2 text-text-secondary">or</span>
           <hr className="w-1/3" />
         </div>
 
-        {/* Login with Spotify Button */}
-        <button className="w-full p-3 mb-4 bg-accent-green-light text-white rounded-lg hover:bg-accent-green">
-          <p>Login with Spotify</p>
-        </button>
-
         {/* Sign Up Link */}
         <p className="text-center text-sm text-text-secondary">
-          <p>Don't have an account?{" "}</p>
+          Don't have an account?{" "}
           <Link to="/signup" className="text-accent-blue hover:underline">
-            <p>Sign Up</p>
+            Sign Up
           </Link>
         </p>
       </div>
@@ -197,32 +227,29 @@ interface PackagedPost {
     user: User;
 }
 
-export let current_user: User;
-
-// Simulate the API response
-async function getContent(path: string): Promise<string> {
- const content = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Authentication": "Bearer" + current_user.token },
- });
- return content.text();
+async function getContent(path: string, token: string): Promise<string> {
+  const content = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Authorization": "Bearer " + token },
+  });
+  return content.text();
 }
 
-async function getPosts(): Promise<PackagedPost[]> {
-    const response = getContent("/posts/top");
-    const posts: PackagedPost[] = JSON.parse(await response);
-    return posts;
+async function getPosts(token: string): Promise<PackagedPost[]> {
+  const response = getContent("/posts/top", token);
+  const posts: PackagedPost[] = JSON.parse(await response);
+  return posts;
 }
 
-async function getUser(path: string): Promise<User> {
-    const response = getContent("/users?userid=" + path);
-    const user: User = JSON.parse(await response);
-    return user;
+async function getUser(path: string, token: string): Promise<User> {
+  const response = getContent("/users?userid=" + path, token);
+  const user: User = JSON.parse(await response);
+  return user;
 }
-
 
 let fetchedPosts: Array<PackagedPost>;
 
 const FeedPage = () => {
+  const { user } = useContext(UserContext);
   // State to store fetched posts.
   const [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
@@ -233,54 +260,61 @@ const FeedPage = () => {
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Build the post data with keys expected from the backend
+    if (!user) return; // ensure user exists
+  
     const postData = {
-      userid: "679579fdc5f8a584dd34c5e6", // Hardcoded MY user id (must be lowercase)
+      userid: user.id, // use the logged-in user's ID
       text: (document.getElementById('posttext') as HTMLInputElement).value,
       song: newPostSong,
     };
-
-
-    // Send the POST request
+  
+    // Include the token in the Authorization header
     const newPostPost = await fetch(`${BASE_URL}/posts/top`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + user.token  // adding the token here
+      },
       body: JSON.stringify(postData),
     });
-
+  
     const newPost: PackagedPost = {
-        post: JSON.parse(await newPostPost.text()),
-        user: await getUser(postData.userid)
+      post: JSON.parse(await newPostPost.text()),
+      user: await getUser(postData.userid, user.token)
     };
-
-    // Refresh posts and clear the form fields
-    fetchedPosts.unshift({...newPost});
+  
+    fetchedPosts.unshift({ ...newPost });
     fetchedPosts.sort(
       (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
     );
     setPosts(fetchedPosts);
     setNewPostSong("");
-
     (document.getElementById("posttext") as HTMLInputElement).value = "";
   };
 
   const handleDeletePost = async (id: string) => {
-    await fetch(`${BASE_URL}/posts?id=${id}`, {
+    if (!user) return; // ensure user exists
+    const response = await fetch(`${BASE_URL}/posts?id=${id}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + user.token
+      },
     });
-
+    
+    if (!response.ok) {
+      console.error("Failed to delete post", await response.text());
+      return;
+    }
+    
     // Remove the deleted post from state without refetching/reloading
-    setPosts((prevPosts) => prevPosts.filter((post) => 
-      post.post.id !== id));
+    setPosts((prevPosts) => prevPosts.filter((post) => post.post.id !== id));
   };
 
   useEffect(() => {
+    if (!user) return; // Wait until user is available
     const fetchPosts = async () => {
-      const fetched = await getPosts();
-
-      // Sort posts by newest first
+      const fetched = await getPosts(user.token);
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
@@ -288,13 +322,13 @@ const FeedPage = () => {
       setPosts(fetchedPosts);
     };
     fetchPosts();
-  }, []);
+  }, [user]);
 
     // @ts-ignore
     return (
     <div className="h-screen bg-background-main flex">
       {/* Sidebar - Left */}
-      {Quicklinks(current_user)}
+      {user && Quicklinks(user)}
 
       {/* Feed - Main Content */}
       <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
@@ -477,11 +511,12 @@ const FeedPage = () => {
 };
 
 const ProfilePage = () => {
-  if (current_user == null) {
+  const { user } = useContext(UserContext);
+  if (user == null) {
       return (
           <div className="h-screen bg-background-main flex">
           {/* Sidebar - Left */}
-          {Quicklinks(current_user)}
+          {Quicklinks(user!)}
           <div className="flex-1 bg-background-main p-6 overflow-auto">
           <div className="relative w-full">
           </div>
@@ -495,7 +530,7 @@ const ProfilePage = () => {
   return (
     <div className="h-screen bg-background-main flex">
     {/* Sidebar - Left */}
-    {Quicklinks(current_user)}
+    {Quicklinks(user)}
 
       {/* Main Content - Middle */}
       <div className="flex-1 bg-background-main p-6 overflow-auto">
@@ -504,11 +539,11 @@ const ProfilePage = () => {
             <div className="w-full h-48 bg-green-500 flex items-center justify-center">
               <h1 className="text-4xl text-text-main">WE'RE COOKED</h1>
             </div>
-            <img src={current_user?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
+            <img src={user?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
           </div>
           <div className="text-center mt-16">
-            <h2 className="text-2xl text-text-main">{current_user?.displayname || 'user cannot be loaded'}</h2>
-            <p className="text-text-secondary">@{current_user?.username || 'username'}</p>
+            <h2 className="text-2xl text-text-main">{user?.displayname || 'user cannot be loaded'}</h2>
+            <p className="text-text-secondary">@{user?.username || 'username'}</p>
           </div>
         </div>
       </div>
