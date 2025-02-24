@@ -127,25 +127,14 @@ func Login(c echo.Context) error {
 func RestoreUserFromCookie(c echo.Context) error {
 
 	var userid primitive.ObjectID
-	var cookie, err = c.Cookie("Authorization")
+	var idString, err = UserIdFromCookie(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to grab cookie")
+		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
 	}
 
-	var tokenString = cookie.Value
-	var token *jwt.Token
-	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return SecretKey, nil
-	})
-
+	userid, err = primitive.ObjectIDFromHex(idString)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to parse token")
-
-	}
-	
-	userid, err = primitive.ObjectIDFromHex(token.Claims.(jwt.MapClaims)["id"].(string))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
+		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
 	}
 
 	filter := bson.D{{"_id", userid}}
@@ -161,6 +150,24 @@ func RestoreUserFromCookie(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, user)
 
+}
+
+func UserIdFromCookie(c echo.Context) (string, error) {
+	var cookie, err = c.Cookie("Authorization")
+	if err != nil {
+		return "", errors.New("failed to get token from cookie")
+	}
+
+	var tokenString = cookie.Value
+	var token *jwt.Token
+	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return SecretKey, nil
+	})
+
+	if err != nil {
+		return "", errors.New("failed to get parse token")
+	}
+	return token.Claims.(jwt.MapClaims)["id"].(string), nil
 }
 
 func UserIdFromToken(c echo.Context) string {
