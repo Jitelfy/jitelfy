@@ -143,11 +143,10 @@ const LoginPage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(loginData),
-    credentials: "include",
+      credentials: "include",
     });
     const loggedInUser: User = JSON.parse(await response.text());
     setUser(loggedInUser);
-    console.log(loggedInUser);
     navigate("/feed");
   };
 
@@ -257,7 +256,7 @@ async function RestoreUser(): Promise<User> {
 let fetchedPosts: Array<PackagedPost>;
 
 const FeedPage = () => {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   // State to store fetched posts.
   const [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
@@ -322,6 +321,9 @@ const FeedPage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
+        if (user === null) {
+            setUser(await RestoreUser());
+        }
       const fetched = await getPosts();
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
