@@ -127,7 +127,23 @@ func Login(c echo.Context) error {
 func RestoreUserFromCookie(c echo.Context) error {
 
 	var userid primitive.ObjectID
-	userid, err := primitive.ObjectIDFromHex(UserIdFromToken(c))
+	var cookie, err = c.Cookie("Authorization")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to grab cookie")
+	}
+
+	var tokenString = cookie.Value
+	var token *jwt.Token
+	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return SecretKey, nil
+	})
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to parse token")
+
+	}
+	
+	userid, err = primitive.ObjectIDFromHex(token.Claims.(jwt.MapClaims)["id"].(string))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
 	}
