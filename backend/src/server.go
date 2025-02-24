@@ -52,6 +52,7 @@ func main() {
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
 	router.GET("/users", web_api.GetUser)
+	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 	router.POST("/signup", web_api.MakeUser)
 	router.POST("/login", web_api.Login)
 	router.DELETE("/posts", web_api.DeletePost)
@@ -60,9 +61,11 @@ func main() {
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173"}, // placeholder for local vite
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
+		AllowCredentials: true,
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey: []byte(web_api.SecretKey),
+		TokenLookup: "cookie:Authorization",
 		Skipper: func(c echo.Context) bool {
 			if c.Path() == "/signup" || c.Path() == "/login" {
 				return true
