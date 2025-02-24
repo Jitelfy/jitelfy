@@ -37,6 +37,7 @@ const SignUpPage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(signUpData),
+    credentials: "include",
     });
   
     if (!response.ok) {
@@ -142,6 +143,7 @@ const LoginPage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(loginData),
+    credentials: "include",
     });
     const loggedInUser: User = JSON.parse(await response.text());
     setUser(loggedInUser);
@@ -227,21 +229,27 @@ interface PackagedPost {
     user: User;
 }
 
-async function getContent(path: string, token: string): Promise<string> {
+async function getContent(path: string): Promise<string> {
   const content = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Authorization": "Bearer " + token },
+    credentials: "include",
   });
   return content.text();
 }
 
-async function getPosts(token: string): Promise<PackagedPost[]> {
-  const response = getContent("/posts/top", token);
+async function getPosts(): Promise<PackagedPost[]> {
+  const response = getContent("/posts/top");
   const posts: PackagedPost[] = JSON.parse(await response);
   return posts;
 }
 
-async function getUser(path: string, token: string): Promise<User> {
-  const response = getContent("/users?userid=" + path, token);
+async function getUser(path: string): Promise<User> {
+  const response = getContent("/users?userid=" + path);
+  const user: User = JSON.parse(await response);
+  return user;
+}
+
+async function RestoreUser(): Promise<User> {
+  const response = getContent("/users/restore");
   const user: User = JSON.parse(await response);
   return user;
 }
@@ -276,11 +284,12 @@ const FeedPage = () => {
         "Authorization": "Bearer " + user.token  // adding the token here
       },
       body: JSON.stringify(postData),
+    credentials: "include",
     });
   
     const newPost: PackagedPost = {
       post: JSON.parse(await newPostPost.text()),
-      user: await getUser(postData.userid, user.token)
+      user: user,
     };
   
     fetchedPosts.unshift({ ...newPost });
@@ -298,8 +307,8 @@ const FeedPage = () => {
       method: "DELETE",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + user.token
       },
+    credentials: "include",
     });
     
     if (!response.ok) {
@@ -312,9 +321,8 @@ const FeedPage = () => {
   };
 
   useEffect(() => {
-    if (!user) return; // Wait until user is available
     const fetchPosts = async () => {
-      const fetched = await getPosts(user.token);
+      const fetched = await getPosts();
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );

@@ -129,9 +129,10 @@ func GetPosts(c echo.Context) error {
 
 func CreatePost(c echo.Context) error {
 	var post Post
+	var err error
 
 	// error checking for valid json
-	if err := c.Bind(&post); err != nil {
+	if err = c.Bind(&post); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
@@ -143,12 +144,18 @@ func CreatePost(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, "invalid song link")
     }
 
+	var userId primitive.ObjectID
+
+	if userId, err = primitive.ObjectIDFromHex(UserIdFromToken(c)); err != nil {
+        return c.JSON(http.StatusBadRequest, "missing user token")
+	}
+
     song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
 	// Build the final Post object
     newPost := Post{
         Id:       primitive.NewObjectID(),
-        UserId:   post.UserId,
+        UserId:   userId,
         ParentId: primitive.NilObjectID,
         Time:     time.Now().Format(time.RFC3339),
         Text:     post.Text,

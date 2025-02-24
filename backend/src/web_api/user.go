@@ -2,6 +2,7 @@ package web_api
 
 import (
 	"context"
+	"time"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -111,11 +112,39 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "failed to create token")
 	}
 
-	// buddy im doing this to not send back the password btw
-	// we know kevin you damn brick
 	result.Password = ""
+	c.SetCookie(&http.Cookie{
+		Name: "Authorization",
+		Value: result.Token,
+		Expires: time.Now().Add(time.Hour * 72),
+		Path: "/",
+		HttpOnly: true,
+	})
 
 	return c.JSON(http.StatusOK, result)
+}
+
+func RestoreUserFromCookie(c echo.Context) error {
+
+	var userid primitive.ObjectID
+	userid, err := primitive.ObjectIDFromHex(UserIdFromToken(c))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
+	}
+
+	filter := bson.D{{"_id", userid}}
+	var result = UserColl.FindOne(context.TODO(), filter)
+	var user User
+	if err = result.Decode(&user); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusBadRequest, "could not find user")
+		} else {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusOK, user)
+
 }
 
 func UserIdFromToken(c echo.Context) string {
