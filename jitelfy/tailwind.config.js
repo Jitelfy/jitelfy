@@ -22,6 +22,7 @@ export default {
         "accent-green-light": "var(--accent-green-light)",
         "accent-blue": "var(--accent-blue)",
         "accent-blue-light": "var(--accent-blue-light)",
+        "accent-red": "var(--accent-red)",
       }
     },
   },

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"server/web_api"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/aws/aws-lambda-go/events"
@@ -52,13 +53,29 @@ func init() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
-
 	router.GET("/users", web_api.GetUser)
-	router.POST("/users", web_api.MakeUser)
+	router.GET("/users/restore", web_api.RestoreUserFromCookie)
+	router.POST("/signup", web_api.MakeUser)
+	router.POST("/login", web_api.Login)
+	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173"},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowOrigins: []string{"http://localhost:5173", "https://d3oiamcw3gvayn.cloudfront.net"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
+		AllowCredentials: true,
+	}))
+	router.Use(echojwt.WithConfig(echojwt.Config{
+		SigningKey: []byte(web_api.SecretKey),
+		TokenLookup: "cookie:Authorization",
+		Skipper: func(c echo.Context) bool {
+			if c.Path() == "/signup" || c.Path() == "/login" {
+				return true
+			}
+			if c.Request().Method == "GET" && c.Path() != "/users" {
+				return true
+			}
+			return false
+		},
 	}))
 
 	echoLambda = echoadapter.NewV2(router)
