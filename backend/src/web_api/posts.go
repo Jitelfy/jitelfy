@@ -107,6 +107,7 @@ func GetPosts(c echo.Context) error {
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
+			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -254,6 +255,7 @@ func GetComments(c echo.Context) error {
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
+			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
