@@ -243,11 +243,13 @@ async function getPosts(): Promise<PackagedPost[]> {
   return posts;
 }
 
+/*
 async function getUser(path: string): Promise<User> {
   const response = getContent("/users?userid=" + path);
   const user: User = JSON.parse(await response);
   return user;
 }
+*/
 
 async function RestoreUser(): Promise<User> {
   const response = getContent("/users/restore");
@@ -358,7 +360,7 @@ const FeedPage = () => {
                         alt="profile image"
                     />
                     <div className="flex flex-col w-full items-center justify-end gap-3 fill-white">
-                        <textarea id="posttext" rows="3" className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue" placeholder="What's on your mind?">
+                        <textarea id="posttext" className="rows=3 resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue" placeholder="What's on your mind?">
                         </textarea>
                         <input
                             type="url"

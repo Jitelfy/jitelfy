@@ -60,7 +60,7 @@ func init() {
 	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:5173", "https://d3oiamcw3gvayn.cloudfront.net"},
+		AllowOrigins: []string{"https://d3oiamcw3gvayn.cloudfront.net"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
 		AllowCredentials: true,
 	}))

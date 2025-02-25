@@ -1,6 +1,7 @@
 package web_api
 
 import (
+	"fmt"
 	"context"
 	"time"
 	"errors"
@@ -93,33 +94,42 @@ func Login(c echo.Context) error {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}{}
+	fmt.Println("0")
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
+	fmt.Println("1")
 	filter := bson.D{{"username", req.Username}}
 	var result User
 	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "incorrect username man")
 	}
+	fmt.Println("2")
 	err = VerifyPassword(result.Password, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, "incorrect password")
 	}
+	fmt.Println("3")
 	// generate token
 	result.Token, err = createToken(result.Username, result.Id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create token")
 	}
 
+	fmt.Println("4")
 	result.Password = ""
 	c.SetCookie(&http.Cookie{
 		Name: "Authorization",
 		Value: result.Token,
 		Expires: time.Now().Add(time.Hour * 72),
+		SameSite: http.SameSiteNoneMode,
 		Path: "/",
 		HttpOnly: true,
+		Secure: true,
 	})
+
+	fmt.Println("5")
 
 	return c.JSON(http.StatusOK, result)
 }
