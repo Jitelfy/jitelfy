@@ -2,7 +2,6 @@ package web_api
 
 import (
 	"context"
-	"time"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -10,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
+	"time"
 )
 
 var UserColl *mongo.Collection
@@ -49,8 +49,8 @@ func GetUser(c echo.Context) error {
 func MakeUser(c echo.Context) error {
 	req := struct {
 		DisplayName string `json:"displayname"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username    string `json:"username"`
+		Password    string `json:"password"`
 	}{}
 
 	if err := c.Bind(&req); err != nil {
@@ -70,12 +70,12 @@ func MakeUser(c echo.Context) error {
 	}
 
 	user := User{
-		Id:        primitive.NewObjectID(),
+		Id:          primitive.NewObjectID(),
 		DisplayName: req.DisplayName,
-		Username:  req.Username,
-		Followers: []primitive.ObjectID{},
-		Following: []primitive.ObjectID{},
-		Password:  encryptedPass,
+		Username:    req.Username,
+		Followers:   []primitive.ObjectID{},
+		Following:   []primitive.ObjectID{},
+		Password:    encryptedPass,
 	}
 
 	_, err = UserColl.InsertOne(context.TODO(), user)
@@ -114,10 +114,10 @@ func Login(c echo.Context) error {
 
 	result.Password = ""
 	c.SetCookie(&http.Cookie{
-		Name: "Authorization",
-		Value: result.Token,
-		Expires: time.Now().Add(time.Hour * 72),
-		Path: "/",
+		Name:     "Authorization",
+		Value:    result.Token,
+		Expires:  time.Now().Add(time.Hour * 72),
+		Path:     "/",
 		HttpOnly: true,
 	})
 
@@ -174,4 +174,8 @@ func UserIdFromToken(c echo.Context) string {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	return claims["id"].(string)
+}
+
+func FollowUser(c echo.Context) error {
+	return nil
 }
