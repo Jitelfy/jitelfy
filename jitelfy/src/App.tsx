@@ -349,12 +349,15 @@ const FeedPage = () => {
 
             {/* Post header */}
             <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
-                <div className="flex flex-row mb-1">
-                    <img
-                        className="size-14 rounded-full mr-3"
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo_m-w-rVy38CwdkPiGEZEQ-8TE0_0dis2HA&s"
-                        alt="profile image"
-                    />
+            <div className="flex flex-row mb-1">
+              {/* Updated: Use the logged-in user's icon */}
+              {user && (
+                <img
+                  className="size-14 rounded-full mr-3"
+                  src={user.icon}
+                  alt={user.displayname}
+                />
+                )}
                     <div className="flex flex-col w-full items-center justify-end gap-3 fill-white">
                         <textarea id="posttext" rows="3" className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue" placeholder="What's on your mind?">
                         </textarea>
