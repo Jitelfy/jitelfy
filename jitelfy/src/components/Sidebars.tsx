@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { User } from '../App.tsx';
+import { IconArray } from "../UserContext";
 
 export const FriendActivity = () => {
     return (
@@ -79,7 +80,8 @@ const ProfileButton = (user: User) => {
                 <div className="flex justify-start">
                     <img
                     className="size-12 rounded-full mb-2 mr-3"
-                    src={user?.icon}
+                    src={IconArray[parseInt(user.icon, 10)]}
+                    alt={user.displayname}
                     ></img>
                     <div className="justify-start">
                         <div className="flex justify-between">

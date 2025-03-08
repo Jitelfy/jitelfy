@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
+import { IconArray } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
 
@@ -106,7 +107,7 @@ const FeedPage = () => {
               {user && (
                 <img
                   className="size-14 rounded-full mr-3"
-                  src={user.icon}
+                  src={IconArray[parseInt(user.icon, 10)]}
                   alt={user.displayname}
                 />
                 )}
@@ -183,7 +184,7 @@ const FeedPage = () => {
                 <div>
                   <img
                     className="size-12 rounded-full mb-2 mr-3"
-                    src={post.user.icon}
+                    src={IconArray[parseInt(post.user.icon, 10)]}
                     alt={post.user.displayname}
                   />
                 </div>

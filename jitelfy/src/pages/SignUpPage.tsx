@@ -30,6 +30,7 @@ const SignUpPage = () => {
       displayname: displayName,
       username: username,
       password: password,
+      icon: 1
     };
   
     // Send the POST request

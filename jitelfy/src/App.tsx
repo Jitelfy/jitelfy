@@ -20,3 +20,6 @@ function App() {
 }
 
 export default App;
+
+export class User {
+}
