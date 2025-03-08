@@ -1,6 +1,8 @@
 import { useContext } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
+import { IconArray } from "../UserContext";
+
 
 const ProfilePage = () => {
     const { user } = useContext(UserContext);
@@ -31,7 +33,7 @@ const ProfilePage = () => {
               <div className="w-full h-48 bg-green-500 flex items-center justify-center">
                 <h1 className="text-4xl text-text-main">WE'RE COOKED</h1>
               </div>
-              <img src={user?.icon} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
+              <img src={IconArray[parseInt(user?.icon, 10)]} className="absolute top-32 left-1/2 transform -translate-x-1/2 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
             </div>
             <div className="text-center mt-16">
               <h2 className="text-2xl text-text-main">{user?.displayname || 'user cannot be loaded'}</h2>
