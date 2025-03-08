@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import FeedPage from "./pages/FeedPage";
 import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>
   );

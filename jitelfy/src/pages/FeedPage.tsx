@@ -183,7 +183,7 @@ const FeedPage = () => {
               <div className="flex items-center">
                 <div>
                   <img
-                    className="size-12 rounded-full mb-2 mr-3"
+                    className="size-14 rounded-full mb-2 mr-3"
                     src={IconArray[parseInt(post.user.icon, 10)]}
                     alt={post.user.displayname}
                   />

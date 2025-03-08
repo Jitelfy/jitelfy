@@ -50,7 +50,7 @@ export const Quicklinks = (user: User) => {
           </li>
         </Link>
 
-        <Link to="/more" className="text-text-main text-left">
+        <Link to="/settings" className="text-text-main text-left">
           <li className="duration-100 ease-in hover:bg-background-tertiary pr-20 pl-3 pt-5 pb-5 rounded-lg border-2 border-background-secondary">
             <svg width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 8.00002C9.79085 8.00002 7.99999 9.79088 7.99999 12C7.99999 14.2092 9.79085 16 12 16C14.2091 16 16 14.2092 16 12C16 9.79088 14.2091 8.00002 12 8.00002ZM9.99999 12C9.99999 10.8955 10.8954 10 12 10C13.1046 10 14 10.8955 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 9.99999 13.1046 9.99999 12Z" fill="white"/>
@@ -79,13 +79,13 @@ const ProfileButton = (user: User) => {
             <div className="relative w-full bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary">
                 <div className="flex justify-start">
                     <img
-                    className="size-12 rounded-full mb-2 mr-3"
+                    className="size-14 rounded-full mb-2 mr-3"
                     src={IconArray[parseInt(user?.icon, 10)]}
                     alt={user?.displayname}
                     ></img>
                     <div className="justify-start">
                         <div className="flex justify-between">
-                            <p className="text-text-main font-bold max-w-fit truncate">{user?.displayname}</p>
+                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis truncate">{user?.displayname}</p>
                             <svg className="" width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z" fill="white"/>
                             </svg>
