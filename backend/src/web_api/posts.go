@@ -30,6 +30,7 @@ type PostUserPackage struct {
 	Postjson Post `json:"post"`
 	Userjson User `json:"user"`
 }
+
 /* I think this will be faster with many many posts but right now
 is a bit slower than consuming the iterator
 
@@ -126,8 +127,6 @@ func GetPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
-
-
 func CreatePost(c echo.Context) error {
 	var post Post
 	var err error
@@ -137,39 +136,39 @@ func CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-    if post.Song == "" {
-        return c.JSON(http.StatusBadRequest, "top level posts must have song")
-    }
+	if post.Song == "" {
+		return c.JSON(http.StatusBadRequest, "top level posts must have song")
+	}
 
-    if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
-        return c.JSON(http.StatusBadRequest, "invalid song link")
-    }
+	if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
+		return c.JSON(http.StatusBadRequest, "invalid song link")
+	}
 
 	var userId primitive.ObjectID
 
 	if userId, err = primitive.ObjectIDFromHex(UserIdFromToken(c)); err != nil {
-        return c.JSON(http.StatusBadRequest, "missing user token")
+		return c.JSON(http.StatusBadRequest, "missing user token")
 	}
 
-    song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
+	song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
 	// Build the final Post object
-    newPost := Post{
-        Id:       primitive.NewObjectID(),
-        UserId:   userId,
-        ParentId: primitive.NilObjectID,
-        Time:     time.Now().Format(time.RFC3339),
-        Text:     post.Text,
-        Embed:    post.Embed,
-        Song:     song,
-    }
+	newPost := Post{
+		Id:       primitive.NewObjectID(),
+		UserId:   userId,
+		ParentId: primitive.NilObjectID,
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     song,
+	}
 
-    if newPost.ParentId != primitive.NilObjectID {
+	if newPost.ParentId != primitive.NilObjectID {
 		return c.JSON(http.StatusBadRequest, "post must be top level")
-    	}
-    if newPost.ChildIds != nil {
+	}
+	if newPost.ChildIds != nil {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
-    	}
+	}
 
 	bsonPost, err := bson.Marshal(newPost)
 	if err != nil {
@@ -179,10 +178,9 @@ func CreatePost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
 	}
-	
+
 	return c.JSON(http.StatusOK, newPost)
 }
-
 
 func CreateComment(c echo.Context) error {
 	post := Post{}
