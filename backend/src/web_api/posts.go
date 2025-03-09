@@ -296,14 +296,14 @@ func LikePost(c echo.Context) error {
 	likerStrID, _ := UserIdFromCookie(c)
 	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liker)")
 	}
 
 	// liked
 	likedStrID := c.Param("id")
 	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liked)")
 	}
 
 	var liked Post
