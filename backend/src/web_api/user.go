@@ -2,14 +2,15 @@ package web_api
 
 import (
 	"context"
-	"time"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"net/http"
 )
 
 var UserColl *mongo.Collection
@@ -18,7 +19,7 @@ type User struct {
 	Id          primitive.ObjectID   `json:"id" bson:"_id"`
 	DisplayName string               `json:"displayname" bson:"displayname"`
 	Username    string               `json:"username" bson:"username"`
-	Icon        string               `json:"icon" bson:"icon"`
+	Icon        int                  `json:"icon" bson:"icon"`
 	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following   []primitive.ObjectID `json:"following" bson:"following"`
 	Token       string               `json:"token" bson:"token"`
@@ -49,8 +50,8 @@ func GetUser(c echo.Context) error {
 func MakeUser(c echo.Context) error {
 	req := struct {
 		DisplayName string `json:"displayname"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username    string `json:"username"`
+		Password    string `json:"password"`
 	}{}
 
 	if err := c.Bind(&req); err != nil {
@@ -70,12 +71,12 @@ func MakeUser(c echo.Context) error {
 	}
 
 	user := User{
-		Id:        primitive.NewObjectID(),
+		Id:          primitive.NewObjectID(),
 		DisplayName: req.DisplayName,
-		Username:  req.Username,
-		Followers: []primitive.ObjectID{},
-		Following: []primitive.ObjectID{},
-		Password:  encryptedPass,
+		Username:    req.Username,
+		Followers:   []primitive.ObjectID{},
+		Following:   []primitive.ObjectID{},
+		Password:    encryptedPass,
 	}
 
 	_, err = UserColl.InsertOne(context.TODO(), user)
@@ -96,7 +97,7 @@ func Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
-	filter := bson.D{{"username", req.Username}}
+	filter := bson.D{{Key: "username", Value: req.Username}}
 	var result User
 	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
@@ -114,14 +115,46 @@ func Login(c echo.Context) error {
 
 	result.Password = ""
 	c.SetCookie(&http.Cookie{
-		Name: "Authorization",
-		Value: result.Token,
-		Expires: time.Now().Add(time.Hour * 72),
-		Path: "/",
+		Name:     "Authorization",
+		Value:    result.Token,
+		Expires:  time.Now().Add(time.Hour * 72),
+		Path:     "/",
 		HttpOnly: true,
 	})
 
 	return c.JSON(http.StatusOK, result)
+}
+
+func SetIcon(c echo.Context) error {
+
+	var userid primitive.ObjectID
+	var idString, err = UserIdFromCookie(c)
+
+	req := struct {
+		Icon int `json:"icon"`
+	}{}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
+	}
+
+	userid, err = primitive.ObjectIDFromHex(idString)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
+	}
+
+	filter := bson.D{{Key: "_id", Value: userid}}
+	change := bson.D{{Key: "icon", Value: req.Icon}}
+	_, err = UserColl.UpdateByID(context.TODO(), filter, change)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to update icon")
+	}
+
+	return c.JSON(http.StatusBadRequest, "unimplemented method")
+
 }
 
 func RestoreUserFromCookie(c echo.Context) error {
