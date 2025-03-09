@@ -37,7 +37,6 @@ const LoginPage = () => {
   };
 
 
-  /*
   useEffect(() => {
     const restore = async () => {
       const loggedInUser: User = await RestoreUser();
@@ -50,7 +49,6 @@ const LoginPage = () => {
 
     restore();
   });
-  */
 
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
