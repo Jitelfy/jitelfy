@@ -18,7 +18,7 @@ const handleChangeIcon = async (icon: number, user: User) => {
             icon: icon
         };
 
-        const response = await fetch(`${BASE_URL}/users/icon`, {
+        const response = await fetch(`${BASE_URL}/customize/icon`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
