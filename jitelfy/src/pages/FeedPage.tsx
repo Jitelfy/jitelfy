@@ -3,6 +3,7 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
+import { useSearchParams } from "react-router-dom";
 
 let fetchedPosts: Array<PackagedPost>;
 
