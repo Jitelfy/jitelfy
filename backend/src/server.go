@@ -36,7 +36,7 @@ func init() {
 	// Send a ping to confirm a successful connection
 	var db = client.Database("jitelfy")
 	if err := db.RunCommand(context.TODO(),
-		bson.D{{"ping", 1}}).Err(); err != nil {
+		bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -53,19 +53,38 @@ func init() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
+	router.DELETE("/posts", web_api.DeletePost)
+	router.POST("/posts/like/:id", web_api.LikePost)
+	router.POST("/posts/unlike/:id", web_api.UnlikePost)
+	router.POST("/posts/bookmark/:id", web_api.BookmarkPost)
+	router.POST("/posts/unbookmark/:id", web_api.UnbookmarkPost)
+
 	router.GET("/users", web_api.GetUser)
-	router.GET("/users/restore", web_api.RestoreUserFromCookie)
+	router.GET("/users/bookmarks", web_api.GetBookmarks)
+
+
+	router.PUT("/customize/icon", web_api.SetIcon)
+	router.PUT("/customize/banner", web_api.SetBanner)
+	router.PUT("/customize/bio", web_api.SetBio)
+	router.PUT("/customize/displayname", web_api.SetDisplayName)
+	router.PUT("/customize/favsong", web_api.SetFavSong)
+
 	router.POST("/signup", web_api.MakeUser)
 	router.POST("/login", web_api.Login)
-	router.DELETE("/posts", web_api.DeletePost)
+	router.POST("/users/follow/:id", web_api.FollowUser)
+	router.POST("/users/unfollow/:id", web_api.UnfollowUser)
+	router.POST("/logout", web_api.Logout)
+
+	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"https://d3oiamcw3gvayn.cloudfront.net"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
+
 		AllowCredentials: true,
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(web_api.SecretKey),
+		SigningKey:  []byte(web_api.SecretKey),
 		TokenLookup: "cookie:Authorization",
 		Skipper: func(c echo.Context) bool {
 			if c.Path() == "/signup" || c.Path() == "/login" {

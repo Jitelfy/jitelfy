@@ -2,9 +2,13 @@ package web_api
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -30,6 +34,7 @@ type PostUserPackage struct {
 	Postjson Post `json:"post"`
 	Userjson User `json:"user"`
 }
+
 /* I think this will be faster with many many posts but right now
 is a bit slower than consuming the iterator
 
@@ -78,6 +83,7 @@ func GetPosts(c echo.Context) error {
 		}
 	}
 
+	// this is not evena  stream bruh
 	return c.JSON(http.StatusOK, packagedresults)
 }
 */
@@ -126,8 +132,6 @@ func GetPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
-
-
 func CreatePost(c echo.Context) error {
 	var post Post
 	var err error
@@ -137,39 +141,39 @@ func CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-    if post.Song == "" {
-        return c.JSON(http.StatusBadRequest, "top level posts must have song")
-    }
+	if post.Song == "" {
+		return c.JSON(http.StatusBadRequest, "top level posts must have song")
+	}
 
-    if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
-        return c.JSON(http.StatusBadRequest, "invalid song link")
-    }
+	if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
+		return c.JSON(http.StatusBadRequest, "invalid song link")
+	}
+	song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
 	var userId primitive.ObjectID
 
 	if userId, err = primitive.ObjectIDFromHex(UserIdFromToken(c)); err != nil {
-        return c.JSON(http.StatusBadRequest, "missing user token")
+		return c.JSON(http.StatusBadRequest, "missing user token")
 	}
 
-    song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
-
 	// Build the final Post object
-    newPost := Post{
-        Id:       primitive.NewObjectID(),
-        UserId:   userId,
-        ParentId: primitive.NilObjectID,
-        Time:     time.Now().Format(time.RFC3339),
-        Text:     post.Text,
-        Embed:    post.Embed,
-        Song:     song,
-    }
+	newPost := Post{
+		Id:       primitive.NewObjectID(),
+		UserId:   userId,
+		ParentId: primitive.NilObjectID,
+		LikeIds:  []primitive.ObjectID{},
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     song,
+	}
 
-    if newPost.ParentId != primitive.NilObjectID {
+	if newPost.ParentId != primitive.NilObjectID {
 		return c.JSON(http.StatusBadRequest, "post must be top level")
-    	}
-    if newPost.ChildIds != nil {
+	}
+	if newPost.ChildIds != nil {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
-    	}
+	}
 
 	bsonPost, err := bson.Marshal(newPost)
 	if err != nil {
@@ -179,10 +183,9 @@ func CreatePost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
 	}
-	
+
 	return c.JSON(http.StatusOK, newPost)
 }
-
 
 func CreateComment(c echo.Context) error {
 	post := Post{}
@@ -280,7 +283,7 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
 
-	filter := bson.D{{"_id", Id}}
+	filter := bson.D{{Key: "_id", Value: Id}}
 	var result *mongo.DeleteResult
 	result, err = PostColl.DeleteOne(context.TODO(), filter)
 	if err != nil {
@@ -290,16 +293,173 @@ func DeletePost(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-/*
 func LikePost(c echo.Context) error {
-	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
+	// liker
+	likerStrID, _ := UserIdFromCookie(c)
+	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liker)")
 	}
 
+	// liked
+	likedStrID := c.Param("id")
+	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liked)")
+	}
 
+	var liked Post
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": likedObjID},
+		bson.M{"$addToSet": bson.M{"likeids": likerObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(liked)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not like post")
+	}
 
-
-
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post liked",
+		"total post likes": strconv.Itoa(len(liked.LikeIds)),
+	})
 }
-*/
+
+func UnlikePost(c echo.Context) error {
+	likerStrID, _ := UserIdFromCookie(c)
+	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	likedStrID := c.Param("id")
+	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var liked Post
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": likedObjID},
+		bson.M{"$pull": bson.M{"likeids": likerObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(liked)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not unlike post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post unliked",
+		"total post likes": strconv.Itoa(len(liked.LikeIds)),
+	})
+}
+
+func BookmarkPost(c echo.Context) error {
+	bookmarkerID, _ := UserIdFromCookie(c)
+	bookmarker, err := primitive.ObjectIDFromHex(bookmarkerID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	postID := c.Param("id")
+	post, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var user User
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": bookmarker},
+		bson.M{"$addToSet": bson.M{"bookmarks": post}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post bookmarked",
+		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+	})
+}
+
+func UnbookmarkPost(c echo.Context) error {
+	bookmarkerID, _ := UserIdFromCookie(c)
+	bookmarker, err := primitive.ObjectIDFromHex(bookmarkerID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	postID := c.Param("id")
+	post, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var user User
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": bookmarker},
+		bson.M{"$pull": bson.M{"bookmarks": post}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post bookmarked",
+		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+	})
+}
+
+func GetBookmarks(c echo.Context) error {
+
+	userid_str, _ := UserIdFromCookie(c)
+	userid, err := primitive.ObjectIDFromHex(userid_str)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "could not get user from cookie")
+	}
+
+	filter := bson.D{{Key: "_id", Value: userid}}
+	var result = UserColl.FindOne(context.TODO(), filter)
+	var user User
+	if err := result.Decode(&user); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusBadRequest, "could not find user")
+		} else {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	var packagedresults = make([]PostUserPackage, len(user.Bookmarks))
+	var ch = make(chan *PostUserPackage)
+
+	for _, post_id := range user.Bookmarks {
+		go func(post_id primitive.ObjectID) {
+			var postfilter = bson.D{{Key: "_id", Value: post_id}}
+			var result = PostColl.FindOne(context.TODO(), postfilter)
+			var post Post
+			if post_err := result.Decode(&post); post_err != nil {
+				ch <- nil
+			}
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			result = UserColl.FindOne(context.TODO(), userfilter)
+			var user User
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
+			}
+			user.Password = ""
+			ch <- &PostUserPackage{
+				Postjson: post,
+				Userjson: user,
+			}
+		}(post_id)
+	}
+
+	for idx := range user.Bookmarks {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
+}

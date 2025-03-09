@@ -1,15 +1,61 @@
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../api';
 import { User } from '../App.tsx';
+import { IconArray } from "../UserContext";
 
 export const FriendActivity = () => {
     return (
-      <div className="w-1/4 bg-background-secondary p-6 overflow-auto">
-        <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
-        {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
-          <div key={index} className="bg-background-tertiary p-4 rounded-lg mb-4">
-            <p className="text-text-main">{friend}: Currently listening to...</p>
+      <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
+
+          <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
+
+          {/* Sample friend activity #1 */}
+          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+              {/* Friend's profile picture and username */}
+              <div className="flex flex-row items-center text-text-main">
+                  <img
+                      className="size-9 rounded-full mr-3"
+                      src="/src/user_icons/icon_5.png"
+                      alt="Friend icon"
+                  ></img>
+                  <p>@username_1</p>
+              </div>
+
+              {/* Friend's profile song */}
+              <div className="mt-4">
+                  <iframe
+                      src="https://open.spotify.com/embed/track/0gzy4HT0Ifnxm7T2U0XzdM?si=12a67ae2d83744e4"
+                      className="w-full h-20"
+                      title="Friend song"
+                      allowFullScreen
+                  ></iframe>
+              </div>
           </div>
-        ))}
+
+          {/* Sample friend activity #2 */}
+          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+              {/* Friend's profile picture and username */}
+              <div className="flex flex-row items-center text-text-main">
+                  <img
+                      className="size-9 rounded-full mr-3"
+                      src="/src/user_icons/icon_10.png"
+                      alt="Friend icon"
+                  ></img>
+                  <p>@username_2</p>
+              </div>
+
+              {/* Friend's profile song */}
+              <div className="mt-4">
+                  <iframe
+                      src="https://open.spotify.com/embed/track/0RvBKchlzAHN59rGJ64qOM?si=8f09ef85b1074bcf"
+                      className="w-full h-20"
+                      title="Friend song"
+                      allowFullScreen
+                  ></iframe>
+              </div>
+          </div>
+
       </div>
     );
 }
@@ -49,7 +95,16 @@ export const Quicklinks = (user: User) => {
           </li>
         </Link>
 
-        <Link to="/more" className="text-text-main text-left">
+          <Link to="/bookmarks" className="text-text-main text-left">
+              <li className="duration-100 ease-in hover:bg-background-tertiary pr-20 pl-3 pt-5 pb-5 rounded-lg border-2 border-background-secondary">
+                  <svg width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.78799 3H14.212C15.0305 2.99999 15.7061 2.99998 16.2561 3.04565C16.8274 3.0931 17.3523 3.19496 17.8439 3.45035C18.5745 3.82985 19.1702 4.42553 19.5497 5.1561C19.805 5.64774 19.9069 6.17258 19.9544 6.74393C20 7.29393 20 7.96946 20 8.78798V17.6227C20 18.5855 20 19.3755 19.9473 19.9759C19.8975 20.5418 19.7878 21.2088 19.348 21.6916C18.8075 22.2847 18.0153 22.5824 17.218 22.4919C16.5691 22.4182 16.0473 21.9884 15.6372 21.5953C15.2022 21.1783 14.6819 20.5837 14.0479 19.8591L13.6707 19.428C13.2362 18.9314 12.9521 18.6081 12.7167 18.3821C12.4887 18.1631 12.3806 18.1107 12.3262 18.0919C12.1148 18.019 11.8852 18.019 11.6738 18.0919C11.6194 18.1107 11.5113 18.1631 11.2833 18.3821C11.0479 18.6081 10.7638 18.9314 10.3293 19.428L9.95209 19.8591C9.31809 20.5837 8.79784 21.1782 8.36276 21.5953C7.95272 21.9884 7.43089 22.4182 6.78196 22.4919C5.9847 22.5824 5.19246 22.2847 4.65205 21.6916C4.21218 21.2088 4.10248 20.5418 4.05275 19.9759C3.99997 19.3755 3.99998 18.5855 4 17.6227V8.78799C3.99999 7.96947 3.99998 7.29393 4.04565 6.74393C4.0931 6.17258 4.19496 5.64774 4.45035 5.1561C4.82985 4.42553 5.42553 3.82985 6.1561 3.45035C6.64774 3.19496 7.17258 3.0931 7.74393 3.04565C8.29393 2.99998 8.96947 2.99999 9.78799 3ZM7.90945 5.03879C7.46401 5.07578 7.23663 5.1428 7.07805 5.22517C6.71277 5.41493 6.41493 5.71277 6.22517 6.07805C6.1428 6.23663 6.07578 6.46401 6.03879 6.90945C6.0008 7.36686 6 7.95898 6 8.83V17.5726C6 18.5978 6.00094 19.2988 6.04506 19.8008C6.08138 20.2139 6.13928 20.3436 6.14447 20.3594C6.2472 20.4633 6.39033 20.5171 6.53606 20.5065C6.55034 20.4981 6.67936 20.4386 6.97871 20.1516C7.34245 19.8029 7.80478 19.2759 8.4799 18.5044L8.85192 18.0792C9.25094 17.6232 9.59229 17.233 9.89819 16.9393C10.2186 16.6317 10.5732 16.3559 11.0214 16.2013C11.6555 15.9825 12.3445 15.9825 12.9786 16.2013C13.4268 16.3559 13.7814 16.6317 14.1018 16.9393C14.4077 17.233 14.7491 17.6232 15.1481 18.0792L15.5201 18.5044C16.1952 19.2759 16.6576 19.8029 17.0213 20.1516C17.3206 20.4386 17.4497 20.4981 17.4639 20.5065C17.6097 20.5171 17.7528 20.4633 17.8555 20.3594C17.8607 20.3436 17.9186 20.2139 17.9549 19.8008C17.9991 19.2988 18 18.5978 18 17.5726V8.83C18 7.95898 17.9992 7.36686 17.9612 6.90945C17.9242 6.46401 17.8572 6.23663 17.7748 6.07805C17.5851 5.71277 17.2872 5.41493 16.9219 5.22517C16.7634 5.1428 16.536 5.07578 16.0905 5.03879C15.6331 5.0008 15.041 5 14.17 5H9.83C8.95898 5 8.36686 5.0008 7.90945 5.03879Z" fill="white"/>
+                  </svg>
+                  <p>Bookmarks</p>
+              </li>
+          </Link>
+
+        <Link to="/settings" className="text-text-main text-left">
           <li className="duration-100 ease-in hover:bg-background-tertiary pr-20 pl-3 pt-5 pb-5 rounded-lg border-2 border-background-secondary">
             <svg width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 8.00002C9.79085 8.00002 7.99999 9.79088 7.99999 12C7.99999 14.2092 9.79085 16 12 16C14.2091 16 16 14.2092 16 12C16 9.79088 14.2091 8.00002 12 8.00002ZM9.99999 12C9.99999 10.8955 10.8954 10 12 10C13.1046 10 14 10.8955 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 9.99999 13.1046 9.99999 12Z" fill="white"/>
@@ -60,7 +115,7 @@ export const Quicklinks = (user: User) => {
           </li>
         </Link>
       </ul>
-      {/* spacer */}
+      {/* Spacer */}
       <div className="h-full"></div>
 
       {/* Profile section */}
@@ -70,29 +125,106 @@ export const Quicklinks = (user: User) => {
 }
 
 const ProfileButton = (user: User) => {
-    if (user == null) {
-        return null;
+
+  const navigate = useNavigate();
+  async function logOut() {
+    const response = await fetch(`${BASE_URL}/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+        alert("failed to logout");
+        return;
     }
+      navigate("/feed");
+      window.location.reload();
+  };
+
+  function login() {
+      navigate("/");
+      return;
+  }
+
+  function handlePopup() {
+      let popup = document.getElementById("myPopup");
+      if (popup != null) {
+          if (popup.style.visibility == "hidden") {
+              popup.style.visibility = "visible";
+          } else {
+              popup.style.visibility = "hidden";
+          }
+      }
+      return;
+  }
+
+    if (user == null) {
+        return (
+            <div className="flex flex-row align-middle gap-1 justify-center border-2 p-4 text-text-main border-background-main hover:bg-background-secondary rounded-md"
+            onClick={() => login() }
+            >
+            <h3 className="text-wrap"> Login </h3>
+            </div>
+        );
+    }
+
+
     return (
-        <Link to="/profile" className="justify-start">
-            <div className="relative w-full bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary">
-                <div className="flex justify-start">
-                    <img
-                    className="size-12 rounded-full mb-2 mr-3"
-                    src={user?.icon}
-                    ></img>
-                    <div className="justify-start">
-                        <div className="flex justify-between">
-                            <p className="text-text-main font-bold max-w-fit truncate">{user?.displayname}</p>
-                            <svg className="" width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z" fill="white"/>
-                            </svg>
+        <div className="flex flex-col">
+            {/* Pop up to view profile or log out*/}
+            <div id="myPopup"
+                 className="invisible flex shadow-md shadow-background-main flex-col text-center w-full bg-background-main rounded-md"
+                 onMouseLeave={handlePopup}>
+
+                {/* Link to profile */}
+                <Link to="/profile">
+                    <div className="flex flex-row align-middle gap-1 justify-center border-2 p-4 text-text-main border-background-main hover:bg-background-secondary rounded-md">
+                        <svg width="25px" height="25px" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 5C10.3431 5 9 6.34315 9 8C9 9.65685 10.3431 11 12 11C13.6569 11 15 9.65685 15 8C15 6.34315 13.6569 5 12 5ZM7 8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8C17 10.7614 14.7614 13 12 13C9.23858 13 7 10.7614 7 8ZM7.45609 16.7264C6.40184 17.1946 6 17.7858 6 18.5C6 18.7236 6.03976 18.8502 6.09728 18.942C6.15483 19.0338 6.29214 19.1893 6.66219 19.3567C7.45312 19.7145 9.01609 20 12 20C14.9839 20 16.5469 19.7145 17.3378 19.3567C17.7079 19.1893 17.8452 19.0338 17.9027 18.942C17.9602 18.8502 18 18.7236 18 18.5C18 17.7858 17.5982 17.1946 16.5439 16.7264C15.4614 16.2458 13.8722 16 12 16C10.1278 16 8.53857 16.2458 7.45609 16.7264ZM6.64442 14.8986C8.09544 14.2542 10.0062 14 12 14C13.9938 14 15.9046 14.2542 17.3556 14.8986C18.8348 15.5554 20 16.7142 20 18.5C20 18.9667 19.9148 19.4978 19.5973 20.0043C19.2798 20.5106 18.7921 20.8939 18.1622 21.1789C16.9531 21.7259 15.0161 22 12 22C8.98391 22 7.04688 21.7259 5.83781 21.1789C5.20786 20.8939 4.72017 20.5106 4.40272 20.0043C4.08524 19.4978 4 18.9667 4 18.5C4 16.7142 5.16516 15.5554 6.64442 14.8986Z"/>
+                        </svg>
+
+                        <h3 className=""> Profile </h3>
+                    </div>
+                </Link>
+
+                {/* Log out button */}
+                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red rounded-md"
+                     onClick={() => logOut() }
+                >
+                    <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
+                </div>
+
+            </div>
+                <div
+                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary"
+                    onClick={handlePopup}
+                >
+                    <div className="flex justify-start items-start justify-items-start w-full flex-row">
+                        {/* Profile picture */}
+                        <img
+                            className="size-14 rounded-full mb-2 mr-3"
+                            src={IconArray[user?.icon]}
+                            alt={user?.displayname}
+                        ></img>
+
+                        {/* Username, display name */}
+                        <div className="justify-start">
+                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis truncate">{user?.displayname}</p>
+                            <p className="text-text-secondary truncate">@{user?.username}</p>
                         </div>
-                        <p className="text-text-secondary truncate">@{user?.username}</p>
+
+                        {/* Link to more options */}
+                        <svg
+                            className="ml-5"
+                            width="25px" height="25px" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                  d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z"
+                                  fill="white"/>
+                        </svg>
                     </div>
                 </div>
-            </div>
-        </Link>
+        </div>
     );
 }
 
