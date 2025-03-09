@@ -11,6 +11,7 @@ const handleChangeIcon = async (icon: string, user: User) => {
     console.log("New icon will be of index " + iconID);
     if (iconID != user?.icon) {
         console.log("Sending request for icon change and reloading...");
+        location.reload();
     }
 };
 
@@ -23,7 +24,7 @@ const handleIconClick = async (imgID: string, user: User) => {
             { /* Unselect the old new icon */ }
             let oldImg = document.getElementById(NewIcon);
             if (oldImg != null) {
-                oldImg.style.padding = "0.75rem"
+                oldImg.style.padding = "0.78rem"
                 oldImg.style.border = "none";
             }
 
