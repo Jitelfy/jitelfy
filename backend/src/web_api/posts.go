@@ -345,7 +345,7 @@ func UnlikePost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post liked",
+		"message":          "post unliked",
 		"total post likes": strconv.Itoa(len(liked.LikeIds)),
 	})
 }
