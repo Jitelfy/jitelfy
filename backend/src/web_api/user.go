@@ -29,7 +29,7 @@ func GetUser(c echo.Context) error {
 
 	var userid, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (userid)")
 	}
 
 	filter := bson.D{{"_id", userid}}
@@ -177,5 +177,40 @@ func UserIdFromToken(c echo.Context) string {
 }
 
 func FollowUser(c echo.Context) error {
-	return nil
+
+	// calling user
+	userStringID := UserIdFromToken(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	filter := bson.D{{"_id", userObjectID}}
+	var result = UserColl.FindOne(context.TODO(), filter)
+	var user User
+	if err := result.Decode(&user); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusNotFound, "user not found")
+		} else {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// get the entry of the user we want to follow
+	id := c.Param("id")
+	filter = bson.D{{"_id", id}}
+	var result2 = UserColl.FindOne(context.TODO(), filter)
+	var follow User
+	if err := result2.Decode(&follow); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusNotFound, "user not found")
+		} else {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	// add the calling user to the followers who we want to follow
+	follow.Followers = append(follow.Followers, user.Id)
+	user.Following = append(follow.Following, follow.Id)
+
+	return c.JSON(http.StatusOK, follow)
 }
