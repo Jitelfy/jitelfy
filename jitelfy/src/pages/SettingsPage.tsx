@@ -7,7 +7,7 @@ import { getPosts, RestoreUser, BASE_URL } from "../api";
 
 let NewIcon = -1;
 
-const handleChangeIcon = async (icon: string, user: User) => {
+const handleChangeIcon = async (icon: number, user: User) => {
     console.log("New icon will be of index " + icon);
     if (icon != user?.icon) {
         console.log("Sending request for icon change and reloading...");
