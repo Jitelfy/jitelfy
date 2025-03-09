@@ -411,7 +411,11 @@ func UnbookmarkPost(c echo.Context) error {
 
 func GetBookmarks(c echo.Context) error {
 
-	userid, _ := UserIdFromCookie(c)
+	userid_str, _ := UserIdFromCookie(c)
+	userid, err := primitive.ObjectIDFromHex(userid_str)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "could not get user from cookie")
+	}
 
 	filter := bson.D{{Key: "_id", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)
@@ -424,13 +428,38 @@ func GetBookmarks(c echo.Context) error {
 		}
 	}
 
-	var posts []Post
+	var packagedresults = make([]PostUserPackage, len(user.Bookmarks))
+	var ch = make(chan *PostUserPackage)
 
 	for _, post_id := range user.Bookmarks {
-
+		go func(post_id primitive.ObjectID) {
+			var postfilter = bson.D{{Key: "_id", Value: post_id}}
+			var result = PostColl.FindOne(context.TODO(), postfilter)
+			var post Post
+			if post_err := result.Decode(&post); post_err != nil {
+				ch <- nil
+			}
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			result = UserColl.FindOne(context.TODO(), userfilter)
+			var user User
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
+			}
+			user.Password = ""
+			ch <- &PostUserPackage{
+				Postjson: post,
+				Userjson: user,
+			}
+		}(post_id)
 	}
 
+	for idx := range user.Bookmarks {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
+	}
 
-
-	return nil
+	return c.JSON(http.StatusOK, packagedresults)
 }
