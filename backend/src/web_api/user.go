@@ -257,11 +257,31 @@ func UnfollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+	filter := bson.D{{"_id", userObjectID}}
+	var result = UserColl.FindOne(context.TODO(), filter)
+	var user User
+	if err := result.Decode(&user); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusNotFound, "user not found")
+		} else {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+	}
 
 	unfollowStringID := c.Param("id")
 	unfollowObjectID, err := primitive.ObjectIDFromHex(unfollowStringID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	filter = bson.D{{"_id", unfollowObjectID}}
+	var result2 = UserColl.FindOne(context.TODO(), filter)
+	var follow User
+	if err := result2.Decode(&follow); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusNotFound, "user not found")
+		} else {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	if unfollowObjectID == userObjectID {
@@ -280,5 +300,21 @@ func UnfollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "unfollowed user"})
+	// re-fetch updated documents
+	err = UserColl.FindOne(context.TODO(), bson.M{"_id": userObjectID}).Decode(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to reload user")
+	}
+	err = UserColl.FindOne(context.TODO(), bson.M{"_id": unfollowObjectID}).Decode(&follow)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to reload followed user")
+	}
+
+	userFollowing := len(user.Following)
+	targetFollowers := len(follow.Followers)
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "unfollowed user",
+		"user followers":   strconv.Itoa(userFollowing),
+		"target followers": strconv.Itoa(targetFollowers),
+	})
 }
