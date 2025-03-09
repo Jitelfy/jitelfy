@@ -20,6 +20,7 @@ type Post struct {
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
 	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
 	LikeIds  []primitive.ObjectID `json:"likeids" bson:"likeids"`
+	LikeNum  int64                `json:"likenum" bson:"likenum"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
@@ -289,13 +290,8 @@ func DeletePost(c echo.Context) error {
 }
 
 func LikePost(c echo.Context) error {
-	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
-	}
-	return err
+
 }
 
 func UnlikePost(c echo.Context) error {
-	return nil
 }
