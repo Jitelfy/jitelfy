@@ -54,9 +54,12 @@ func main() {
 	router.DELETE("/posts", web_api.DeletePost)
 	router.POST("/posts/like/:id", web_api.LikePost)
 	router.POST("/posts/unlike/:id", web_api.UnlikePost)
+	router.POST("/posts/bookmark/:id", web_api.BookmarkPost)
+	router.POST("/posts/unbookmark/:id", web_api.UnbookmarkPost)
 
 	router.GET("/users", web_api.GetUser)
-	router.GET("/users/restore", web_api.RestoreUserFromCookie)
+	router.GET("/users/bookmarks", web_api.GetBookmarks)
+
 
 	router.PUT("/customize/icon", web_api.SetIcon)
 	router.PUT("/customize/banner", web_api.SetBanner)
@@ -69,6 +72,8 @@ func main() {
 	router.POST("/users/follow/:id", web_api.FollowUser)
 	router.POST("/users/unfollow/:id", web_api.UnfollowUser)
 	router.POST("/logout", web_api.Logout)
+
+	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
