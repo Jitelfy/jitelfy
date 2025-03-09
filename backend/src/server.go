@@ -55,6 +55,7 @@ func main() {
 	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 	router.POST("/signup", web_api.MakeUser)
 	router.POST("/login", web_api.Login)
+	router.POST("/logout", web_api.Logout)
 	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))

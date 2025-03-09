@@ -124,6 +124,20 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+// idk if there needs to be more to this but it might actually just be this
+func Logout(c echo.Context) error {
+
+	c.SetCookie(&http.Cookie{
+		Name: "Authorization",
+		Value: "",
+		Expires: time.Now(),
+		Path: "/",
+		HttpOnly: true,
+	})
+
+	return c.String(http.StatusOK, "success")
+}
+
 func RestoreUserFromCookie(c echo.Context) error {
 
 	var userid primitive.ObjectID
@@ -137,7 +151,7 @@ func RestoreUserFromCookie(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
 	}
 
-	filter := bson.D{{"_id", userid}}
+	filter := bson.D{{Key: "_id", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
