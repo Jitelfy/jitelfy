@@ -56,6 +56,7 @@ func main() {
 	router.POST("/signup", web_api.MakeUser)
 	router.POST("/login", web_api.Login)
 	router.POST("/users/follow/:id", web_api.FollowUser)
+	router.POST("/users/unfollow/:id", web_api.UnfollowUser)
 	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
