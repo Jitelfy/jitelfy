@@ -27,6 +27,7 @@ type User struct {
 	Song        string               `json:"song" bson:"song"`
 	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following   []primitive.ObjectID `json:"following" bson:"following"`
+	Bookmarks   []primitive.ObjectID `json:"bookmarks" bson:"bookmarks"`
 	Token       string               `json:"token" bson:"token"`
 	Password    string               `json:"password" bson:"password"`
 }
