@@ -193,6 +193,20 @@ const FeedPage = () => {
             </>
           )}
 
+        {flairFilter && (
+          <div className="mx-10 my-4">
+            <p className="text-white">
+              Filtering posts by hashtag: <strong>#{flairFilter}</strong>
+            </p>
+            <button
+              className="mt-2 px-4 py-1 bg-accent-blue-light rounded"
+              onClick={() => setSearchParams({})}
+            > 
+              Clear Filter
+            </button>
+          </div>
+          )}
+
           {posts.map((post) => (
             <div
               key={post.post.id}
