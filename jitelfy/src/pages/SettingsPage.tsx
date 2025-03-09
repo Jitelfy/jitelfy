@@ -14,18 +14,24 @@ const handleChangeIcon = async (icon: number, user: User) => {
     if (icon != user?.icon) {
         console.log("Sending request for icon change and reloading...");
 
-        {/*const response = await fetch(`${BASE_URL}/posts?id=${id}`, {
-            method: "DELETE",
+        const iconData = {
+            icon: icon
+        };
+
+        const response = await fetch(`${BASE_URL}/users/icon`, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": "Bearer " + user?.token
             },
+            body: JSON.stringify(iconData),
             credentials: "include",
         });
 
         if (!response.ok) {
             console.error("Failed to change icon", await response.text());
             return;
-        }*/}
+        }
     }
 };
 
