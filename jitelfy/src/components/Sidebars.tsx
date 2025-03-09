@@ -70,7 +70,7 @@ export const Quicklinks = (user: User) => {
           </li>
         </Link>
       </ul>
-      {/* spacer */}
+      {/* Spacer */}
       <div className="h-full"></div>
 
       {/* Profile section */}
@@ -83,27 +83,76 @@ const ProfileButton = (user: User) => {
     if (user == null) {
         return null;
     }
+
+    function logOutUser() {
+        {/* TODO: Put an onclick here to log out the user. */}
+        console.log('logOutUser');
+    }
+
+    function handlePopup() {
+        let popup = document.getElementById("myPopup");
+        if (popup != null) {
+            if (popup.style.visibility == "hidden") {
+                popup.style.visibility = "visible";
+            } else {
+                popup.style.visibility = "hidden";
+            }
+        }
+        return
+    }
+
     return (
-        <Link to="/profile" className="justify-start">
-            <div className="relative w-full bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary">
-                <div className="flex justify-start">
-                    <img
-                    className="size-14 rounded-full mb-2 mr-3"
-                    src={IconArray[user?.icon]}
-                    alt={user?.displayname}
-                    ></img>
-                    <div className="justify-start">
-                        <div className="flex justify-between">
+        <div className="flex flex-col">
+            {/* Pop up to view profile or log out*/}
+            <div id="myPopup"
+                 className="invisible flex shadow-md shadow-background-main flex-col text-center w-full bg-background-main rounded-md"
+                 onMouseLeave={handlePopup}>
+
+                {/* Link to profile */}
+                <Link to="/profile">
+                    <div className="border-2 p-4 text-text-main border-background-main hover:bg-background-secondary rounded-md">
+                        <h3 className=""> Profile </h3>
+                    </div>
+                </Link>
+
+                {/* Log out button */}
+                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red rounded-md"
+                     onClick={logOutUser}
+                >
+                    <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
+                </div>
+
+            </div>
+                <div
+                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary"
+                    onClick={handlePopup}
+                >
+                    <div className="flex justify-start items-start justify-items-start w-full flex-row">
+                        {/* Profile picture */}
+                        <img
+                            className="size-14 rounded-full mb-2 mr-3"
+                            src={IconArray[user?.icon]}
+                            alt={user?.displayname}
+                        ></img>
+
+                        {/* Username, display name */}
+                        <div className="justify-start">
                             <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis truncate">{user?.displayname}</p>
-                            <svg className="" width="25px" height="25px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z" fill="white"/>
-                            </svg>
+                            <p className="text-text-secondary truncate">@{user?.username}</p>
                         </div>
-                        <p className="text-text-secondary truncate">@{user?.username}</p>
+
+                        {/* Link to more options */}
+                        <svg
+                            className="ml-5"
+                            width="25px" height="25px" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                  d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z"
+                                  fill="white"/>
+                        </svg>
                     </div>
                 </div>
-            </div>
-        </Link>
+        </div>
     );
 }
 

@@ -38,7 +38,9 @@ const ProfilePage = () => {
                 {/* Icon, display & username, profile song */}
                 <div className="flex flex-row w-full self-start items-center">
                     {/*transform -translate-x-1/2*/}
-                    <img src={IconArray[user?.icon]} alt="profile picture" className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
+                    <img src={IconArray[user?.icon]}
+                         alt="profile picture"
+                         className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-secondary"></img>
 
                     {/* Display name & username */}
                     <div className="flex-col ml-44 mt-4 justify-start">
