@@ -94,14 +94,14 @@ const FeedPage = () => {
       {user && Quicklinks(user)}
 
       {/* Feed - Main Content */}
-      <div className="flex-1 flex-col relative grid grid-auto-flow auto-rows-auto">
+      <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
           <div className="sticky">
-            <h1 className="text-text-main text-2xl top-0 my-6 mx-10">Feed</h1>
+            <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
             {/* Post header */}
-            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
+            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 gap-3">
             <div className="flex flex-row mb-1">
               {/* Updated: Use the logged-in user's icon */}
               {user && (
@@ -156,7 +156,7 @@ const FeedPage = () => {
           {posts.map((post) => (
             <div
               key={post.post.id}
-              className="bg-background-secondary p-4 rounded-lg mb-6 mx-10 relative"
+              className="bg-background-secondary p-4 rounded-lg mb-6 relative"
             >
               {/* Delete Button temp*/}
               <button

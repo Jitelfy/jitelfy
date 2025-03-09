@@ -26,12 +26,15 @@ const ActivityPage = () => {
             {Quicklinks(user)}
 
             {/* Main Content - Middle */}
-            <div className="flex-1 flex-col relative grid grid-auto-flow auto-rows-auto">
+            <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
                 <div className="sticky">
-                    <h1 className="text-white text-2xl top-0 my-6 mx-10">Activity</h1>
+                    <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
                 </div>
 
-                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                {/* All notifications */}
+                <div className="p-6 flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                    {/*<p className="text-text-main">Nothing to see here yet...</p>
+                    <hr className="border-1 w-full self-start border-background-tertiary"></hr>*/}
                 </div>
 
             </div>
