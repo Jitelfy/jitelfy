@@ -36,7 +36,7 @@ func main() {
 	// Send a ping to confirm a successful connection
 	var db = client.Database("jitelfy")
 	if err := db.RunCommand(context.TODO(),
-		bson.D{{"ping", 1}}).Err(); err != nil {
+		bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -66,7 +66,7 @@ func main() {
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 
-		AllowOrigins:     []string{"http://localhost:*"}, // placeholder for local vite
+		AllowOrigins: []string{"http://localhost:*"}, // placeholder for local vite
 
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization"},
 		AllowCredentials: true,

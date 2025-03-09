@@ -22,6 +22,9 @@ type User struct {
 	DisplayName string               `json:"displayname" bson:"displayname"`
 	Username    string               `json:"username" bson:"username"`
 	Icon        int                  `json:"icon" bson:"icon"`
+	Banner      int                  `json:"banner" bson:"banner"`
+	Bio         string               `json:"bio" bson:"bio"`
+	Song        string               `json:"song" bson:"song"`
 	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following   []primitive.ObjectID `json:"following" bson:"following"`
 	Token       string               `json:"token" bson:"token"`
@@ -35,7 +38,7 @@ func GetUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid parameter (userid)")
 	}
 
-	filter := bson.D{{"_id", userid}}
+	filter := bson.D{{Key: "_id", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
@@ -127,47 +130,14 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func SetIcon(c echo.Context) error {
-
-	var userid primitive.ObjectID
-	var idString, err = UserIdFromCookie(c)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
-	}
-
-	req := struct {
-		Icon int `json:"icon"`
-	}{}
-
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid json")
-	}
-
-	userid, err = primitive.ObjectIDFromHex(idString)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
-	}
-
-	filter := bson.D{{Key: "_id", Value: userid}}
-	change := bson.D{{Key: "$set", Value: bson.D{{Key: "icon", Value: req.Icon}}}}
-	var result *mongo.UpdateResult
-	result, err = UserColl.UpdateOne(context.TODO(), filter, change)
-	if err != nil  || result.MatchedCount == 0 {
-		return c.JSON(http.StatusInternalServerError, "failed to update icon")
-	}
-
-	return c.JSON(http.StatusOK, result)
-
-}
-
 // idk if there needs to be more to this but it might actually just be this
 func Logout(c echo.Context) error {
 
 	c.SetCookie(&http.Cookie{
-		Name: "Authorization",
-		Value: "",
-		Expires: time.Now(),
-		Path: "/",
+		Name:     "Authorization",
+		Value:    "",
+		Expires:  time.Now(),
+		Path:     "/",
 		HttpOnly: true,
 	})
 
@@ -210,7 +180,7 @@ func UserIdFromCookie(c echo.Context) (string, error) {
 
 	var tokenString = cookie.Value
 	var token *jwt.Token
-	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		return SecretKey, nil
 	})
 

@@ -145,14 +145,13 @@ func CreatePost(c echo.Context) error {
 	if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
 		return c.JSON(http.StatusBadRequest, "invalid song link")
 	}
+	song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
 	var userId primitive.ObjectID
 
 	if userId, err = primitive.ObjectIDFromHex(UserIdFromToken(c)); err != nil {
 		return c.JSON(http.StatusBadRequest, "missing user token")
 	}
-
-	song := strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 
 	// Build the final Post object
 	newPost := Post{
@@ -281,7 +280,7 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
 
-	filter := bson.D{{"_id", Id}}
+	filter := bson.D{{Key: "_id", Value: Id}}
 	var result *mongo.DeleteResult
 	result, err = PostColl.DeleteOne(context.TODO(), filter)
 	if err != nil {
