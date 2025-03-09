@@ -136,6 +136,8 @@ const FeedPage = () => {
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
+        {!flairFilter && (
+          <>
             {/* Post header */}
             <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
             <div className="flex flex-row mb-1">
@@ -187,7 +189,9 @@ const FeedPage = () => {
                         </p>
                     </button>
                 </div>
-            </div>
+              </div>
+            </>
+          )}
 
           {posts.map((post) => (
             <div
