@@ -126,6 +126,8 @@ const SettingsPage = () => {
                     >
                     </textarea>
 
+                    <hr className="border-1 border-background-tertiary w-full my-3"></hr>
+
                     <button className="w-1/4 self-end"
                     >
                         <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
@@ -156,6 +158,8 @@ const SettingsPage = () => {
                         ))}
 
                     </div>
+
+                    <hr className="border-1 border-background-tertiary w-full my-3"></hr>
 
                     <button className="w-1/4 self-end"
                             onClick={() => handleChangeIcon(NewIcon, user)}>
