@@ -125,7 +125,6 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-<<<<<<< HEAD
 func SetIcon(c echo.Context) error {
 
 	var userid primitive.ObjectID
@@ -149,12 +148,15 @@ func SetIcon(c echo.Context) error {
 
 	filter := bson.D{{Key: "_id", Value: userid}}
 	change := bson.D{{Key: "icon", Value: req.Icon}}
-	_, err = UserColl.UpdateByID(context.TODO(), filter, change)
+	var result *mongo.UpdateResult
+	result, err = UserColl.UpdateByID(context.TODO(), filter, change)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "failed to update icon")
 	}
 
-	return c.JSON(http.StatusBadRequest, "unimplemented method")
+	return c.JSON(http.StatusOK, result)
+
+}
 
 // idk if there needs to be more to this but it might actually just be this
 func Logout(c echo.Context) error {
