@@ -3,6 +3,9 @@ package web_api
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -98,7 +101,7 @@ func Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
-	filter := bson.D{{"username", req.Username}}
+	filter := bson.D{{Key: "username", Value: req.Username}}
 	var result User
 	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
 	if err != nil {
@@ -126,6 +129,53 @@ func Login(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+func SetIcon(c echo.Context) error {
+
+	var userid primitive.ObjectID
+	var idString, err = UserIdFromCookie(c)
+
+	req := struct {
+		Icon int `json:"icon"`
+	}{}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
+	}
+
+	userid, err = primitive.ObjectIDFromHex(idString)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
+	}
+
+	filter := bson.D{{Key: "_id", Value: userid}}
+	change := bson.D{{Key: "icon", Value: req.Icon}}
+	var result *mongo.UpdateResult
+	result, err = UserColl.UpdateByID(context.TODO(), filter, change)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to update icon")
+	}
+
+	return c.JSON(http.StatusOK, result)
+
+}
+
+// idk if there needs to be more to this but it might actually just be this
+func Logout(c echo.Context) error {
+
+	c.SetCookie(&http.Cookie{
+		Name: "Authorization",
+		Value: "",
+		Expires: time.Now(),
+		Path: "/",
+		HttpOnly: true,
+	})
+
+	return c.String(http.StatusOK, "success")
+}
+
 func RestoreUserFromCookie(c echo.Context) error {
 
 	var userid primitive.ObjectID
@@ -139,7 +189,7 @@ func RestoreUserFromCookie(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
 	}
 
-	filter := bson.D{{"_id", userid}}
+	filter := bson.D{{Key: "_id", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 	if err = result.Decode(&user); err != nil {
