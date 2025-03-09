@@ -196,8 +196,12 @@ func FollowUser(c echo.Context) error {
 	}
 
 	// get the entry of the user we want to follow
-	id := c.Param("id")
-	filter = bson.D{{"_id", id}}
+	followStringID := c.Param("id")
+	followObjectID, err := primitive.ObjectIDFromHex(followStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	filter = bson.D{{"_id", followObjectID}}
 	var result2 = UserColl.FindOne(context.TODO(), filter)
 	var follow User
 	if err := result2.Decode(&follow); err != nil {
@@ -208,9 +212,22 @@ func FollowUser(c echo.Context) error {
 		}
 	}
 
-	// add the calling user to the followers who we want to follow
+	// tbh we do not need this
 	follow.Followers = append(follow.Followers, user.Id)
-	user.Following = append(follow.Following, follow.Id)
+	user.Following = append(user.Following, follow.Id)
 
-	return c.JSON(http.StatusOK, follow)
+	// update DB
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": follow.Id}, bson.M{
+		"$addToSet": bson.M{"followers": user.Id},
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": user.Id}, bson.M{
+		"$addToSet": bson.M{"following": follow.Id},
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]string{"message": "followed user - kz3"})
 }
