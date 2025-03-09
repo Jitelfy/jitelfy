@@ -113,7 +113,7 @@ const FeedPage = () => {
       if (user === null) {
         setUser(await RestoreUser());
       }
-      const fetched = await getPosts();  // Always fetch all posts
+      const fetched = await getPosts();
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
@@ -258,7 +258,9 @@ const FeedPage = () => {
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
+              <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
+                {renderTextWithHashtags(post.post.text)}
+              </p>
               {post.post.embed && (
                 <div className="mt-2">
                   <img
