@@ -289,9 +289,27 @@ func DeletePost(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+/*
 func LikePost(c echo.Context) error {
+	// liker
+	likerStrID, _ := UserIdFromCookie(c)
+	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
 
+	// liked
+	likedStrID, _ := c.Param("id")
+	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+
+	_, err = PostColl.UpdateOne(context.TODO(), bson.M{"_id": likedObjID}, bson.M{
+		"$inc": bson.M{"likenum": 1},
+	})
 }
 
 func UnlikePost(c echo.Context) error {
 }
+*/
