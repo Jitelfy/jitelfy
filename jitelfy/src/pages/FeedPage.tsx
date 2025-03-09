@@ -47,11 +47,21 @@ const FeedPage = () => {
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return; // ensure user exists
+
+    const textValue = (document.getElementById('posttext') as HTMLInputElement).value;
   
+    // Find the first hashtag in the text and extract it as flair
+    const match = textValue.match(/#[A-Za-z0-9_]+/);
+    let flair = "";
+    if (match) {
+      flair = match[0].substring(1); // remove the '#' character
+    }
+
     const postData = {
       userid: user.id, // use the logged-in user's ID
       text: (document.getElementById('posttext') as HTMLInputElement).value,
       song: newPostSong,
+      flair: flair, //flair in the post data
     };
   
     // Include the token in the Authorization header
