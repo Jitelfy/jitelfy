@@ -6,6 +6,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import ExplorePage from "./pages/ExplorePage";
 import ActivityPage from "./pages/ActivityPage";
+import BookmarksPage from "./pages/BookmarksPage";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/activity" element={<ActivityPage />} />
+          <Route path="/bookmarks" element={<BookmarksPage />} />
       </Routes>
     </BrowserRouter>
   );

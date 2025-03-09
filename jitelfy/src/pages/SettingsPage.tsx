@@ -3,15 +3,15 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { User } from '../App.tsx';
 import { UserContext } from "../UserContext";
 import { IconArray} from "../UserContext";
+import { getPosts, RestoreUser, BASE_URL } from "../api";
 
-let NewIcon = "-1";
+let NewIcon = -1;
 
 const handleChangeIcon = async (icon: string, user: User) => {
-    const iconID = IconArray.indexOf(icon).toString();
-    console.log("New icon will be of index " + iconID);
-    if (iconID != user?.icon) {
+    console.log("New icon will be of index " + icon);
+    if (icon != user?.icon) {
         console.log("Sending request for icon change and reloading...");
-        location.reload();
+        //location.reload();
     }
 };
 
@@ -20,16 +20,16 @@ const handleIconClick = async (imgID: string, user: User) => {
     if (img != null) {
         const iconIndex = IconArray.indexOf(img.id);
 
-        if (NewIcon != imgID) {
+        if (NewIcon != iconIndex) {
             { /* Unselect the old new icon */ }
-            let oldImg = document.getElementById(NewIcon);
+            let oldImg = document.getElementById(IconArray[NewIcon]);
             if (oldImg != null) {
                 oldImg.style.padding = "0.78rem"
                 oldImg.style.border = "none";
             }
 
             { /* Select the new icon */ }
-            NewIcon = imgID;
+            NewIcon = iconIndex;
             img.style.padding = "0.65rem"
             img.style.border = "2px solid #3354c8";
         }
@@ -54,6 +54,8 @@ const SettingsPage = () => {
     }
 
     const SelectedIcon = user?.icon;
+    NewIcon = -1;
+    let rv = handleIconClick(IconArray[SelectedIcon], user);
 
     return (
         <div className="h-screen bg-background-main flex">

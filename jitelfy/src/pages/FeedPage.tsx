@@ -107,7 +107,7 @@ const FeedPage = () => {
               {user && (
                 <img
                   className="size-14 rounded-full mr-3"
-                  src={IconArray[parseInt(user.icon, 10)]}
+                  src={IconArray[user.icon]}
                   alt={user.displayname}
                 />
                 )}
@@ -184,7 +184,7 @@ const FeedPage = () => {
                 <div>
                   <img
                     className="size-14 rounded-full mb-2 mr-3"
-                    src={IconArray[parseInt(post.user.icon, 10)]}
+                    src={IconArray[post.user.icon]}
                     alt={post.user.displayname}
                   />
                 </div>
