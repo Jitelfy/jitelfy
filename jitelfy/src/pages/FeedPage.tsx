@@ -21,6 +21,10 @@ const FeedPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const flairFilter = searchParams.get("flair") || "";
 
+  const handleFlairClick = (flair: string) => {
+    setSearchParams({ flair });
+  };
+
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return; // ensure user exists
