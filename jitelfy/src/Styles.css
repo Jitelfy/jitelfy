@@ -51,6 +51,11 @@
         font-weight: bold;
     }
 
+    h2 {
+        font-family: "Satoshi", sans-serif;
+        font-weight: bold;
+    }
+
     p {
         font-family: "Inter", sans-serif;
         font-weight: 400;

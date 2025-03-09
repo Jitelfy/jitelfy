@@ -96,7 +96,7 @@ const FeedPage = () => {
       {/* Feed - Main Content */}
       <div className="flex-1 flex-col relative grid grid-auto-flow auto-rows-auto">
           <div className="sticky">
-            <h1 className="text-white text-2xl top-0 my-6 mx-10">Feed</h1>
+            <h1 className="text-text-main text-2xl top-0 my-6 mx-10">Feed</h1>
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
