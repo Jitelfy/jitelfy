@@ -210,5 +210,37 @@ func FollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "followed user - kz3"})
+	return c.JSON(http.StatusOK, map[string]string{"message": "followed user"})
+}
+
+func UnfollowUser(c echo.Context) error {
+	userStringID, _ := UserIdFromCookie(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	unfollowStringID := c.Param("id")
+	unfollowObjectID, err := primitive.ObjectIDFromHex(unfollowStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	if unfollowObjectID == userObjectID {
+		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
+	}
+
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": unfollowObjectID}, bson.M{
+		"$removeFromSet": bson.M{"followers": userObjectID},
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{
+		"$removeFromSet": bson.M{"following": unfollowObjectID},
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]string{"message": "unfollowed user"})
 }
