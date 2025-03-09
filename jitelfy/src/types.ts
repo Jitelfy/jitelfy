@@ -14,7 +14,7 @@ export interface Post {
     id: string;
     displayname: string;
     username: string;
-    icon: string;
+    icon: number;
     following: string[];
     followers: string[];
     token: string;

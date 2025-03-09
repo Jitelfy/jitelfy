@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
+import { IconArray } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
 import { useSearchParams } from "react-router-dom";
@@ -133,22 +134,22 @@ const FeedPage = () => {
       {user && Quicklinks(user)}
 
       {/* Feed - Main Content */}
-      <div className="flex-1 relative grid grid-auto-flow auto-rows-auto">
+      <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
           <div className="sticky">
-            <h1 className="text-white text-2xl top-0 my-6 mx-10">Feed</h1>
+            <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
         {!flairFilter && (
           <>
             {/* Post header */}
-            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
+            <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 gap-3">
             <div className="flex flex-row mb-1">
               {/* Updated: Use the logged-in user's icon */}
               {user && (
                 <img
                   className="size-14 rounded-full mr-3"
-                  src={user.icon}
+                  src={IconArray[user.icon]}
                   alt={user.displayname}
                 />
                 )}
@@ -213,7 +214,7 @@ const FeedPage = () => {
           {posts.map((post) => (
             <div
               key={post.post.id}
-              className="bg-background-secondary p-4 rounded-lg mb-6 mx-10 relative"
+              className="bg-background-secondary p-4 rounded-lg mb-6 relative"
             >
               {/* Delete Button temp*/}
               <button
@@ -240,8 +241,8 @@ const FeedPage = () => {
               <div className="flex items-center">
                 <div>
                   <img
-                    className="size-12 rounded-full mb-2 mr-3"
-                    src={post.user.icon}
+                    className="size-14 rounded-full mb-2 mr-3"
+                    src={IconArray[post.user.icon]}
                     alt={post.user.displayname}
                   />
                 </div>
