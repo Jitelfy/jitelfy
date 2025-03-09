@@ -3,7 +3,7 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 
 
-const SettingsPage = () => {
+const ActivityPage = () => {
     const { user } = useContext(UserContext);
     if (user == null) {
         return (
@@ -28,7 +28,7 @@ const SettingsPage = () => {
             {/* Main Content - Middle */}
             <div className="flex-1 flex-col relative grid grid-auto-flow auto-rows-auto">
                 <div className="sticky">
-                    <h1 className="text-white text-2xl top-0 my-6 mx-10">Settings</h1>
+                    <h1 className="text-white text-2xl top-0 my-6 mx-10">Activity</h1>
                 </div>
 
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
@@ -42,4 +42,4 @@ const SettingsPage = () => {
     );
 };
 
-export default SettingsPage;
+export default ActivityPage;
