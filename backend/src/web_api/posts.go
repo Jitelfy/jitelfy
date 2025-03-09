@@ -2,11 +2,13 @@ package web_api
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
@@ -81,6 +83,7 @@ func GetPosts(c echo.Context) error {
 		}
 	}
 
+	// this is not evena  stream bruh
 	return c.JSON(http.StatusOK, packagedresults)
 }
 */
@@ -348,4 +351,86 @@ func UnlikePost(c echo.Context) error {
 		"message":          "post unliked",
 		"total post likes": strconv.Itoa(len(liked.LikeIds)),
 	})
+}
+
+func BookmarkPost(c echo.Context) error {
+	bookmarkerID, _ := UserIdFromCookie(c)
+	bookmarker, err := primitive.ObjectIDFromHex(bookmarkerID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	postID := c.Param("id")
+	post, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var user User
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": bookmarker},
+		bson.M{"$addToSet": bson.M{"bookmarks": post}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post bookmarked",
+		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+	})
+}
+
+func UnbookmarkPost(c echo.Context) error {
+	bookmarkerID, _ := UserIdFromCookie(c)
+	bookmarker, err := primitive.ObjectIDFromHex(bookmarkerID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	postID := c.Param("id")
+	post, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var user User
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": bookmarker},
+		bson.M{"$pull": bson.M{"bookmarks": post}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post bookmarked",
+		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+	})
+}
+
+func GetBookmarks(c echo.Context) error {
+
+	userid, _ := UserIdFromCookie(c)
+
+	filter := bson.D{{Key: "_id", Value: userid}}
+	var result = UserColl.FindOne(context.TODO(), filter)
+	var user User
+	if err := result.Decode(&user); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusBadRequest, "could not find user")
+		} else {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	var posts []Post
+
+	for _, post_id := range user.Bookmarks {
+
+	}
+
+
+
+	return nil
 }
