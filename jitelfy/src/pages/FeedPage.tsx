@@ -25,6 +25,25 @@ const FeedPage = () => {
     setSearchParams({ flair });
   };
 
+  // Helper function that renders post text and wrap hashtags
+  const renderTextWithHashtags = (text: string) => {
+    return text.split(" ").map((word, index) => {
+      if (word.startsWith("#") && word.length > 1) {
+        const cleanWord = word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+        return (
+          <span
+            key={index}
+            className="cursor-pointer text-accent-blue hover:underline"
+            onClick={() => handleFlairClick(cleanWord.replace(/^#/, ""))}
+          >
+            {word}{" "}
+          </span>
+        );
+      }
+      return <span key={index}>{word} </span>;
+    });
+  };
+
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return; // ensure user exists
