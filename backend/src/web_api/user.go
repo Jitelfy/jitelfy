@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
 	"strconv"
 	"time"
@@ -185,32 +186,12 @@ func FollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	filter := bson.D{{"_id", userObjectID}}
-	var result = UserColl.FindOne(context.TODO(), filter)
-	var user User
-	if err := result.Decode(&user); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-	}
 
 	// user to follow
 	followStringID := c.Param("id")
 	followObjectID, err := primitive.ObjectIDFromHex(followStringID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	filter = bson.D{{"_id", followObjectID}}
-	var result2 = UserColl.FindOne(context.TODO(), filter)
-	var follow User
-	if err := result2.Decode(&follow); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
 	}
 
 	// lol
@@ -219,35 +200,30 @@ func FollowUser(c echo.Context) error {
 	}
 
 	// update DB
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": followObjectID}, bson.M{
-		"$addToSet": bson.M{"followers": userObjectID},
-	})
+	var user User
+	var follow User
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": userObjectID},
+		bson.M{"$addToSet": bson.M{"following": followObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{
-		"$addToSet": bson.M{"following": followObjectID},
-	})
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": followObjectID},
+		bson.M{"$addToSet": bson.M{"followers": userObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&follow)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
-	// re-fetch updated documents
-	err = UserColl.FindOne(context.TODO(), bson.M{"_id": userObjectID}).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to reload user")
-	}
-	err = UserColl.FindOne(context.TODO(), bson.M{"_id": followObjectID}).Decode(&follow)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to reload followed user")
-	}
-
-	userFollowing := len(user.Following)
-	targetFollowers := len(follow.Followers)
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "followed user",
-		"user followers":   strconv.Itoa(userFollowing),
-		"target followers": strconv.Itoa(targetFollowers),
+		"user following":   strconv.Itoa(len(user.Following)),
+		"target followers": strconv.Itoa(len(follow.Followers)),
 	})
 }
 
@@ -257,64 +233,42 @@ func UnfollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	filter := bson.D{{"_id", userObjectID}}
-	var result = UserColl.FindOne(context.TODO(), filter)
-	var user User
-	if err := result.Decode(&user); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-	}
 
 	unfollowStringID := c.Param("id")
 	unfollowObjectID, err := primitive.ObjectIDFromHex(unfollowStringID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	filter = bson.D{{"_id", unfollowObjectID}}
-	var result2 = UserColl.FindOne(context.TODO(), filter)
-	var follow User
-	if err := result2.Decode(&follow); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-	}
 
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
 
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": unfollowObjectID}, bson.M{
-		"$pull": bson.M{"followers": userObjectID},
-	})
+	// update DB
+	var user User
+	var follow User
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": userObjectID},
+		bson.M{"$pull": bson.M{"following": unfollowObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{
-		"$pull": bson.M{"following": unfollowObjectID},
-	})
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": unfollowObjectID},
+		bson.M{"$pull": bson.M{"followers": userObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&follow)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	// re-fetch updated documents
-	err = UserColl.FindOne(context.TODO(), bson.M{"_id": userObjectID}).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to reload user")
-	}
-	err = UserColl.FindOne(context.TODO(), bson.M{"_id": unfollowObjectID}).Decode(&follow)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to reload followed user")
 	}
 
-	userFollowing := len(user.Following)
-	targetFollowers := len(follow.Followers)
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "unfollowed user",
-		"user followers":   strconv.Itoa(userFollowing),
-		"target followers": strconv.Itoa(targetFollowers),
+		"user following":   strconv.Itoa(len(user.Following)),
+		"target followers": strconv.Itoa(len(follow.Followers)),
 	})
 }
