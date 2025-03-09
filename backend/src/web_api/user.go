@@ -179,7 +179,7 @@ func UserIdFromToken(c echo.Context) string {
 func FollowUser(c echo.Context) error {
 
 	// calling user
-	userStringID := UserIdFromToken(c)
+	userStringID, _ := UserIdFromCookie(c)
 	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())

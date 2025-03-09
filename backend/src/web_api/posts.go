@@ -288,6 +288,7 @@ func DeletePost(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+/*
 func LikePost(c echo.Context) error {
 	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
 	if err != nil {
@@ -307,3 +308,4 @@ func CommentPost(c echo.Context) error {
 func DeleteComment(c echo.Context) error {
 	return nil
 }
+*/
