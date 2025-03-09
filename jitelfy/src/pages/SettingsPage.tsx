@@ -3,15 +3,29 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { User } from '../App.tsx';
 import { UserContext } from "../UserContext";
 import { IconArray} from "../UserContext";
-import { getPosts, RestoreUser, BASE_URL } from "../api";
+import {BASE_URL} from "../api";
 
 let NewIcon = -1;
 
 const handleChangeIcon = async (icon: number, user: User) => {
+    if (!user) return; // ensure user exists
+
     console.log("New icon will be of index " + icon);
     if (icon != user?.icon) {
         console.log("Sending request for icon change and reloading...");
-        //location.reload();
+
+        {/*const response = await fetch(`${BASE_URL}/posts?id=${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to change icon", await response.text());
+            return;
+        }*/}
     }
 };
 

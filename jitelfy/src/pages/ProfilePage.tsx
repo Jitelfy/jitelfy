@@ -38,10 +38,10 @@ const ProfilePage = () => {
                 {/* Icon, display & username, profile song */}
                 <div className="flex flex-row w-full self-start items-center">
                     {/*transform -translate-x-1/2*/}
-                    <img src={IconArray[user?.icon]} className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
+                    <img src={IconArray[user?.icon]} alt="profile picture" className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-main"></img>
 
                     {/* Display name & username */}
-                    <div className="flex-col ml-44 mt-4 justify-start ml-3">
+                    <div className="flex-col ml-44 mt-4 justify-start">
                         <h2 className="text-xl text-text-main">{user?.displayname || 'user cannot be loaded'}</h2>
                         <p className="text-md text-text-secondary">@{user?.username || 'username'}</p>
                     </div>
