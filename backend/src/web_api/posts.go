@@ -159,6 +159,7 @@ func CreatePost(c echo.Context) error {
 		Id:       primitive.NewObjectID(),
 		UserId:   userId,
 		ParentId: primitive.NilObjectID,
+		LikeIds:  []primitive.ObjectID{},
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,

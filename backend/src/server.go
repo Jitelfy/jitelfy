@@ -51,6 +51,8 @@ func main() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
+	router.POST("/posts/like/:id", web_api.LikePost)
+	router.POST("/posts/unlike/:id", web_api.UnlikePost)
 	router.GET("/users", web_api.GetUser)
 	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 	router.POST("/signup", web_api.MakeUser)
