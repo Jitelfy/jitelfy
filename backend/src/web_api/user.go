@@ -11,6 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 var UserColl *mongo.Collection
@@ -30,7 +34,7 @@ func GetUser(c echo.Context) error {
 
 	var userid, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (userid)")
 	}
 
 	filter := bson.D{{"_id", userid}}
@@ -222,4 +226,99 @@ func UserIdFromToken(c echo.Context) string {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	return claims["id"].(string)
+}
+
+func FollowUser(c echo.Context) error {
+
+	// calling user
+	userStringID, _ := UserIdFromCookie(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// user to follow
+	followStringID := c.Param("id")
+	followObjectID, err := primitive.ObjectIDFromHex(followStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	// lol
+	if followObjectID == userObjectID {
+		return c.JSON(http.StatusForbidden, "you can't follow yourself")
+	}
+
+	// update DB
+	var user User
+	var follow User
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": userObjectID},
+		bson.M{"$addToSet": bson.M{"following": followObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": followObjectID},
+		bson.M{"$addToSet": bson.M{"followers": userObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&follow)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "followed user",
+		"user following":   strconv.Itoa(len(user.Following)),
+		"target followers": strconv.Itoa(len(follow.Followers)),
+	})
+}
+
+func UnfollowUser(c echo.Context) error {
+	userStringID, _ := UserIdFromCookie(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	unfollowStringID := c.Param("id")
+	unfollowObjectID, err := primitive.ObjectIDFromHex(unfollowStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	if unfollowObjectID == userObjectID {
+		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
+	}
+
+	// update DB
+	var user User
+	var follow User
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": userObjectID},
+		bson.M{"$pull": bson.M{"following": unfollowObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	err = UserColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": unfollowObjectID},
+		bson.M{"$pull": bson.M{"followers": userObjectID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&follow)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "unfollowed user",
+		"user following":   strconv.Itoa(len(user.Following)),
+		"target followers": strconv.Itoa(len(follow.Followers)),
+	})
 }

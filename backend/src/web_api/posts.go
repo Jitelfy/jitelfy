@@ -2,7 +2,9 @@ package web_api
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -157,6 +159,7 @@ func CreatePost(c echo.Context) error {
 		Id:       primitive.NewObjectID(),
 		UserId:   userId,
 		ParentId: primitive.NilObjectID,
+		LikeIds:  []primitive.ObjectID{},
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
@@ -288,16 +291,62 @@ func DeletePost(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-/*
 func LikePost(c echo.Context) error {
-	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
+	// liker
+	likerStrID, _ := UserIdFromCookie(c)
+	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liker)")
 	}
 
+	// liked
+	likedStrID := c.Param("id")
+	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid parameter (liked)")
+	}
 
+	var liked Post
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": likedObjID},
+		bson.M{"$addToSet": bson.M{"likeids": likerObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(liked)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not like post")
+	}
 
-
-
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post liked",
+		"total post likes": strconv.Itoa(len(liked.LikeIds)),
+	})
 }
-*/
+
+func UnlikePost(c echo.Context) error {
+	likerStrID, _ := UserIdFromCookie(c)
+	likerObjID, err := primitive.ObjectIDFromHex(likerStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liker)")
+	}
+	likedStrID := c.Param("id")
+	likedObjID, err := primitive.ObjectIDFromHex(likedStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
+	}
+	var liked Post
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": likedObjID},
+		bson.M{"$pull": bson.M{"likeids": likerObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(liked)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not unlike post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post unliked",
+		"total post likes": strconv.Itoa(len(liked.LikeIds)),
+	})
+}

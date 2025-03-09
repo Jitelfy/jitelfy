@@ -51,17 +51,23 @@ func main() {
 	router.GET("/posts/comments", web_api.GetComments)
 	router.POST("/posts/top", web_api.CreatePost)
 	router.POST("/posts/comments", web_api.CreateComment)
+	router.POST("/posts/like/:id", web_api.LikePost)
+	router.POST("/posts/unlike/:id", web_api.UnlikePost)
 	router.GET("/users", web_api.GetUser)
 	router.PUT("/users/icon", web_api.SetIcon)
 	router.GET("/users/restore", web_api.RestoreUserFromCookie)
 	router.POST("/signup", web_api.MakeUser)
 	router.POST("/login", web_api.Login)
+	router.POST("/users/follow/:id", web_api.FollowUser)
+	router.POST("/users/unfollow/:id", web_api.UnfollowUser)
 	router.POST("/logout", web_api.Logout)
 	router.DELETE("/posts", web_api.DeletePost)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+
 		AllowOrigins:     []string{"http://localhost:*"}, // placeholder for local vite
+
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization"},
 		AllowCredentials: true,
 	}))
