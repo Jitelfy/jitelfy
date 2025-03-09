@@ -133,6 +133,9 @@ func SetIcon(c echo.Context) error {
 
 	var userid primitive.ObjectID
 	var idString, err = UserIdFromCookie(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
+	}
 
 	req := struct {
 		Icon int `json:"icon"`
@@ -141,9 +144,6 @@ func SetIcon(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to get userid from cookie")
-	}
 
 	userid, err = primitive.ObjectIDFromHex(idString)
 	if err != nil {
@@ -151,11 +151,11 @@ func SetIcon(c echo.Context) error {
 	}
 
 	filter := bson.D{{Key: "_id", Value: userid}}
-	change := bson.D{{Key: "icon", Value: req.Icon}}
+	change := bson.D{{Key: "$set", Value: bson.D{{Key: "icon", Value: req.Icon}}}}
 	var result *mongo.UpdateResult
-	result, err = UserColl.UpdateByID(context.TODO(), filter, change)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "failed to update icon")
+	result, err = UserColl.UpdateOne(context.TODO(), filter, change)
+	if err != nil  || result.MatchedCount == 0 {
+		return c.JSON(http.StatusInternalServerError, "failed to update icon")
 	}
 
 	return c.JSON(http.StatusOK, result)

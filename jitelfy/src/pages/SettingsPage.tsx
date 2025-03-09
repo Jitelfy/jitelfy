@@ -1,9 +1,9 @@
-import {useContext, useState} from "react";
+import {useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
-import { User } from '../App.tsx';
+import { User } from '../types.ts';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
-import {BASE_URL} from "../api";
+import {BASE_URL, RestoreUser } from "../api";
 
 let NewIcon = -1;
 
@@ -32,6 +32,7 @@ const handleChangeIcon = async (icon: number, user: User) => {
             console.error("Failed to change icon", await response.text());
             return;
         }
+        window.location.reload();
     }
 };
 
@@ -57,7 +58,27 @@ const handleIconClick = async (imgID: string, user: User) => {
 };
 
 const SettingsPage = () => {
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
+
+
+    let newBio: string = "";
+    const [newDisplayName, setNewDisplayName] = useState("");
+    const [newProfileSong, setNewProfileSong] = useState("");
+
+    useEffect(() => {
+        const restore = async () => {
+            const loggedInUser: User = await RestoreUser();
+            if (loggedInUser.id != null) {
+                setUser(loggedInUser);
+            }
+
+        };
+
+        if (user == null) {
+            restore();
+        }
+  });
+
     if (user == null) {
         return (
             <div className="h-screen bg-background-main flex">
@@ -76,10 +97,6 @@ const SettingsPage = () => {
     const SelectedIcon = user?.icon;
     NewIcon = -1;
     let rv = handleIconClick(IconArray[SelectedIcon], user);
-
-    let newBio: string = "";
-    const [newDisplayName, setNewDisplayName] = useState("");
-    const [newProfileSong, setNewProfileSong] = useState("");
 
     return (
         <div className="h-screen bg-background-main flex">

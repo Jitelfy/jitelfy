@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../api';
 import { User } from '../App.tsx';
 import { IconArray } from "../UserContext";
 
@@ -123,26 +125,49 @@ export const Quicklinks = (user: User) => {
 }
 
 const ProfileButton = (user: User) => {
+
+  const navigate = useNavigate();
+  async function logOut() {
+    const response = await fetch(`${BASE_URL}/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) {
+        alert("failed to logout");
+        return;
+    }
+      navigate("/feed");
+      window.location.reload();
+  };
+
+  function login() {
+      navigate("/");
+      return;
+  }
+
+  function handlePopup() {
+      let popup = document.getElementById("myPopup");
+      if (popup != null) {
+          if (popup.style.visibility == "hidden") {
+              popup.style.visibility = "visible";
+          } else {
+              popup.style.visibility = "hidden";
+          }
+      }
+      return;
+  }
+
     if (user == null) {
-        return null;
+        return (
+            <div className="flex flex-row align-middle gap-1 justify-center border-2 p-4 text-text-main border-background-main hover:bg-background-secondary rounded-md"
+            onClick={() => login() }
+            >
+            <h3 className="text-wrap"> Login </h3>
+            </div>
+        );
     }
 
-    function logOutUser() {
-        {/* TODO: Put an onclick here to log out the user. */}
-        console.log('logOutUser');
-    }
-
-    function handlePopup() {
-        let popup = document.getElementById("myPopup");
-        if (popup != null) {
-            if (popup.style.visibility == "hidden") {
-                popup.style.visibility = "visible";
-            } else {
-                popup.style.visibility = "hidden";
-            }
-        }
-        return
-    }
 
     return (
         <div className="flex flex-col">
@@ -164,7 +189,7 @@ const ProfileButton = (user: User) => {
 
                 {/* Log out button */}
                 <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red rounded-md"
-                     onClick={logOutUser}
+                     onClick={() => logOut() }
                 >
                     <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
                 </div>

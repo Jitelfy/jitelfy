@@ -112,7 +112,10 @@ const FeedPage = () => {
   useEffect(() => {
     const fetchPostsData = async () => {
       if (user === null) {
-        setUser(await RestoreUser());
+          const userjson = await RestoreUser();
+          if (userjson.id != null) {
+              setUser(userjson);
+          }
       }
       const fetched = await getPosts();
       fetched.sort(
@@ -131,7 +134,7 @@ const FeedPage = () => {
     return (
     <div className="h-screen bg-background-main flex">
       {/* Sidebar - Left */}
-      {user && Quicklinks(user)}
+      {Quicklinks(user)}
 
       {/* Feed - Main Content */}
       <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
@@ -140,7 +143,7 @@ const FeedPage = () => {
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
-        {!flairFilter && (
+        {!flairFilter && user && (
           <>
             {/* Post header */}
             <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 gap-3">
