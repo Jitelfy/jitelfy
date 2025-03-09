@@ -3,6 +3,7 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
+import { useSearchParams } from "react-router-dom";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -16,15 +17,51 @@ const FeedPage = () => {
   //const [newPostText, setNewPostText] = useState("");
   const [newPostSong, setNewPostSong] = useState("");
 
+  // Setup search parameters for filtering
+  const [searchParams, setSearchParams] = useSearchParams();
+  const flairFilter = searchParams.get("flair") || "";
+
+  const handleFlairClick = (flair: string) => {
+    setSearchParams({ flair });
+  };
+
+  // Helper function that renders post text and wrap hashtags
+  const renderTextWithHashtags = (text: string) => {
+    return text.split(" ").map((word, index) => {
+      if (word.startsWith("#") && word.length > 1) {
+        const cleanWord = word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+        return (
+          <span
+            key={index}
+            className="cursor-pointer text-accent-blue hover:underline"
+            onClick={() => handleFlairClick(cleanWord.replace(/^#/, ""))}
+          >
+            {word}{" "}
+          </span>
+        );
+      }
+      return <span key={index}>{word} </span>;
+    });
+  };
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return; // ensure user exists
+
+    const textValue = (document.getElementById('posttext') as HTMLInputElement).value;
   
+    // Find the first hashtag in the text and extract it as flair
+    const match = textValue.match(/#[A-Za-z0-9_]+/);
+    let flair = "";
+    if (match) {
+      flair = match[0].substring(1); // remove the '#' character
+    }
+
     const postData = {
       userid: user.id, // use the logged-in user's ID
       text: (document.getElementById('posttext') as HTMLInputElement).value,
       song: newPostSong,
+      flair: flair, //flair in the post data
     };
   
     // Include the token in the Authorization header
@@ -72,19 +109,22 @@ const FeedPage = () => {
   };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-        if (user === null) {
-            setUser(await RestoreUser());
-        }
+    const fetchPostsData = async () => {
+      if (user === null) {
+        setUser(await RestoreUser());
+      }
       const fetched = await getPosts();
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
       fetchedPosts = fetched;
-      setPosts(fetchedPosts);
+      const filtered = flairFilter
+        ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
+        : fetchedPosts;
+      setPosts(filtered);
     };
-    fetchPosts();
-  }, [user]);
+    fetchPostsData();
+  }, [user, flairFilter]);
 
     // @ts-ignore
     return (
@@ -99,6 +139,8 @@ const FeedPage = () => {
           </div>
         <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
+        {!flairFilter && (
+          <>
             {/* Post header */}
             <div className="flex flex-col bg-background-secondary p-4 rounded-md mb-8 mx-10 gap-3">
             <div className="flex flex-row mb-1">
@@ -150,7 +192,23 @@ const FeedPage = () => {
                         </p>
                     </button>
                 </div>
-            </div>
+              </div>
+            </>
+          )}
+
+        {flairFilter && (
+          <div className="mx-10 my-4">
+            <p className="text-white">
+              Filtering posts by hashtag: <strong>#{flairFilter}</strong>
+            </p>
+            <button
+              className="mt-2 px-4 py-1 bg-accent-blue-light rounded"
+              onClick={() => setSearchParams({})}
+            > 
+              Clear Filter
+            </button>
+          </div>
+          )}
 
           {posts.map((post) => (
             <div
@@ -200,7 +258,9 @@ const FeedPage = () => {
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
+              <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
+                {renderTextWithHashtags(post.post.text)}
+              </p>
               {post.post.embed && (
                 <div className="mt-2">
                   <img
