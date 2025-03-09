@@ -184,47 +184,28 @@ func FollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	filter := bson.D{{"_id", userObjectID}}
-	var result = UserColl.FindOne(context.TODO(), filter)
-	var user User
-	if err := result.Decode(&user); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
-	}
 
-	// get the entry of the user we want to follow
+	// user to follow
 	followStringID := c.Param("id")
 	followObjectID, err := primitive.ObjectIDFromHex(followStringID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	filter = bson.D{{"_id", followObjectID}}
-	var result2 = UserColl.FindOne(context.TODO(), filter)
-	var follow User
-	if err := result2.Decode(&follow); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusNotFound, "user not found")
-		} else {
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
+
+	// lol
+	if followObjectID == userObjectID {
+		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
-	// tbh we do not need this
-	follow.Followers = append(follow.Followers, user.Id)
-	user.Following = append(user.Following, follow.Id)
-
 	// update DB
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": follow.Id}, bson.M{
-		"$addToSet": bson.M{"followers": user.Id},
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": followObjectID}, bson.M{
+		"$addToSet": bson.M{"followers": userObjectID},
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": user.Id}, bson.M{
-		"$addToSet": bson.M{"following": follow.Id},
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{
+		"$addToSet": bson.M{"following": followObjectID},
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
