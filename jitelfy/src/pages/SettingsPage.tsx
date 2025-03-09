@@ -2,7 +2,7 @@ import {useContext, useState} from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { User } from '../App.tsx';
 import { UserContext } from "../UserContext";
-import { IconArray} from "../UserContext";
+import { IconArray, BannerArray } from "../UserContext";
 import {BASE_URL} from "../api";
 
 let NewIcon = -1;
@@ -167,8 +167,36 @@ const SettingsPage = () => {
                             Save
                         </p>
                     </button>
+                </div>
+
+                {/* Profile banner selector */}
+                <div className="flex flex-col items-start bg-background-secondary mt-10 p-4 rounded-md gap-3">
+                    <h2 className=" text-text-main text-lg">Profile banner</h2>
+
+                    {/* Container for banner colours */}
+                    <div id="bannerContainer"
+                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
+
+                        {BannerArray.map((color) => (
+                            <svg height="140" width="140"
+                                className="p-3 rounded-lg bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out">
+                                <rect width="110" height="110" x="3" y="3" rx="10" ry="10" fill={color} />
+                            </svg>
+                        ))}
+
+                    </div>
+
+                    <hr className="border-1 border-background-tertiary w-full my-3"></hr>
+
+                    <button className="w-1/4 self-end"
+                            >
+                        <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
+                            Save
+                        </p>
+                    </button>
 
                 </div>
+
 
                 {/* Profile song changer */}
                 <div className="flex flex-col items-start bg-background-secondary p-4 rounded-md my-10 gap-3">
