@@ -1,7 +1,7 @@
-import { useState, useContext } from "react";
+import { useEffect, useContext } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from "../UserContext";
-import { BASE_URL } from "../api";
+import { BASE_URL, RestoreUser } from "../api";
 import { User } from "../types";
 
 
@@ -27,10 +27,30 @@ const LoginPage = () => {
       body: JSON.stringify(loginData),
       credentials: "include",
     });
+    if (!response.ok) {
+        alert("invalid username/password");
+        return;
+    }
     const loggedInUser: User = JSON.parse(await response.text());
     setUser(loggedInUser);
     navigate("/feed");
   };
+
+
+  /*
+  useEffect(() => {
+    const restore = async () => {
+      const loggedInUser: User = await RestoreUser();
+      if (loggedInUser.id != null) {
+          setUser(loggedInUser);
+          navigate("/feed");
+      }
+
+    };
+
+    restore();
+  });
+  */
 
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
