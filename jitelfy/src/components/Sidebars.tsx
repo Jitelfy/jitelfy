@@ -4,13 +4,56 @@ import { IconArray } from "../UserContext";
 
 export const FriendActivity = () => {
     return (
-      <div className="w-1/4 bg-background-secondary p-6 overflow-auto">
-        <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
-        {["jack", "alexie", "kayzee", "emilie", "booler"].map((friend, index) => (
-          <div key={index} className="bg-background-tertiary p-4 rounded-lg mb-4">
-            <p className="text-text-main">{friend}: Currently listening to...</p>
+      <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
+
+          <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
+
+          {/* Sample friend activity #1 */}
+          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+              {/* Friend's profile picture and username */}
+              <div className="flex flex-row items-center text-text-main">
+                  <img
+                      className="size-9 rounded-full mr-3"
+                      src="/src/user_icons/icon_5.png"
+                      alt="Friend icon"
+                  ></img>
+                  <p>@username_1</p>
+              </div>
+
+              {/* Friend's profile song */}
+              <div className="mt-4">
+                  <iframe
+                      src="https://open.spotify.com/embed/track/0gzy4HT0Ifnxm7T2U0XzdM?si=12a67ae2d83744e4"
+                      className="w-full h-20"
+                      title="Friend song"
+                      allowFullScreen
+                  ></iframe>
+              </div>
           </div>
-        ))}
+
+          {/* Sample friend activity #2 */}
+          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+              {/* Friend's profile picture and username */}
+              <div className="flex flex-row items-center text-text-main">
+                  <img
+                      className="size-9 rounded-full mr-3"
+                      src="/src/user_icons/icon_10.png"
+                      alt="Friend icon"
+                  ></img>
+                  <p>@username_2</p>
+              </div>
+
+              {/* Friend's profile song */}
+              <div className="mt-4">
+                  <iframe
+                      src="https://open.spotify.com/embed/track/0RvBKchlzAHN59rGJ64qOM?si=8f09ef85b1074bcf"
+                      className="w-full h-20"
+                      title="Friend song"
+                      allowFullScreen
+                  ></iframe>
+              </div>
+          </div>
+
       </div>
     );
 }
