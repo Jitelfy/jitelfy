@@ -109,19 +109,22 @@ const FeedPage = () => {
   };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-        if (user === null) {
-            setUser(await RestoreUser());
-        }
-      const fetched = await getPosts();
+    const fetchPostsData = async () => {
+      if (user === null) {
+        setUser(await RestoreUser());
+      }
+      const fetched = await getPosts();  // Always fetch all posts
       fetched.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
       fetchedPosts = fetched;
-      setPosts(fetchedPosts);
+      const filtered = flairFilter
+        ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
+        : fetchedPosts;
+      setPosts(filtered);
     };
-    fetchPosts();
-  }, [user]);
+    fetchPostsData();
+  }, [user, flairFilter]);
 
     // @ts-ignore
     return (
