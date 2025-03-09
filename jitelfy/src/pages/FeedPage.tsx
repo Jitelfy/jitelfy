@@ -17,6 +17,9 @@ const FeedPage = () => {
   //const [newPostText, setNewPostText] = useState("");
   const [newPostSong, setNewPostSong] = useState("");
 
+  // Setup search parameters for filtering
+  const [searchParams, setSearchParams] = useSearchParams();
+  const flairFilter = searchParams.get("flair") || "";
 
   const handleSubmitPost = async (e: React.FormEvent) => {
     e.preventDefault();
