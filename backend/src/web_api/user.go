@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"time"
-	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -217,6 +216,16 @@ func FollowUser(c echo.Context) error {
 	if followObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
+
+	// Make sure the actual arrays themselves are null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
 
 	// update DB
 	var user User
