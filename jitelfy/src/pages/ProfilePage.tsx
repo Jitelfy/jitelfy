@@ -18,19 +18,23 @@ const ProfilePage = () => {
     const handleToggleFollow = async () => {
         if (!userData) return;
         if (!isFollowing) {
-          await followUser(userData.id);
-          // Refresh user data immediately after following
-          const updatedUser = await RestoreUser();
-          setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
-          setIsFollowing(true);
+            await followUser(userData.id);
+            // Refresh user data immediately after following
+            const updatedUser = await RestoreUser();
+            setUser(updatedUser);
+            if (user != null) {
+                setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+                setIsFollowing(true);
+            }
         } else {
-          await unfollowUser(userData.id);
-          // Refresh user data immediately after unfollowing
-          const updatedUser = await RestoreUser();
-          setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
-          setIsFollowing(false);
+            await unfollowUser(userData.id);
+            // Refresh user data immediately after unfollowing
+            const updatedUser = await RestoreUser();
+            setUser(updatedUser);
+            if (user != null) {
+                setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+                setIsFollowing(false);
+            }
         }
       };
       

@@ -8,5 +8,5 @@ export default defineConfig({
         outDir: './build',
         assetsDir: './',
     },
-    base: './',
+    base: '/',
 })

@@ -1,5 +1,8 @@
 backend/src/go_build_test_web_api
 backend/src/bootstrap.zip
 backend/src/bootstrap
+jitelfy/src/pages/*.js
+jitelfy/src/components/*.js
+jitelfy/src/*.js
 jitelfy/build
 .idea

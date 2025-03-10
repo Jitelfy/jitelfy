@@ -384,20 +384,22 @@ const FeedPage = () => {
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M16.2929 3.29289C16.6834 2.90237 17.3166 2.90237 17.7071 3.29289L20.7071 6.29289C21.0976 6.68342 21.0976 7.31658 20.7071 7.70711L17.7071 10.7071C17.3166 11.0976 16.6834 11.0976 16.2929 10.7071C15.9024 10.3166 15.9024 9.68342 16.2929 9.29289L17.5857 8.00006H7.85181C5.70703 8.00006 4 9.75511 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12C2 8.72205 4.53229 6.00006 7.85181 6.00006H17.5858L16.2929 4.70711C15.9024 4.31658 15.9024 3.68342 16.2929 3.29289ZM21 11C21.5523 11 22 11.4477 22 12C22 15.3283 19.2275 18.0001 15.9578 18.0001H6.41427L7.70711 19.2929C8.09763 19.6834 8.09763 20.3166 7.70711 20.7071C7.31658 21.0976 6.68342 21.0976 6.29289 20.7071L3.29289 17.7071C2.90237 17.3166 2.90237 16.6834 3.29289 16.2929L6.29289 13.2929C6.68342 12.9024 7.31658 12.9024 7.70711 13.2929C8.09763 13.6834 8.09763 14.3166 7.70711 14.7071L6.41415 16.0001H15.9578C18.1524 16.0001 20 14.1945 20 12C20 11.4477 20.4477 11 21 11Z"/>
                             </svg>
                             <p className="text-sm">0</p>
-                        </div>
+                            </div>
 
-                        {/* Like */}
-                        <div className={`text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-red hover:fill-accent-red flex flex-row gap-2 items-center cursor-pointer`}
+                            {/* Like */}
+                            <div className={`text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-red hover:fill-accent-red flex flex-row gap-2 items-center cursor-pointer`}
                             onClick={() => {
-                              if (post.post.likeIds.indexOf(user.id) !== -1) {
-                                handleUnlike(post.post.id); // Unlike if already liked
-                              } else {
-                                handleLike(post.post.id); // Like if not already liked
-                              }
+                                if (user != null) {
+                                    if (post.post.likeIds.indexOf(user.id) !== -1) {
+                                        handleUnlike(post.post.id); // Unlike if already liked
+                                    } else {
+                                        handleLike(post.post.id); // Like if not already liked
+                                    }
+                                }
                             }}>
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.78125 4C4.53699 4 2 6.81981 2 10.1559C2 11.8911 2.27768 13.32 3.31283 14.8234C4.3005 16.258 5.9429 17.7056 8.49134 19.6155L12 22L15.5084 19.6158C18.057 17.7058 19.6995 16.258 20.6872 14.8234C21.7223 13.32 22 11.8911 22 10.1559C22 6.81982 19.463 4 16.2188 4C14.5909 4 13.1818 4.66321 12 5.86323C10.8182 4.66321 9.40906 4 7.78125 4ZM7.78125 6C5.77551 6 4 7.7855 4 10.1559C4 10.7049 4.03107 11.1875 4.10853 11.6325C4.23826 12.378 4.49814 13.0182 4.96014 13.6893C5.74532 14.8297 7.14861 16.11 9.69156 18.0157L12 19.7494L14.3084 18.0157C16.8514 16.11 18.2547 14.8297 19.0399 13.6893C19.7777 12.6176 20 11.6245 20 10.1559C20 7.7855 18.2245 6 16.2188 6C14.9831 6 13.8501 6.58627 12.8033 7.99831C12.6147 8.25274 12.3167 8.40277 12 8.40277C11.6833 8.40277 11.3853 8.25274 11.1967 7.99831C10.1499 6.58627 9.01689 6 7.78125 6Z"
-                                fill={post.post.likeIds.indexOf(user?.id) !== -1 ? "#ff0000" : "currentColor"}/>
+                                fill={user && post.post.likeIds.indexOf(user?.id) !== -1 ? "#ff0000" : "currentColor"}/>
                             </svg>
                             <p className="text-sm">{post.post.likeIds.length}</p>
                         </div>

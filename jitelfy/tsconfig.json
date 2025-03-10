@@ -7,9 +7,11 @@
     "target": "es6",
     "module": "esnext",
     "jsx": "react-jsx",
+    "noEmit": true,
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "lib": ["es7", "dom"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
