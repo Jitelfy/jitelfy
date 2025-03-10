@@ -70,7 +70,7 @@ func SetBanner(c echo.Context) error {
 	}
 
 	filter := bson.D{{Key: "_id", Value: userid}}
-	change := bson.D{{Key: "$set", Value: bson.D{{Key: "icon", Value: req.Banner}}}}
+	change := bson.D{{Key: "$set", Value: bson.D{{Key: "banner", Value: req.Banner}}}}
 	var result *mongo.UpdateResult
 	result, err = UserColl.UpdateOne(context.TODO(), filter, change)
 	if err != nil || result.MatchedCount == 0 {
@@ -132,7 +132,7 @@ func SetDisplayName(c echo.Context) error {
 	}
 
 	filter := bson.D{{Key: "_id", Value: userid}}
-	change := bson.D{{Key: "$set", Value: bson.D{{Key: "bio", Value: req.Displayname}}}}
+	change := bson.D{{Key: "$set", Value: bson.D{{Key: "displayname", Value: req.Displayname}}}}
 	var result *mongo.UpdateResult
 	result, err = UserColl.UpdateOne(context.TODO(), filter, change)
 	if err != nil || result.MatchedCount == 0 {
@@ -153,14 +153,15 @@ func SetFavSong(c echo.Context) error {
 		Song string `json:"song"`
 	}{}
 
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
+
 	if !strings.Contains(req.Song, "https://open.spotify.com/track/") {
 		return c.JSON(http.StatusBadRequest, "invalid song link")
 	}
 	song := strings.Replace(req.Song, "/track/", "/embed/track/", 1)
 
-	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid json")
-	}
 
 	userid, err = primitive.ObjectIDFromHex(idString)
 	if err != nil {

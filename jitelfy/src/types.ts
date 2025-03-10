@@ -8,19 +8,22 @@ export interface Post {
     text: string;
     embed: string;
     song: string;
-  }
-  
-  export interface User {
+}
+
+export interface User {
     id: string;
     displayname: string;
     username: string;
     icon: number;
+    banner: number;
+    bio: string;
+    song: string;
     following: string[];
     followers: string[];
     token: string;
-  }
-  
-  export interface PackagedPost {
+}
+
+export interface PackagedPost {
     post: Post;
     user: User;
-  }
+}
