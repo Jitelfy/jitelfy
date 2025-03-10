@@ -21,3 +21,11 @@ export async function RestoreUser(): Promise<User> {
   const response = await getContent("/users/restore");
   return JSON.parse(response);
 }
+
+export async function followUser(userId: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/users/follow/${userId}`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return response.json();
+}
