@@ -36,8 +36,6 @@ type User struct {
 func GetUser(c echo.Context) error {
 
 	var userid = c.Param("id")
-	fmt.Println("username")
-	fmt.Println(userid)
 
 	filter := bson.D{{Key: "username", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)

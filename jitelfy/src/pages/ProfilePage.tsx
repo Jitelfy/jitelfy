@@ -1,12 +1,31 @@
-import { useContext } from "react";
+import {useContext, useEffect, useState} from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
+import {useParams} from "react-router-dom";
+import {getPosts, getUser, RestoreUser} from "../api";
+import {User} from "../types";
 
 
 const ProfilePage = () => {
     const { user } = useContext(UserContext);
-    if (user == null) {
+    const [userData, setUserData] = useState<User | null>(null);
+
+    const { username } = useParams(); // Grab the dynamic username from the URL
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (username != null) {
+                // Fetching user data
+                const profileUser = await getUser(username);
+                setUserData(profileUser);
+            }
+        };
+        fetchUser();
+    }, [user, username]); // Run when username changes
+
+    console.log(userData);
+
+    if (userData == null) {
         return (
             <div className="h-screen bg-background-main flex">
                 {/* Sidebar - Left */}
@@ -34,25 +53,25 @@ const ProfilePage = () => {
                     {/* Banner */}
                     <div className="w-full h-44 rounded-md flex items-center justify-center"
                         id="banner"
-                        style={{backgroundColor: BannerArray[user?.banner]}}>
+                        style={{backgroundColor: BannerArray[userData.banner]}}>
                     </div>
 
                     {/* Icon, display & username, profile song */}
                     <div className="flex flex-row w-full self-start justify-start items-center">
-                        <img src={IconArray[user?.icon]}
+                        <img src={IconArray[userData.icon]}
                              alt="profile picture"
                              className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-secondary"></img>
 
                         {/* Display name & username */}
                         <div className="flex-col ml-44 mt-4">
-                            <h2 className="text-xl text-text-main">{user?.displayname || 'user cannot be loaded'}</h2>
-                            <p className="text-md text-text-secondary">@{user?.username || 'username'}</p>
+                            <h2 className="text-xl text-text-main">{userData.displayname || 'user cannot be loaded'}</h2>
+                            <p className="text-md text-text-secondary">@{userData.username || 'username'}</p>
                         </div>
 
                         {/* DEBUG: Profile song */}
                         {user.song && (<div className="ml-auto mt-4">
                             <iframe
-                                src={user?.song}
+                                src={userData.song}
                                 className="w-full h-20"
                                 title="Profile song"
                             ></iframe>
@@ -61,7 +80,7 @@ const ProfilePage = () => {
 
                     {/* Bio */}
                     <p className="text-text-main self-start ml-10 mr-10 mt-10 overflow-auto text-wrap">
-                        {user?.bio || "This user has no bio."}
+                        {userData.bio || "This user has no bio."}
                     </p>
 
                     {/* Followers & following */}
