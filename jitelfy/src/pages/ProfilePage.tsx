@@ -7,25 +7,33 @@ import {getPosts, getUser, RestoreUser, followUser, unfollowUser} from "../api"
 import {User} from "../types";
 
 
+
 const ProfilePage = () => {
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
     const handleToggleFollow = async () => {
-  if (!userData) return;
-  if (!isFollowing) {
-    await followUser(userData.id);
-    setIsFollowing(true);
-    setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
-  } else {
-    await unfollowUser(userData.id);
-    setIsFollowing(false);
-    setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
-  }
-};
+        if (!userData) return;
+        if (!isFollowing) {
+          await followUser(userData.id);
+          // Refresh user data immediately after following
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+          setIsFollowing(true);
+        } else {
+          await unfollowUser(userData.id);
+          // Refresh user data immediately after unfollowing
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+          setIsFollowing(false);
+        }
+      };
+      
     
     useEffect(() => {
         const fetchUser = async () => {
