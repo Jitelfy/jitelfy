@@ -186,6 +186,64 @@ const FeedPage = () => {
     setPosts((prevPosts) => prevPosts.filter((post) => post.post.id !== id));
   };
 
+  const handleBookmark = async (postId: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${BASE_URL}/posts/bookmark/${postId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setUser(posts.map((user) => {
+          return {
+            ...user.user,
+            user: {
+              ...user.user,
+              bookmarks: [...user.user.bookmarks, postId],
+            },
+          };
+        }));
+      }
+    } 
+    catch (error) {
+      console.log("Error bookmarking post:", error);
+    }
+  }
+
+  const handleUnBookmark = async (postId: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${BASE_URL}/posts/bookmark/${postId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setUser(posts.map((user) => {
+          return {
+            ...user.user,
+            user: {
+              ...user.user,
+              bookmarks: user.user.bookmarks.filter((id) => id !== postId)
+            },
+          };
+        }));
+      }
+    } 
+    catch (error) {
+      console.log("Error bookmarking post:", error);
+    }
+  }
+
   useEffect(() => {
     const fetchPostsData = async () => {
       if (user === null) {
