@@ -158,7 +158,7 @@ const ProfileButton = (user: User) => {
 
     if (user == null) {
         return (
-            <div className="flex mt-auto mb-4 justify-center w-full flex-row border-2 p-10 text-text-main border-background-tertiary hover:bg-background-tertiary rounded-md"
+            <div className="flex mt-auto mb-4 justify-center w-full flex-row border-2 p-10 text-text-main border-background-tertiary hover:bg-background-tertiary hover:cursor-pointer rounded-md"
             onClick={() => login() }
             >
                 <h3 className="text-wrap text-xl"> Login </h3>
@@ -186,7 +186,7 @@ const ProfileButton = (user: User) => {
                 </Link>
 
                 {/* Log out button */}
-                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red rounded-md"
+                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red hover:cursor-pointer rounded-md"
                      onClick={() => logOut() }
                 >
                     <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
@@ -194,7 +194,7 @@ const ProfileButton = (user: User) => {
 
             </div>
                 <div
-                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary"
+                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
                     onClick={handlePopup}
                 >
                     <div className="flex justify-start items-start justify-items-start w-full flex-row">
