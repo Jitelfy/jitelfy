@@ -360,7 +360,7 @@ func LikePost(c echo.Context) error {
 		Type:      "like",
 		Message:   msg,
 	}
-	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"addToSet": bson.M{"alerts": alert}})
+	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"$addToSet": bson.M{"alerts": alert}})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}

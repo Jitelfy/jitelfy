@@ -29,14 +29,14 @@ func GetUserAlerts(c echo.Context) error {
 	userStringID, _ := UserIdFromCookie(c)
 	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not parse user id")
 	}
 
 	filter := bson.M{"userid": userObjectID}
 	var userAlerts UserAlerts
 	err = AlertColl.FindOne(context.Background(), filter).Decode(&userAlerts)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not find alerts")
 	}
 	return c.JSON(http.StatusOK, userAlerts)
 }

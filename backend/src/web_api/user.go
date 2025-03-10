@@ -275,7 +275,7 @@ func FollowUser(c echo.Context) error {
 		Type:      "follow",
 		Message:   msg,
 	}
-	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"addToSet": bson.M{"alerts": alert}})
+	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
