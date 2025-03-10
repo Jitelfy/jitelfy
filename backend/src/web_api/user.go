@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"time"
-	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -35,9 +34,17 @@ type User struct {
 
 func GetUser(c echo.Context) error {
 
-	var userid = c.Param("id")
+	param := c.Param("id")
+	var filter bson.D
 
-	filter := bson.D{{Key: "username", Value: userid}}
+	// Try to interpret the param as an objectiD
+	if objID, err := primitive.ObjectIDFromHex(param); err == nil {
+		filter = bson.D{{Key: "_id", Value: objID}}
+	} else {
+		// Otherwise treat it as a username
+		filter = bson.D{{Key: "username", Value: param}}
+	}
+	
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 
@@ -218,6 +225,16 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
+	// Make sure the actual arrays themselves are null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
+
 	// update DB
 	var user User
 	var follow User
@@ -262,6 +279,16 @@ func UnfollowUser(c echo.Context) error {
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
+
+	// Make sure the actual arrays themselves are NOT null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
 
 	// update DB
 	var user User
