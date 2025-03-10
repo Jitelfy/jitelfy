@@ -60,7 +60,7 @@ export const FriendActivity = () => {
     );
 }
 
-export const Quicklinks = (user: User) => {
+export const Quicklinks = (user: User | null) => {
 
     return (
     <div className="static h-full bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
@@ -122,7 +122,7 @@ export const Quicklinks = (user: User) => {
     );
 }
 
-const ProfileButton = (user: User) => {
+const ProfileButton = (user: User | null) => {
 
   const navigate = useNavigate();
   async function logOut() {
