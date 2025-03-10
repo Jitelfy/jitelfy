@@ -22,7 +22,7 @@ type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
-	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
+	ChildIds int `json:"childids" bson:"childids"`
 	LikeIds  []primitive.ObjectID `json:"likeIds" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
@@ -162,6 +162,7 @@ func CreatePost(c echo.Context) error {
 		UserId:   userId,
 		ParentId: primitive.NilObjectID,
 		LikeIds:  []primitive.ObjectID{},
+		ChildIds: 0,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
@@ -171,10 +172,6 @@ func CreatePost(c echo.Context) error {
 	if newPost.ParentId != primitive.NilObjectID {
 		return c.JSON(http.StatusBadRequest, "post must be top level")
 	}
-	if newPost.ChildIds != nil {
-		return c.JSON(http.StatusBadRequest, "post cannot have children")
-	}
-
 	bsonPost, err := bson.Marshal(newPost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
@@ -200,10 +197,6 @@ func CreateComment(c echo.Context) error {
         return c.JSON(http.StatusBadRequest, "invalid json")
     }
 
-    if post.ChildIds != nil {
-        return c.JSON(http.StatusBadRequest, "post cannot have children")
-    }
-
     // Conver song url to an embed
     if post.Song != "" {
         if strings.Contains(post.Song, "https://open.spotify.com/track/") {
@@ -224,6 +217,7 @@ func CreateComment(c echo.Context) error {
     newComment := Post{
         Id:       primitive.NewObjectID(),
         ParentId: parentId,
+		ChildIds: 0,
         UserId:   userId,
         Time:     time.Now().Format(time.RFC3339),
         Text:     post.Text,
@@ -240,6 +234,13 @@ func CreateComment(c echo.Context) error {
     if err != nil {
         return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
     }
+	filter := bson.D{{Key: "_id", Value: parentId}}
+	change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: 1}}}}
+	var result *mongo.UpdateResult
+	result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+	if err != nil || result.MatchedCount == 0 {
+		return c.JSON(http.StatusInternalServerError, "failed to update parent")
+	}
 
     return c.JSON(http.StatusOK, newComment)
 }
@@ -302,10 +303,19 @@ func DeletePost(c echo.Context) error {
 	}
 
 	filter := bson.D{{Key: "_id", Value: Id}}
-	var result *mongo.DeleteResult
-	result, err = PostColl.DeleteOne(context.TODO(), filter)
+	var result *mongo.SingleResult
+	result = PostColl.FindOneAndDelete(context.TODO(), filter)
+	var post Post
+	err = result.Decode(&post)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not delete post")
+	}
+	filter = bson.D{{Key: "_id", Value: post.ParentId}}
+	change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
+	var update_result *mongo.UpdateResult
+	update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+	if err != nil || update_result.MatchedCount == 0 {
+		return c.JSON(http.StatusInternalServerError, "failed to update parent")
 	}
 
 	return c.JSON(http.StatusOK, result)
