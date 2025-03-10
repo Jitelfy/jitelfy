@@ -168,7 +168,7 @@ const ProfileButton = (user: User | null) => {
 
 
     return (
-        <div className="flex flex-col mt-auto">
+        <div className="flex flex-col w-full mt-auto">
             {/* Pop up to view profile or log out*/}
             <div id="myPopup"
                  className="invisible absolute w-1/6 transform -translate-y-32 flex shadow-md shadow-background-main flex-col text-center bg-background-main rounded-md"
@@ -194,7 +194,7 @@ const ProfileButton = (user: User | null) => {
 
             </div>
                 <div
-                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
+                    className="relative bg-background-secondary pl-auto rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
                     onClick={handlePopup}
                 >
                     <div className="flex justify-start items-start justify-items-start  flex-row">
