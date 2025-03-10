@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"strconv"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strconv"
 )
 
 var UserColl *mongo.Collection
@@ -44,7 +45,7 @@ func GetUser(c echo.Context) error {
 		// Otherwise treat it as a username
 		filter = bson.D{{Key: "username", Value: param}}
 	}
-	
+
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 
@@ -89,6 +90,7 @@ func MakeUser(c echo.Context) error {
 		Username:    req.Username,
 		Followers:   []primitive.ObjectID{},
 		Following:   []primitive.ObjectID{},
+		Bookmarks:   []primitive.ObjectID{},
 		Password:    encryptedPass,
 	}
 
