@@ -28,6 +28,17 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
     fetchComments();
   }, [parentId]);
 
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const commentData = { text: newCommentText };
+
+    const res = await fetch(`${BASE_URL}/posts/comments?parent=${parentId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(commentData),
+    });
+  };
   
   return null;
 };
