@@ -3,6 +3,7 @@ package web_api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -265,6 +266,20 @@ func FollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	// notification
+	msg := fmt.Sprintf("Followed by %s", user.Username)
+	alert := Alert{
+		AlerterId: userObjectID,
+		CreatedAt: time.Now(),
+		Type:      "follow",
+		Message:   msg,
+	}
+	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"addToSet": bson.M{"alerts": alert}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "followed user",
 		"user following":   strconv.Itoa(len(user.Following)),
