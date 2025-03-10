@@ -89,3 +89,10 @@
 .hide-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
 }
+
+@keyframes likeAnim {
+    0%   {width: 10px;}
+    25%  {width: 30px;}
+    50%  {width: 50px;}
+    100% {width: 100px;}
+}
