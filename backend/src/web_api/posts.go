@@ -188,51 +188,62 @@ func CreatePost(c echo.Context) error {
 }
 
 func CreateComment(c echo.Context) error {
-	post := Post{}
+    post := Post{}
 
-	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
-	}
+    var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid parameter (parentid)")
+    }
 
-	// error checking for valid json
-	if err := c.Bind(&post); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid json")
-	}
+    // Bind the incoming JSON
+    if err := c.Bind(&post); err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid json")
+    }
 
-	if post.ChildIds != nil {
-		return c.JSON(http.StatusBadRequest, "post cannot have children")
-	}
+    if post.ChildIds != nil {
+        return c.JSON(http.StatusBadRequest, "post cannot have children")
+    }
 
-	// We gotta get the user ID from the token man
-	userIdHex := UserIdFromToken(c) 
-	userId, err := primitive.ObjectIDFromHex(userIdHex)
-	if err != nil {
-    	return c.JSON(http.StatusBadRequest, "invalid user token")
-	}
+    // Conver song url to an embed
+    if post.Song != "" {
+        if strings.Contains(post.Song, "https://open.spotify.com/track/") {
+            post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
+        } else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
+            return c.JSON(http.StatusBadRequest, "invalid song link")
+        }
+    }
 
-	post = Post{
-		Id:       primitive.NewObjectID(),
-		ParentId: parentId,
-		UserId:   userId,
-		Time:     time.Now().Format(time.RFC3339),
-		Text:     post.Text,
-		Embed:    post.Embed,
-		Song:     post.Song,
-	}
+    // Get the user ID from the token
+    userIdHex := UserIdFromToken(c)
+    userId, err := primitive.ObjectIDFromHex(userIdHex)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid user token")
+    }
 
-	var bsonpost []byte
-	bsonpost, err = bson.Marshal(post)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-	}
-	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
-	}
+    // Build the new Post object with the converted song URL
+    newComment := Post{
+        Id:       primitive.NewObjectID(),
+        ParentId: parentId,
+        UserId:   userId,
+        Time:     time.Now().Format(time.RFC3339),
+        Text:     post.Text,
+        Embed:    post.Embed,
+        Song:     post.Song,
+    }
 
-	return c.JSON(http.StatusOK, post)
+    // Marshal and insert into the database
+    bsonpost, err := bson.Marshal(newComment)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+    }
+    _, err = PostColl.InsertOne(context.TODO(), bsonpost)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+    }
+
+    return c.JSON(http.StatusOK, newComment)
 }
+
 
 func GetComments(c echo.Context) error {
 
