@@ -40,6 +40,16 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
     });
   };
   
+  // Delete a comment by id
+  const handleDeleteComment = async (commentId: string) => {
+    const response = await fetch(`${BASE_URL}/posts?id=${commentId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    // Remove the deleted comment from state
+    setComments((prev) => prev.filter((c) => c.post.id !== commentId));
+}
   return null;
 };
 
