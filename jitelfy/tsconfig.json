@@ -10,6 +10,7 @@
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "lib": ["es7", "dom"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },

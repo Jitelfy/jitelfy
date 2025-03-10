@@ -199,16 +199,10 @@ const FeedPage = () => {
       });
 
       if (response.ok) {
-        setUser(posts.map((user) => {
-          return {
-            ...user.user,
-            user: {
-              ...user.user,
-              bookmarks: [...user.user.bookmarks, postId],
-            },
-          };
-        }));
-      }
+          user.bookmarks = {...user.bookmarks, postId};
+          setUser(user);
+          console.log("BOOKMARKED");
+        }
     } 
     catch (error) {
       console.log("Error bookmarking post:", error);
@@ -218,7 +212,7 @@ const FeedPage = () => {
   const handleUnBookmark = async (postId: string) => {
     if (!user) return;
     try {
-      const response = await fetch(`${BASE_URL}/posts/bookmark/${postId}`, {
+      const response = await fetch(`${BASE_URL}/posts/unbookmark/${postId}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -228,15 +222,9 @@ const FeedPage = () => {
       });
 
       if (response.ok) {
-        setUser(posts.map((user) => {
-          return {
-            ...user.user,
-            user: {
-              ...user.user,
-              bookmarks: user.user.bookmarks.filter((id) => id !== postId)
-            },
-          };
-        }));
+          user.bookmarks = user.bookmarks.filter((id: string) => id !== postId);
+          setUser(user);
+          console.log("UNBOOKMARKED");
       }
     } 
     catch (error) {
@@ -465,11 +453,11 @@ const FeedPage = () => {
                         {/* Bookmark */}
                         <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3"
                           onClick={() => {
-                            if (post.user.bookmarks.indexOf(post.post.parentId)) {
-                              handleUnBookmark(post.post.parentId);
+                            if (user.bookmarks.indexOf(post.post.id) !== -1) {
+                              handleUnBookmark(post.post.id);
                             }
                             else {
-                              handleBookmark(post.post.parentId);
+                              handleBookmark(post.post.id);
                             } 
                           }}>
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
