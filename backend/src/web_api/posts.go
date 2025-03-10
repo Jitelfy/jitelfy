@@ -33,9 +33,9 @@ type Post struct {
 }
 
 type Repost struct {
-	Id       primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
-	PostIds  []primitive.ObjectID `json:"postids" bson:"postids"`
+	Id      primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId  primitive.ObjectID   `json:"userid" bson:"userid"`
+	PostIds []primitive.ObjectID `json:"postids" bson:"postids"`
 }
 
 type PostUserPackage struct {
@@ -327,7 +327,7 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
 
-	if (post.ParentId != primitive.NilObjectID) {
+	if post.ParentId != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: post.ParentId}}
 		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
 		var update_result *mongo.UpdateResult
@@ -371,17 +371,19 @@ func LikePost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not like post")
 	}
 	// notification
-	msg := fmt.Sprintf("%s liked you post", liker.Username)
-	alert := Alert{
-		AlerterId: likerObjID,
-		PostID:    likedObjID,
-		CreatedAt: time.Now(),
-		Type:      "like",
-		Message:   msg,
-	}
-	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"$addToSet": bson.M{"alerts": alert}})
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if liker.Id != liked.UserId {
+		msg := fmt.Sprintf("%s liked you post", liker.Username)
+		alert := Alert{
+			AlerterId: likerObjID,
+			PostID:    likedObjID,
+			CreatedAt: time.Now(),
+			Type:      "like",
+			Message:   msg,
+		}
+		_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"$addToSet": bson.M{"alerts": alert}})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -441,7 +443,7 @@ func BookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post bookmarked",
+		"message":                  "post bookmarked",
 		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
@@ -469,7 +471,7 @@ func UnbookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post bookmarked",
+		"message":                  "post bookmarked",
 		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
@@ -556,11 +558,10 @@ func MakeRepost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post reposted",
+		"message":                   "post reposted",
 		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
 	})
 }
-
 
 func DeleteRepost(c echo.Context) error {
 	// liker
@@ -589,7 +590,7 @@ func DeleteRepost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post unreposted",
+		"message":                   "post unreposted",
 		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
 	})
 }
@@ -686,6 +687,5 @@ func GetAllPostsFromUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
-
 
 }
