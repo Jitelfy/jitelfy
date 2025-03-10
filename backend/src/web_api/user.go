@@ -92,9 +92,20 @@ func MakeUser(c echo.Context) error {
 		Password:    encryptedPass,
 	}
 
+	repost := Repost{
+		Id: primitive.NewObjectID(),
+		UserId: user.Id,
+		PostIds: []primitive.ObjectID{},
+	}
+
 	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
+	}
+
+	_, err = RepostColl.InsertOne(context.TODO(), repost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
 	}
 
 	user.Password = ""

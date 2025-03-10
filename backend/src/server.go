@@ -44,6 +44,7 @@ func main() {
 
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
+	web_api.RepostColl = db.Collection("reposts")
 
 	router := echo.New()
 	router.Debug = true
@@ -56,10 +57,12 @@ func main() {
 	router.POST("/posts/unlike/:id", web_api.UnlikePost)
 	router.POST("/posts/bookmark/:id", web_api.BookmarkPost)
 	router.POST("/posts/unbookmark/:id", web_api.UnbookmarkPost)
+	router.POST("/posts/repost/:id", web_api.MakeRepost)
+	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
+	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
-
 
 	router.PUT("/customize/icon", web_api.SetIcon)
 	router.PUT("/customize/banner", web_api.SetBanner)
