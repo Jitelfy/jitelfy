@@ -4,7 +4,7 @@ import { UserContext } from "../UserContext";
 import { IconArray } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
-import { useSearchParams } from "react-router-dom";
+import {Link, useSearchParams} from "react-router-dom";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -251,12 +251,15 @@ const FeedPage = () => {
                 </div>
                 <div>
                   {/* Display name, @username, timestamp posted */}
-                  <p className="text-text-main font-bold">
-                    {post.user.displayname}
-                  </p>
-                  <p className="text-text-secondary font-normal">
-                    @{post.user.username}
-                  </p>
+                  <Link to={"/profile/" + post.user.username}
+                        className="hover:underline hover:decoration-background-tertiary">
+                    <p className="text-text-main font-bold">
+                      {post.user.displayname}
+                    </p>
+                    <p className="text-text-secondary font-normal">
+                      @{post.user.username}
+                    </p>
+                  </Link>
                   <p className="text-text-secondary text-sm">
                     {new Date(post.post.time).toLocaleString()}
                   </p>

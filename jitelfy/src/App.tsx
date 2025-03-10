@@ -17,7 +17,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/feed" element={<FeedPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/activity" element={<ActivityPage />} />

@@ -13,7 +13,7 @@ export async function getPosts(): Promise<PackagedPost[]> {
 }
 
 export async function getUser(path: string): Promise<User> {
-  const response = await getContent("/users?userid=" + path);
+  const response = await getContent("/users/" + path);
   return JSON.parse(response);
 }
 
