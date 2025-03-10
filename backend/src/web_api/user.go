@@ -3,7 +3,6 @@ package web_api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -248,55 +247,57 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
-	// Make sure the actual arrays themselves are null
-	_, err = UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	_, err = UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
+	var ch = make(chan int)
 	// update DB
 	var user User
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": userObjectID},
+			bson.M{"$addToSet": bson.M{"following": followObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&user)
+		if err != nil {
+			ch <- -1
+		}
+		ch <- 0
+	}()
 	var follow User
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": userObjectID},
-		bson.M{"$addToSet": bson.M{"following": followObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": followObjectID},
-		bson.M{"$addToSet": bson.M{"followers": userObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&follow)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": followObjectID},
+			bson.M{"$addToSet": bson.M{"followers": userObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&follow)
+		if err != nil {
+			ch<--1
+		}
+		ch<-0
+	}()
 
-	// notification
-	msg := fmt.Sprintf("Followed by %s", user.Username)
-	alert := Alert{
-		AlerterId: userObjectID,
-		CreatedAt: time.Now(),
-		Type:      "follow",
-		Message:   msg,
+	go func() {
+		// notification
+		alert := Alert{
+			AlerterId: userObjectID,
+			CreatedAt: time.Now(),
+			Type:      "follow",
+		}
+		_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
+		if err != nil {
+			ch<--1
+		}
+		ch<-0
+	}()
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to follow")
 	}
-	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to follow")
+	}
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to alert")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -322,35 +323,23 @@ func UnfollowUser(c echo.Context) error {
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
-
-	// Make sure the actual arrays themselves are NOT null
-	_, err = UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-	_, err = UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
-	)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
-
 	// update DB
 	var user User
 	var follow User
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": userObjectID},
-		bson.M{"$pull": bson.M{"following": unfollowObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
-	}
+	var ch = make(chan int)
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": userObjectID},
+			bson.M{"$pull": bson.M{"following": unfollowObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&user)
+		if err != nil {
+			ch <- -1
+		}
+		ch <- 0
+	}()
+	go func() {
 	err = UserColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"_id": unfollowObjectID},
@@ -358,7 +347,16 @@ func UnfollowUser(c echo.Context) error {
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&follow)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		ch <- -1
+	}
+		ch <- 0
+	}()
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to unfollow")
+	}
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to unfollow")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
