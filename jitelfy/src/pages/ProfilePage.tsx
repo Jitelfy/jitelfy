@@ -3,7 +3,7 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import {useParams} from "react-router-dom";
-import {getPosts, getUser, RestoreUser} from "../api";
+import {getPosts, getUser, RestoreUser, followUser, unfollowUser} from "../api"
 import {User} from "../types";
 
 
