@@ -309,20 +309,32 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
 
-	filter := bson.D{{Key: "_id", Value: Id}}
+	userStrID, _ := UserIdFromCookie(c)
+	userObjID, err := primitive.ObjectIDFromHex(userStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "could not get user from cookie")
+	}
+
+	filter := bson.D{{Key: "$and", Value: []bson.D{
+		{{Key: "_id", Value: Id}},
+		{{Key: "userid", Value: userObjID}},
+	}}}
 	var result *mongo.SingleResult
 	result = PostColl.FindOneAndDelete(context.TODO(), filter)
 	var post Post
 	err = result.Decode(&post)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not delete post")
+		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
-	filter = bson.D{{Key: "_id", Value: post.ParentId}}
-	change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
-	var update_result *mongo.UpdateResult
-	update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
-	if err != nil || update_result.MatchedCount == 0 {
-		return c.JSON(http.StatusInternalServerError, "failed to update parent")
+
+	if (post.ParentId != primitive.NilObjectID) {
+		filter = bson.D{{Key: "_id", Value: post.ParentId}}
+		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
+		var update_result *mongo.UpdateResult
+		update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+		if err != nil || update_result.MatchedCount == 0 {
+			return c.JSON(http.StatusInternalServerError, "failed to update parent")
+		}
 	}
 
 	return c.JSON(http.StatusOK, result)
