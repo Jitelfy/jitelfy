@@ -29,3 +29,11 @@ export async function followUser(userId: string): Promise<any> {
   });
   return response.json();
 }
+
+export async function unfollowUser(userId: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/users/unfollow/${userId}`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return response.json();
+}
