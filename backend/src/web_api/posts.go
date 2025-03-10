@@ -204,10 +204,17 @@ func CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "post cannot have children")
 	}
 
+	// We gotta get the user ID from the token man
+	userIdHex := UserIdFromToken(c) 
+	userId, err := primitive.ObjectIDFromHex(userIdHex)
+	if err != nil {
+    	return c.JSON(http.StatusBadRequest, "invalid user token")
+	}
+
 	post = Post{
 		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
-		UserId:   post.UserId,
+		UserId:   userId,
 		Time:     time.Now().Format(time.RFC3339),
 		Text:     post.Text,
 		Embed:    post.Embed,
