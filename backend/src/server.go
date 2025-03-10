@@ -80,7 +80,6 @@ func init() {
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"https://d3oiamcw3gvayn.cloudfront.net"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization",},
-
 		AllowCredentials: true,
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{

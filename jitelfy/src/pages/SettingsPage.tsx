@@ -1,6 +1,6 @@
 import {useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
-import { User } from '../types.ts';
+import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import {BASE_URL, RestoreUser } from "../api";

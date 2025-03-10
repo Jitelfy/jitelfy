@@ -1,6 +1,6 @@
 import { PackagedPost, Post, User } from './types';
 
-export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = "https://mafjre94nh.execute-api.us-west-2.amazonaws.com";
 
 export async function getContent(path: string): Promise<string> {
   const content = await fetch(`${BASE_URL}${path}`, { credentials: "include" });
