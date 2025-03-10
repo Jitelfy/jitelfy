@@ -4,16 +4,15 @@ import { UserContext } from "../UserContext";
 import { IconArray } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
-import {Link, useSearchParams} from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Comments from "../components/Comments";
-
 
 const BookmarksPage = () => {
     const { user, setUser } = useContext(UserContext);
     const [bookmarkedPosts, setBookmarkedPosts] = useState<Array<PackagedPost>>([]);
 
     useEffect(() => {
-        const fetchBookmarkedPost = async () => {
+        const fetchBookmarkedPosts = async () => {
             if (user === null) {
                 const userjson = await RestoreUser();
                 if (userjson.id != null) {
@@ -34,31 +33,15 @@ const BookmarksPage = () => {
                 if (response.ok) {
                     const data = await response.json();
                     const filteredEmptyPosts = data.filter((post: PackagedPost) => post.post.id !== "000000000000000000000000");
-                    console.log(filteredEmptyPosts)
                     setBookmarkedPosts(filteredEmptyPosts);
                 }
-            }
-            catch(error) {
+
+            } catch (error) {
                 console.error("Error fetching bookmarked posts:", error);
             }
-        }
-        fetchBookmarkedPost();
-    }, [user])
-
-    // if (user == null) {
-    //     return (
-    //         <div className="h-screen bg-background-main flex">
-    //             {/* Sidebar - Left */}
-    //             {Quicklinks(user!)}
-    //             <div className="flex-1 bg-background-main p-6 overflow-auto">
-    //                 <div className="relative w-full">
-    //                 </div>
-    //             </div>
-    //             {/* Sidebar - Right */}
-    //             {FriendActivity()}
-    //         </div>
-    //     );
-    // }
+        };
+        fetchBookmarkedPosts();
+    }, [user]);
 
     return (
         <div className="h-screen bg-background-main flex">
@@ -71,15 +54,47 @@ const BookmarksPage = () => {
                     <h1 className="text-white text-2xl top-0 my-6">Bookmarks</h1>
                 </div>
 
-                {/* Show all bookmarks */}
-                {/* <p className="text-text-main">Nothing to see here yet...</p> */}
-
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
-                    {bookmarkedPosts.map((post) => (
-                        <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
-                            <div>{post.post.text}</div>
-                        </div>
-                    ))}
+                    {bookmarkedPosts.length === 0 ? (
+                        <p className="text-text-main">Nothing to see here yet...</p>
+                    ) : (
+                        bookmarkedPosts.map((post) => (
+                            <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
+                                <div className="flex items-center">
+                                    <div>
+                                        <img
+                                            className="size-14 rounded-full mb-2 mr-3"
+                                            src={IconArray[post.user.icon]}
+                                            alt={post.user.displayname}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Link to={"/profile/" + post.user.username} className="hover:underline hover:decoration-background-tertiary">
+                                            <p className="text-text-main font-bold">{post.user.displayname}</p>
+                                            <p className="text-text-secondary font-normal">@{post.user.username}</p>
+                                        </Link>
+                                        <p className="text-text-secondary text-sm">{new Date(post.post.time).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
+                                {post.post.embed && (
+                                    <div className="mt-2">
+                                        <img src={post.post.embed} className="w-full h-40 rounded-md" alt="" />
+                                    </div>
+                                )}
+                                {post.post.song && (
+                                    <div className="mt-2">
+                                        <iframe
+                                            src={post.post.song}
+                                            className="w-full h-20"
+                                            title={`Song for ${post.post.id}`}
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
