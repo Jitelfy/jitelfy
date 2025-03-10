@@ -1,6 +1,6 @@
 import {useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
-import { User } from '../types.ts';
+import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import {BASE_URL, RestoreUser } from "../api";
@@ -238,7 +238,7 @@ const SettingsPage = () => {
 
     return (
         <div className="h-screen bg-background-main flex"
-             onLoad={() => handleBannerClick(SelectedBanner, user)}>
+             onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -332,7 +332,7 @@ const SettingsPage = () => {
 
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
-                         onLoad={() => handleBannerClick(SelectedBanner, user)}
+                         onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
 
                         {BannerArray.map((color) => (
