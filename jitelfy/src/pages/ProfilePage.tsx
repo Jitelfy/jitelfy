@@ -56,7 +56,7 @@ const ProfilePage = () => {
             }
         };
         if (user == null) {
-            // actually keep user logged in
+            // Keep user logged in
             restore();
         }
         fetchUser();
