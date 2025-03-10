@@ -23,7 +23,7 @@ type Post struct {
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
 	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
-	LikeIds  []primitive.ObjectID `json:"likeids" bson:"likeids"`
+	LikeIds  []primitive.ObjectID `json:"likeIds" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
@@ -314,7 +314,7 @@ func LikePost(c echo.Context) error {
 		bson.M{"_id": likedObjID},
 		bson.M{"$addToSet": bson.M{"likeids": likerObjID}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(liked)
+	).Decode(&liked)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not like post")
 	}
@@ -342,7 +342,7 @@ func UnlikePost(c echo.Context) error {
 		bson.M{"_id": likedObjID},
 		bson.M{"$pull": bson.M{"likeids": likerObjID}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(liked)
+	).Decode(&liked)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not unlike post")
 	}
