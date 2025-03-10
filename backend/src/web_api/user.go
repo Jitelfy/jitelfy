@@ -44,7 +44,7 @@ func GetUser(c echo.Context) error {
 		// Otherwise treat it as a username
 		filter = bson.D{{Key: "username", Value: param}}
 	}
-	
+
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 
@@ -91,10 +91,19 @@ func MakeUser(c echo.Context) error {
 		Following:   []primitive.ObjectID{},
 		Password:    encryptedPass,
 	}
-
+	userAlerts := UserAlerts{
+		Id:     primitive.NewObjectID(),
+		UserId: user.Id,
+		Alert:  []Alert{},
+	}
 	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
+	}
+
+	_, err = AlertColl.InsertOne(context.TODO(), userAlerts)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create alert")
 	}
 
 	user.Password = ""
