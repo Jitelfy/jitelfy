@@ -383,19 +383,19 @@ func BookmarkPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
 	var user User
-	err = PostColl.FindOneAndUpdate(
+	err = UserColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"_id": bookmarker},
 		bson.M{"$addToSet": bson.M{"bookmarks": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(user)
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "post bookmarked",
-		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
 
@@ -411,19 +411,19 @@ func UnbookmarkPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
 	var user User
-	err = PostColl.FindOneAndUpdate(
+	err = UserColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"_id": bookmarker},
 		bson.M{"$pull": bson.M{"bookmarks": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(user)
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "post bookmarked",
-		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
 
