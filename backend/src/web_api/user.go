@@ -236,14 +236,20 @@ func FollowUser(c echo.Context) error {
 	}
 
 	// Make sure the actual arrays themselves are null
-	UserColl.UpdateOne(context.TODO(),
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
 	)
-	UserColl.UpdateOne(context.TODO(),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
 	)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
 
 	// update DB
 	var user User
@@ -305,14 +311,20 @@ func UnfollowUser(c echo.Context) error {
 	}
 
 	// Make sure the actual arrays themselves are NOT null
-	UserColl.UpdateOne(context.TODO(),
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
 	)
-	UserColl.UpdateOne(context.TODO(),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
 	)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
 
 	// update DB
 	var user User
