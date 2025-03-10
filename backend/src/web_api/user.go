@@ -217,7 +217,7 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
-	// Make sure the actual arrays themselves are null
+	// Make sure the actual arrays themselves are NOT null
 	UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
@@ -271,6 +271,16 @@ func UnfollowUser(c echo.Context) error {
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
+
+	// Make sure the actual arrays themselves are NOT null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
 
 	// update DB
 	var user User
