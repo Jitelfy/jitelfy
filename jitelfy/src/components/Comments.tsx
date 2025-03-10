@@ -102,6 +102,9 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
           key={comment.post.id}
           className="relative bg-background-secondary p-4 rounded-lg mb-4"
         >
+
+          {/* Delete Button (only for our own posts)*/}
+          {user != null && comment.user.id === user.id && (
           <button
             onClick={() => handleDeleteComment(comment.post.id)}
             className="absolute top-2 right-2 hover:cursor-pointer"
@@ -120,7 +123,8 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
                 fill="#7e7e7e"
               />
             </svg>
-          </button>
+          </button>)}
+
           <div className="flex items-center">
             <img
               className="size-12 rounded-full mb-2 mr-3"
