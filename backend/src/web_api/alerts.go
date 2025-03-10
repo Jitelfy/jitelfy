@@ -1,8 +1,12 @@
 package web_api
 
 import (
+	"context"
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
 	"time"
 )
 
@@ -19,4 +23,20 @@ type UserAlerts struct {
 	Id     primitive.ObjectID `json:"id" bson:"_id"`
 	UserId primitive.ObjectID `json:"userid" bson:"userid"`
 	Alert  []Alert            `json:"alerts" bson:"alerts"`
+}
+
+func GetUserAlerts(c echo.Context) error {
+	userStringID, _ := UserIdFromCookie(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	filter := bson.M{"userid": userObjectID}
+	var userAlerts UserAlerts
+	err = AlertColl.FindOne(context.Background(), filter).Decode(&userAlerts)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, userAlerts)
 }
