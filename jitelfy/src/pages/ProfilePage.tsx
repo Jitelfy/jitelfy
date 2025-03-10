@@ -3,27 +3,64 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import {useParams} from "react-router-dom";
-import {getPosts, getUser, RestoreUser} from "../api";
+import {getPosts, getUser, RestoreUser, followUser, unfollowUser} from "../api"
 import {User} from "../types";
 
 
+
 const ProfilePage = () => {
-    const { user } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
+    const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
+    
+    const handleToggleFollow = async () => {
+        if (!userData) return;
+        if (!isFollowing) {
+          await followUser(userData.id);
+          // Refresh user data immediately after following
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+          setIsFollowing(true);
+        } else {
+          await unfollowUser(userData.id);
+          // Refresh user data immediately after unfollowing
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+          setIsFollowing(false);
+        }
+      };
+      
+    
     useEffect(() => {
+        const restore = async () => {
+            const loggedInUser: User = await RestoreUser();
+            if (loggedInUser.id != null) {
+                setUser(loggedInUser);
+            }
+
+        };
+
         const fetchUser = async () => {
+
             if (username != null) {
                 // Fetching user data
                 const profileUser = await getUser(username);
                 setUserData(profileUser);
+                if (profileUser && user) {
+                    setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
+                }
             }
         };
+        if (user == null) {
+            // actually keep user logged in
+            restore();
+        }
         fetchUser();
     }, [user, username]); // Run when username changes
-
-    console.log(userData);
 
     if (user == null || userData == null) {
         return (
@@ -68,14 +105,27 @@ const ProfilePage = () => {
                             <p className="text-md text-text-secondary">@{userData.username || 'username'}</p>
                         </div>
 
-                        {/* DEBUG: Profile song */}
-                        {user.song && (<div className="ml-auto mt-4">
-                            <iframe
-                                src={userData.song}
-                                className="w-full h-20"
-                                title="Profile song"
-                            ></iframe>
-                        </div>)}
+                        <div className="ml-auto mt-4 flex flex-row items-center">
+                            {userData.username !== user.username && (
+                                <button
+                                    onClick={handleToggleFollow}
+                                    className={
+                                        isFollowing
+                                            ? "mr-4 px-4 py-2 bg-transparent text-white border border-white rounded hover:bg-opacity-20"
+                                            : "mr-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    }
+                                >
+                                    {isFollowing ? "Following" : "Follow"}
+                                </button>
+                            )}
+                            {userData.song && (
+                                <iframe
+                                    src={userData.song}
+                                    className="w-full h-20"
+                                    title="Profile song"
+                                ></iframe>
+                            )}
+                        </div>
                     </div>
 
                     {/* Bio */}
@@ -85,8 +135,12 @@ const ProfilePage = () => {
 
                     {/* Followers & following */}
                     <div className="flex flex-row w-full my-5 justify-evenly">
-                        <p className="text-text-main"><b>0</b> Followers</p>
-                        <p className="text-text-main"><b>0</b> Following</p>
+                    <p className="text-text-main">
+                        <b>{userData.followers?.length || 0}</b> Followers
+                    </p>
+                    <p className="text-text-main">
+                        <b>{userData.following?.length || 0}</b> Following
+                    </p>
                     </div>
 
                     <hr className="border-1 w-full self-start border-background-tertiary"></hr>

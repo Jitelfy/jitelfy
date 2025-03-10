@@ -23,7 +23,7 @@ type Post struct {
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
 	ChildIds []primitive.ObjectID `json:"childids" bson:"childids"`
-	LikeIds  []primitive.ObjectID `json:"likeids" bson:"likeids"`
+	LikeIds  []primitive.ObjectID `json:"likeIds" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
@@ -188,44 +188,62 @@ func CreatePost(c echo.Context) error {
 }
 
 func CreateComment(c echo.Context) error {
-	post := Post{}
+    post := Post{}
 
-	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (parentid)")
-	}
+    var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid parameter (parentid)")
+    }
 
-	// error checking for valid json
-	if err := c.Bind(&post); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid json")
-	}
+    // Bind the incoming JSON
+    if err := c.Bind(&post); err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid json")
+    }
 
-	if post.ChildIds != nil {
-		return c.JSON(http.StatusBadRequest, "post cannot have children")
-	}
+    if post.ChildIds != nil {
+        return c.JSON(http.StatusBadRequest, "post cannot have children")
+    }
 
-	post = Post{
-		Id:       primitive.NewObjectID(),
-		ParentId: parentId,
-		UserId:   post.UserId,
-		Time:     time.Now().Format(time.RFC3339),
-		Text:     post.Text,
-		Embed:    post.Embed,
-		Song:     post.Song,
-	}
+    // Conver song url to an embed
+    if post.Song != "" {
+        if strings.Contains(post.Song, "https://open.spotify.com/track/") {
+            post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
+        } else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
+            return c.JSON(http.StatusBadRequest, "invalid song link")
+        }
+    }
 
-	var bsonpost []byte
-	bsonpost, err = bson.Marshal(post)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-	}
-	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
-	}
+    // Get the user ID from the token
+    userIdHex := UserIdFromToken(c)
+    userId, err := primitive.ObjectIDFromHex(userIdHex)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, "invalid user token")
+    }
 
-	return c.JSON(http.StatusOK, post)
+    // Build the new Post object with the converted song URL
+    newComment := Post{
+        Id:       primitive.NewObjectID(),
+        ParentId: parentId,
+        UserId:   userId,
+        Time:     time.Now().Format(time.RFC3339),
+        Text:     post.Text,
+        Embed:    post.Embed,
+        Song:     post.Song,
+    }
+
+    // Marshal and insert into the database
+    bsonpost, err := bson.Marshal(newComment)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+    }
+    _, err = PostColl.InsertOne(context.TODO(), bsonpost)
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+    }
+
+    return c.JSON(http.StatusOK, newComment)
 }
+
 
 func GetComments(c echo.Context) error {
 
@@ -314,7 +332,7 @@ func LikePost(c echo.Context) error {
 		bson.M{"_id": likedObjID},
 		bson.M{"$addToSet": bson.M{"likeids": likerObjID}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(liked)
+	).Decode(&liked)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not like post")
 	}
@@ -342,7 +360,7 @@ func UnlikePost(c echo.Context) error {
 		bson.M{"_id": likedObjID},
 		bson.M{"$pull": bson.M{"likeids": likerObjID}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(liked)
+	).Decode(&liked)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not unlike post")
 	}
