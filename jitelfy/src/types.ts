@@ -2,7 +2,7 @@ export interface Post {
     id: string;
     userid: string;
     parentId: string;
-    childIds: number;
+    childids: number;
     likeIds: string[];
     time: string;
     text: string;
