@@ -21,8 +21,6 @@ const ProfilePage = () => {
         );
     }
 
-    console.log(user.song);
-
     return (
         <div className="h-screen bg-background-main flex">
             {/* Sidebar - Left */}
@@ -62,7 +60,9 @@ const ProfilePage = () => {
                     </div>
 
                     {/* Bio */}
-                    <p className="text-text-main self-start ml-10 mr-10 mt-10 overflow-auto text-wrap">This is a biography. You should probably put some meaningful words here. I am typing a lot to see if this text will wrap around correctly.</p>
+                    <p className="text-text-main self-start ml-10 mr-10 mt-10 overflow-auto text-wrap">
+                        {user?.bio || "This user has no bio."}
+                    </p>
 
                     {/* Followers & following */}
                     <div className="flex flex-row w-full my-5 justify-evenly">
