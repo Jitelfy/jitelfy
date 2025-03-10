@@ -1,13 +1,28 @@
 import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
-import { UserContext } from "../UserContext";
-import { getUser } from "../api";
+import {IconArray, UserContext} from "../UserContext";
+import {getUser, RestoreUser} from "../api";
+import {User} from "../types";
+import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const [mutualFriend, setMutualFriend] = useState<any>(null);
 
   useEffect(() => {
+    const restore = async () => {
+      const loggedInUser: User = await RestoreUser();
+      if (loggedInUser.id != null) {
+        setUser(loggedInUser);
+      }
+
+    };
+
+    if (user == null) {
+      // Keep user logged in
+      restore();
+    }
+
     if (user) {
       // Calculate mutual friendships using the arrays of user IDs
       const mutuals = user.followers.filter((follower: string) =>
@@ -41,18 +56,31 @@ const ActivityPage = () => {
     <div className="h-screen bg-background-main flex">
       {/* Sidebar - Left */}
       {Quicklinks(user)}
+
       {/* Main Content - Middle */}
       <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
           {mutualFriend && (
-            <div className="bg-gray-800 p-2 rounded mt-2">
-              <p className="text-white">
-                @{mutualFriend.username} is now friends with you!
-              </p>
+            <div className="flex flex-row content-center bg-background-secondary p-4 rounded mt-2">
+              <img
+                  className="size-14 rounded-full mr-3"
+                  src={IconArray[mutualFriend.icon]}
+                  alt={mutualFriend.displayname}
+              />
+              <div className="flex flex-row text-white gap-2 text-center content-center">
+                <Link to={"/profile/" + mutualFriend.username}
+                      className="hover:underline hover:decoration-text-main text-center content-center">
+                  <p>
+                    @<b>{mutualFriend.username}</b>
+                  </p>
+                </Link>
+                <p className="text-center content-center">is now friends with you!</p>
+              </div>
             </div>
           )}
         </div>
+
         <div className="p-6 flex-1 bg-background-main relative overflow-auto hide-scrollbar">
           {/* Other notifications can go here */}
         </div>

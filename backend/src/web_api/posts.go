@@ -18,6 +18,7 @@ import (
 )
 
 var PostColl *mongo.Collection
+var RepostColl *mongo.Collection
 
 type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
@@ -29,6 +30,12 @@ type Post struct {
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
 	Song     string               `json:"song" bson:"song"`
+}
+
+type Repost struct {
+	Id       primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
+	PostIds  []primitive.ObjectID `json:"postids" bson:"postids"`
 }
 
 type PostUserPackage struct {
@@ -302,20 +309,32 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
 
-	filter := bson.D{{Key: "_id", Value: Id}}
+	userStrID, _ := UserIdFromCookie(c)
+	userObjID, err := primitive.ObjectIDFromHex(userStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "could not get user from cookie")
+	}
+
+	filter := bson.D{{Key: "$and", Value: []bson.D{
+		{{Key: "_id", Value: Id}},
+		{{Key: "userid", Value: userObjID}},
+	}}}
 	var result *mongo.SingleResult
 	result = PostColl.FindOneAndDelete(context.TODO(), filter)
 	var post Post
 	err = result.Decode(&post)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not delete post")
+		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
-	filter = bson.D{{Key: "_id", Value: post.ParentId}}
-	change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
-	var update_result *mongo.UpdateResult
-	update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
-	if err != nil || update_result.MatchedCount == 0 {
-		return c.JSON(http.StatusInternalServerError, "failed to update parent")
+
+	if (post.ParentId != primitive.NilObjectID) {
+		filter = bson.D{{Key: "_id", Value: post.ParentId}}
+		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
+		var update_result *mongo.UpdateResult
+		update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+		if err != nil || update_result.MatchedCount == 0 {
+			return c.JSON(http.StatusInternalServerError, "failed to update parent")
+		}
 	}
 
 	return c.JSON(http.StatusOK, result)
@@ -411,19 +430,19 @@ func BookmarkPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
 	var user User
-	err = PostColl.FindOneAndUpdate(
+	err = UserColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"_id": bookmarker},
 		bson.M{"$addToSet": bson.M{"bookmarks": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(user)
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "post bookmarked",
-		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
 
@@ -439,19 +458,19 @@ func UnbookmarkPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
 	var user User
-	err = PostColl.FindOneAndUpdate(
+	err = UserColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"_id": bookmarker},
 		bson.M{"$pull": bson.M{"bookmarks": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(user)
+	).Decode(&user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "post bookmarked",
-		"total post likes": strconv.Itoa(len(user.Bookmarks)),
+		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
 	})
 }
 
@@ -510,6 +529,125 @@ func GetBookmarks(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
+func MakeRepost(c echo.Context) error {
+	// liker
+	userStrID, _ := UserIdFromCookie(c)
+	userObjID, err := primitive.ObjectIDFromHex(userStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
+	}
+
+	// liked
+	postStrID := c.Param("id")
+	postObjID, err := primitive.ObjectIDFromHex(postStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid parameter (id)")
+	}
+
+	var repost Repost
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"userid": userObjID},
+		bson.M{"$addToSet": bson.M{"postids": postObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&repost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not repost post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post reposted",
+		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
+	})
+}
+
+
+func DeleteRepost(c echo.Context) error {
+	// liker
+	userStrID, _ := UserIdFromCookie(c)
+	userObjID, err := primitive.ObjectIDFromHex(userStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
+	}
+
+	// liked
+	postStrID := c.Param("id")
+	postObjID, err := primitive.ObjectIDFromHex(postStrID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid parameter (id)")
+	}
+
+	var repost Repost
+	err = PostColl.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"userid": userObjID},
+		bson.M{"$pull": bson.M{"postids": postObjID}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&repost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post")
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":          "post unreposted",
+		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
+	})
+}
+
+func GetAllReposts(c echo.Context) error {
+	userid_str := c.Param("id")
+	userid, err := primitive.ObjectIDFromHex(userid_str)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (id)")
+	}
+
+	filter := bson.D{{Key: "userid", Value: userid}}
+	var result = RepostColl.FindOne(context.TODO(), filter)
+	var reposts Repost
+	if err := result.Decode(&reposts); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(http.StatusBadRequest, "could not find user repost document")
+		} else {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+	}
+
+	var packagedresults = make([]PostUserPackage, len(reposts.PostIds))
+	var ch = make(chan *PostUserPackage)
+
+	for _, post_id := range reposts.PostIds {
+		go func(post_id primitive.ObjectID) {
+			var postfilter = bson.D{{Key: "_id", Value: post_id}}
+			var result = PostColl.FindOne(context.TODO(), postfilter)
+			var post Post
+			if post_err := result.Decode(&post); post_err != nil {
+				ch <- nil
+			}
+			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
+			result = UserColl.FindOne(context.TODO(), userfilter)
+			var user User
+			if user_err := result.Decode(&user); user_err != nil {
+				ch <- nil
+			}
+			user.Password = ""
+			ch <- &PostUserPackage{
+				Postjson: post,
+				Userjson: user,
+			}
+		}(post_id)
+	}
+
+	for idx := range reposts.PostIds {
+		var packagedpost = <-ch
+		// for now just ignore posts without users
+		if packagedpost != nil {
+			packagedresults[idx] = *packagedpost
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
+}
+
 func GetAllPostsFromUser(c echo.Context) error {
 
 	var userId, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
@@ -548,4 +686,6 @@ func GetAllPostsFromUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
+
+
 }

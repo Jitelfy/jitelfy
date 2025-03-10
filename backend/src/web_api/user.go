@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"time"
 
+	"strconv"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strconv"
 )
 
 var UserColl *mongo.Collection
@@ -90,6 +91,7 @@ func MakeUser(c echo.Context) error {
 		Username:    req.Username,
 		Followers:   []primitive.ObjectID{},
 		Following:   []primitive.ObjectID{},
+		Bookmarks:   []primitive.ObjectID{},
 		Password:    encryptedPass,
 	}
 	userAlerts := UserAlerts{
@@ -97,6 +99,13 @@ func MakeUser(c echo.Context) error {
 		UserId: user.Id,
 		Alert:  []Alert{},
 	}
+
+	repost := Repost{
+		Id: primitive.NewObjectID(),
+		UserId: user.Id,
+		PostIds: []primitive.ObjectID{},
+	}
+
 	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
@@ -105,6 +114,10 @@ func MakeUser(c echo.Context) error {
 	_, err = AlertColl.InsertOne(context.TODO(), userAlerts)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create alert")
+	}
+	_, err = RepostColl.InsertOne(context.TODO(), repost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
 	}
 
 	user.Password = ""
