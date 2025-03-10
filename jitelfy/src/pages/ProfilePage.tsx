@@ -15,17 +15,17 @@ const ProfilePage = () => {
     const { username } = useParams(); // Grab the dynamic username from the URL
     
     const handleToggleFollow = async () => {
-        if (!userData) return;
-        if (!isFollowing) {
-          await followUser(userData.id);
-          setIsFollowing(true);
-          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
-        } else {
-          await unfollowUser(userData.id);
-          setIsFollowing(false);
-          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
-        }
-      };
+  if (!userData) return;
+  if (!isFollowing) {
+    await followUser(userData.id);
+    setIsFollowing(true);
+    setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+  } else {
+    await unfollowUser(userData.id);
+    setIsFollowing(false);
+    setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+  }
+};
     
     useEffect(() => {
         const fetchUser = async () => {
@@ -86,14 +86,27 @@ const ProfilePage = () => {
                             <p className="text-md text-text-secondary">@{userData.username || 'username'}</p>
                         </div>
 
-                        {/* DEBUG: Profile song */}
-                        {user.song && (<div className="ml-auto mt-4">
-                            <iframe
-                                src={userData.song}
-                                className="w-full h-20"
-                                title="Profile song"
-                            ></iframe>
-                        </div>)}
+                        <div className="ml-auto mt-4 flex flex-row items-center">
+                            {userData.username !== user.username && (
+                                <button
+                                    onClick={handleToggleFollow}
+                                    className={
+                                        isFollowing
+                                            ? "mr-4 px-4 py-2 bg-transparent text-white border border-white rounded hover:bg-opacity-20"
+                                            : "mr-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    }
+                                >
+                                    {isFollowing ? "Following" : "Follow"}
+                                </button>
+                            )}
+                            {userData.song && (
+                                <iframe
+                                    src={userData.song}
+                                    className="w-full h-20"
+                                    title="Profile song"
+                                ></iframe>
+                            )}
+                        </div>
                     </div>
 
                     {/* Bio */}
