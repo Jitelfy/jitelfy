@@ -42,6 +42,7 @@ func main() {
 	}
 	fmt.Println("Jitelfy successfully connected to Cluster Server.")
 
+	web_api.AlertColl = db.Collection("alerts")
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
 	web_api.RepostColl = db.Collection("reposts")
@@ -63,6 +64,7 @@ func main() {
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
+	router.GET("/users/alerts", web_api.GetUserAlerts)
 	router.GET("/posts/from", web_api.GetAllPostsFromUser)
 
 	router.PUT("/customize/icon", web_api.SetIcon)
