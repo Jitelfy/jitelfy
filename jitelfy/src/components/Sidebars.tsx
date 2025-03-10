@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../api';
-import { User } from '../App.tsx';
+import { User } from "../types"
 import { IconArray } from "../UserContext";
 
 export const FriendActivity = () => {
