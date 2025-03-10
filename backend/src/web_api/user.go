@@ -3,6 +3,7 @@ package web_api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -93,6 +94,11 @@ func MakeUser(c echo.Context) error {
 		Bookmarks:   []primitive.ObjectID{},
 		Password:    encryptedPass,
 	}
+	userAlerts := UserAlerts{
+		Id:     primitive.NewObjectID(),
+		UserId: user.Id,
+		Alert:  []Alert{},
+	}
 
 	repost := Repost{
 		Id: primitive.NewObjectID(),
@@ -105,6 +111,10 @@ func MakeUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
 
+	_, err = AlertColl.InsertOne(context.TODO(), userAlerts)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create alert")
+	}
 	_, err = RepostColl.InsertOne(context.TODO(), repost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
@@ -239,14 +249,20 @@ func FollowUser(c echo.Context) error {
 	}
 
 	// Make sure the actual arrays themselves are null
-	UserColl.UpdateOne(context.TODO(),
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
 	)
-	UserColl.UpdateOne(context.TODO(),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
 	)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
 
 	// update DB
 	var user User
@@ -269,6 +285,20 @@ func FollowUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
+
+	// notification
+	msg := fmt.Sprintf("Followed by %s", user.Username)
+	alert := Alert{
+		AlerterId: userObjectID,
+		CreatedAt: time.Now(),
+		Type:      "follow",
+		Message:   msg,
+	}
+	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "followed user",
 		"user following":   strconv.Itoa(len(user.Following)),
@@ -294,14 +324,20 @@ func UnfollowUser(c echo.Context) error {
 	}
 
 	// Make sure the actual arrays themselves are NOT null
-	UserColl.UpdateOne(context.TODO(),
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
 	)
-	UserColl.UpdateOne(context.TODO(),
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
 	)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
 
 	// update DB
 	var user User
