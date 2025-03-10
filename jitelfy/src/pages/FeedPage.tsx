@@ -347,7 +347,7 @@ const FeedPage = () => {
                         </div>
                     </div>
                 </div>
-                {openComments.has(post.post.id) && (
+                {openComments.has(post.post.id) && ( // Render the comments
                   <Comments parentId={post.post.id} />
                 )}
             </div>
