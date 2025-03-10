@@ -455,7 +455,7 @@ const FeedPage = () => {
                         {/* Bookmark */}
                         <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3"
                           onClick={() => {
-                            if (user.bookmarks.indexOf(post.post.id) !== -1) {
+                            if (user && user.bookmarks.indexOf(post.post.id) !== -1) {
                               handleUnBookmark(post.post.id);
                             }
                             else {
