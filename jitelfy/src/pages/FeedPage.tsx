@@ -305,7 +305,7 @@ const FeedPage = () => {
                     <div className="flex flex-row gap-20 ml-4">
                         {/* Comment */}
                         <button 
-                          onClick={() => toggleComments(post.post.id)}
+                          onClick={() => toggleComments(post.post.id)} // Toggle comments on after clicking the svg
                           className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-2 items-center"
                           >
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
