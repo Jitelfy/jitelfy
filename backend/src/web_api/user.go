@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -34,15 +35,16 @@ type User struct {
 
 func GetUser(c echo.Context) error {
 
-	var userid, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid parameter (userid)")
-	}
+	var userid = c.Param("id")
+	fmt.Println("username")
+	fmt.Println(userid)
 
-	filter := bson.D{{Key: "_id", Value: userid}}
+	filter := bson.D{{Key: "username", Value: userid}}
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
-	if err = result.Decode(&user); err != nil {
+
+	var err = result.Decode(&user)
+	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user")
 		} else {
