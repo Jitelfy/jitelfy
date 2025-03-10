@@ -25,7 +25,7 @@ const ProfilePage = () => {
 
     console.log(userData);
 
-    if (userData == null) {
+    if (user == null || userData == null) {
         return (
             <div className="h-screen bg-background-main flex">
                 {/* Sidebar - Left */}
