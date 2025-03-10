@@ -89,8 +89,12 @@ const ProfilePage = () => {
 
                     {/* Followers & following */}
                     <div className="flex flex-row w-full my-5 justify-evenly">
-                        <p className="text-text-main"><b>0</b> Followers</p>
-                        <p className="text-text-main"><b>0</b> Following</p>
+                    <p className="text-text-main">
+                        <b>{userData.followers?.length || 0}</b> Followers
+                    </p>
+                    <p className="text-text-main">
+                        <b>{userData.following?.length || 0}</b> Following
+                    </p>
                     </div>
 
                     <hr className="border-1 w-full self-start border-background-tertiary"></hr>
