@@ -21,7 +21,7 @@ const ProfilePage = () => {
         );
     }
 
-    console.log(user.banner);
+    console.log(user.song);
 
     return (
         <div className="h-screen bg-background-main flex">
@@ -52,13 +52,13 @@ const ProfilePage = () => {
                         </div>
 
                         {/* DEBUG: Profile song */}
-                        <div className="ml-auto mt-4">
+                        {user.song && (<div className="ml-auto mt-4">
                             <iframe
-                                src="https://open.spotify.com/embed/track/1SgLBqrhVLZkXFqd5DH5cW?si=aaea95bffac24723"
+                                src={user?.song}
                                 className="w-full h-20"
                                 title="Profile song"
                             ></iframe>
-                        </div>
+                        </div>)}
                     </div>
 
                     {/* Bio */}
