@@ -20,6 +20,7 @@ export interface User {
     song: string;
     following: string[];
     followers: string[];
+    bookmarks: string[];
     token: string;
 }
 
