@@ -22,21 +22,30 @@ const ProfilePage = () => {
           // Refresh user data immediately after following
           const updatedUser = await RestoreUser();
           setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+          setUserData(prev => user && prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
           setIsFollowing(true);
         } else {
           await unfollowUser(userData.id);
           // Refresh user data immediately after unfollowing
           const updatedUser = await RestoreUser();
           setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+          setUserData(prev => user && prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
           setIsFollowing(false);
         }
       };
       
     
     useEffect(() => {
+        const restore = async () => {
+            const loggedInUser: User = await RestoreUser();
+            if (loggedInUser.id != null) {
+                setUser(loggedInUser);
+            }
+
+        };
+
         const fetchUser = async () => {
+
             if (username != null) {
                 // Fetching user data
                 const profileUser = await getUser(username);
@@ -46,10 +55,12 @@ const ProfilePage = () => {
                 }
             }
         };
+        if (user == null) {
+            // actually keep user logged in
+            restore();
+        }
         fetchUser();
     }, [user, username]); // Run when username changes
-
-    console.log(userData);
 
     if (user == null || userData == null) {
         return (
