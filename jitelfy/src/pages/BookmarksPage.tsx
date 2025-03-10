@@ -1,24 +1,64 @@
-import { useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
+import { IconArray } from "../UserContext";
+import { getPosts, RestoreUser, BASE_URL } from "../api";
+import { PackagedPost, Post, User } from "../types";
+import {Link, useSearchParams} from "react-router-dom";
+import Comments from "../components/Comments";
 
 
 const BookmarksPage = () => {
-    const { user } = useContext(UserContext);
-    if (user == null) {
-        return (
-            <div className="h-screen bg-background-main flex">
-                {/* Sidebar - Left */}
-                {Quicklinks(user!)}
-                <div className="flex-1 bg-background-main p-6 overflow-auto">
-                    <div className="relative w-full">
-                    </div>
-                </div>
-                {/* Sidebar - Right */}
-                {FriendActivity()}
-            </div>
-        );
-    }
+    const { user, setUser } = useContext(UserContext);
+    const [bookmarkedPosts, setBookmarkedPosts] = useState<Array<PackagedPost>>([]);
+
+    useEffect(() => {
+        const fetchBookmarkedPost = async () => {
+            if (user === null) {
+                const userjson = await RestoreUser();
+                if (userjson.id != null) {
+                    setUser(userjson);
+                }
+            }
+            try {
+                if (!user) return;
+                const response = await fetch(`${BASE_URL}/users/bookmarks`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + user.token
+                    },
+                    credentials: "include"
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const filteredEmptyPosts = data.filter((post: PackagedPost) => post.post.id !== "000000000000000000000000");
+                    console.log(filteredEmptyPosts)
+                    setBookmarkedPosts(filteredEmptyPosts);
+                }
+            }
+            catch(error) {
+                console.error("Error fetching bookmarked posts:", error);
+            }
+        }
+        fetchBookmarkedPost();
+    }, [user])
+
+    // if (user == null) {
+    //     return (
+    //         <div className="h-screen bg-background-main flex">
+    //             {/* Sidebar - Left */}
+    //             {Quicklinks(user!)}
+    //             <div className="flex-1 bg-background-main p-6 overflow-auto">
+    //                 <div className="relative w-full">
+    //                 </div>
+    //             </div>
+    //             {/* Sidebar - Right */}
+    //             {FriendActivity()}
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="h-screen bg-background-main flex">
@@ -32,11 +72,15 @@ const BookmarksPage = () => {
                 </div>
 
                 {/* Show all bookmarks */}
-                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
-                    {/*<p className="text-text-main">Nothing to see here yet...</p>
-                    <hr className="border-1 w-full self-start border-background-tertiary"></hr>*/}
-                </div>
+                {/* <p className="text-text-main">Nothing to see here yet...</p> */}
 
+                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                    {bookmarkedPosts.map((post) => (
+                        <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
+                            <div>{post.post.text}</div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Sidebar - Right */}
