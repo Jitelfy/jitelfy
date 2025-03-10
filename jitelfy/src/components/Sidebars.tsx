@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../api';
-import { User } from "../types"
+import { User } from '../types';
 import { IconArray } from "../UserContext";
 
 export const FriendActivity = () => {
@@ -168,7 +168,7 @@ const ProfileButton = (user: User | null) => {
 
 
     return (
-        <div className="flex flex-col w-full mt-auto">
+        <div className="flex flex-col mt-auto">
             {/* Pop up to view profile or log out*/}
             <div id="myPopup"
                  className="invisible absolute w-1/6 transform -translate-y-32 flex shadow-md shadow-background-main flex-col text-center bg-background-main rounded-md"
@@ -197,7 +197,7 @@ const ProfileButton = (user: User | null) => {
                     className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
                     onClick={handlePopup}
                 >
-                    <div className="flex justify-start items-start justify-items-start pl-auto flex-row">
+                    <div className="flex justify-start items-start justify-items-start  flex-row">
                         {/* Profile picture */}
                         <img
                             className="size-14 rounded-full mb-2 mr-3"
