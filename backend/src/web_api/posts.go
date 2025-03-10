@@ -481,3 +481,45 @@ func GetBookmarks(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, packagedresults)
 }
+
+func GetAllPostsFromUser(c echo.Context) error {
+
+	var userId, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
+	}
+
+	var user User
+	filter := bson.D{{Key: "_id", Value: userId}}
+	user_result := UserColl.FindOne(context.TODO(), filter)
+	if err := user_result.Decode(&user); err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to get user")
+	}
+	user.Password = ""
+	user.Bookmarks = nil
+
+	filter = bson.D{{Key: "userid", Value: userId}}
+	var cursor *mongo.Cursor
+	cursor, err = PostColl.Find(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
+	}
+	var result []Post
+	err = cursor.All(context.TODO(), &result)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not parse posts")
+	}
+
+	var packagedresults = make([]PostUserPackage, len(result))
+
+	for i, currpost := range result {
+		packagedresults[i] = PostUserPackage{
+			Userjson: user,
+			Postjson: currpost,
+		}
+	}
+
+	return c.JSON(http.StatusOK, packagedresults)
+}
+
+
