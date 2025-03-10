@@ -10,6 +10,7 @@ import {User} from "../types";
 const ProfilePage = () => {
     const { user } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
+    const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     useEffect(() => {
@@ -18,6 +19,9 @@ const ProfilePage = () => {
                 // Fetching user data
                 const profileUser = await getUser(username);
                 setUserData(profileUser);
+                if (profileUser && user) {
+                    setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
+                }
             }
         };
         fetchUser();
