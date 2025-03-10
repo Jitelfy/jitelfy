@@ -4,7 +4,8 @@ import { UserContext } from "../UserContext";
 import { IconArray } from "../UserContext";
 import { getPosts, RestoreUser, BASE_URL } from "../api";
 import { PackagedPost, Post, User } from "../types";
-import { useSearchParams } from "react-router-dom";
+import {Link, useSearchParams} from "react-router-dom";
+import Comments from "../components/Comments";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -22,8 +23,84 @@ const FeedPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const flairFilter = searchParams.get("flair") || "";
 
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+
+  const toggleComments = (postId: string) => {
+    const newSet = new Set(openComments);
+    if (newSet.has(postId)) {
+      newSet.delete(postId);
+    } else {
+      newSet.add(postId);
+    }
+    setOpenComments(newSet);
+  };
+
   const handleFlairClick = (flair: string) => {
     setSearchParams({ flair });
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${BASE_URL}/posts/like/${postId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+    
+      if (response.ok) {
+        setPosts(posts.map((post) => {
+          if (post.post.id === postId) {
+            return {
+              ...post,
+              post: {
+                ...post.post,
+                likeIds: [...post.post.likeIds, user.id],
+              },
+            };
+          }
+          return post;
+        }));
+      }
+    }
+    catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+  
+  const handleUnlike = async (postId: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${BASE_URL}/posts/unlike/${postId}`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+    
+      if (response.ok) {
+        setPosts(posts.map((post) => {
+          if (post.post.id === postId) {
+            return {
+              ...post,
+              post: {
+                ...post.post,
+                likeIds: post.post.likeIds.filter((id) => id !== user.id),
+              },
+            };
+          }
+          return post;
+        }));
+      }
+    }
+    catch (error) {
+      console.error("Error unliking post:", error);
+    }
   };
 
   // Helper function that renders post text and wrap hashtags
@@ -251,12 +328,15 @@ const FeedPage = () => {
                 </div>
                 <div>
                   {/* Display name, @username, timestamp posted */}
-                  <p className="text-text-main font-bold">
-                    {post.user.displayname}
-                  </p>
-                  <p className="text-text-secondary font-normal">
-                    @{post.user.username}
-                  </p>
+                  <Link to={"/profile/" + post.user.username}
+                        className="hover:underline hover:decoration-background-tertiary">
+                    <p className="text-text-main font-bold">
+                      {post.user.displayname}
+                    </p>
+                    <p className="text-text-secondary font-normal">
+                      @{post.user.username}
+                    </p>
+                  </Link>
                   <p className="text-text-secondary text-sm">
                     {new Date(post.post.time).toLocaleString()}
                   </p>
@@ -288,12 +368,15 @@ const FeedPage = () => {
                 <div className="flex flex-row align-baseline mt-5 justify-between">
                     <div className="flex flex-row gap-20 ml-4">
                         {/* Comment */}
-                        <div className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-2 items-center">
+                        <button 
+                          onClick={() => toggleComments(post.post.id)} // Toggle comments on after clicking the svg
+                          className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-2 items-center"
+                          >
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M12 3C10.5937 3 9.2995 3.05598 8.14453 3.14113C6.41589 3.26859 5.80434 3.32966 5.0751 3.73C4.42984 4.08423 3.66741 4.90494 3.36159 5.5745C3.01922 6.32408 3.00002 7.07231 3.00002 9.13826V10.8156C3.00002 11.9615 3.00437 12.3963 3.06904 12.7399C3.37386 14.3594 4.64066 15.6262 6.26012 15.931C6.60374 15.9957 7.03847 16 8.18442 16C8.1948 16 8.20546 16 8.21637 16C8.33199 15.9998 8.47571 15.9996 8.61593 16.019C9.21331 16.1021 9.74133 16.4502 10.053 16.9666C10.1261 17.0878 10.1825 17.22 10.2279 17.3264C10.2322 17.3364 10.2364 17.3462 10.2404 17.3557L10.6994 18.4267C11.0609 19.2701 11.3055 19.8382 11.518 20.2317C11.6905 20.5511 11.7828 20.6364 11.794 20.6477C11.9249 20.7069 12.0751 20.7069 12.2061 20.6477C12.2172 20.6364 12.3095 20.5511 12.482 20.2317C12.6946 19.8382 12.9392 19.2701 13.3006 18.4267L13.7596 17.3557C13.7637 17.3462 13.7679 17.3364 13.7721 17.3264C13.8175 17.22 13.8739 17.0878 13.9471 16.9666C14.2587 16.4502 14.7867 16.1021 15.3841 16.019C15.5243 15.9996 15.668 15.9998 15.7837 16C15.7946 16 15.8052 16 15.8156 16C16.9616 16 17.3963 15.9957 17.7399 15.931C19.3594 15.6262 20.6262 14.3594 20.931 12.7399C20.9957 12.3963 21 11.9615 21 10.8156V9.13826C21 7.07231 20.9808 6.32408 20.6384 5.5745C20.3326 4.90494 19.5702 4.08423 18.9249 3.73C18.1957 3.32966 17.5841 3.26859 15.8555 3.14113C14.7005 3.05598 13.4064 3 12 3ZM7.99746 1.14655C9.19742 1.05807 10.5408 1 12 1C13.4593 1 14.8026 1.05807 16.0026 1.14655C16.0472 1.14984 16.0913 1.15308 16.1351 1.1563C17.6971 1.27104 18.7416 1.34777 19.8874 1.97681C20.9101 2.53823 21.973 3.68239 22.4577 4.74356C23.001 5.93322 23.0007 7.13737 23.0001 8.95396C23 9.0147 23 9.07613 23 9.13826V10.8156C23 10.8555 23 10.8949 23 10.9337C23.0002 11.921 23.0003 12.5583 22.8965 13.1098C22.4392 15.539 20.5391 17.4392 18.1099 17.8965C17.5583 18.0003 16.9211 18.0002 15.9337 18C15.8949 18 15.8555 18 15.8156 18C15.7355 18 15.6941 18.0001 15.6638 18.0009C15.6625 18.0009 15.6612 18.0009 15.66 18.001C15.6596 18.002 15.659 18.0032 15.6585 18.0044C15.6458 18.0319 15.6294 18.07 15.5979 18.1436L15.1192 19.2604C14.7825 20.0462 14.5027 20.6992 14.2417 21.1823C13.9898 21.6486 13.6509 22.1678 13.098 22.4381C12.4052 22.7768 11.5948 22.7768 10.902 22.4381C10.3491 22.1678 10.0103 21.6486 9.75836 21.1823C9.49738 20.6992 9.21753 20.0462 8.88079 19.2604L8.40215 18.1436C8.3706 18.07 8.35421 18.0319 8.34157 18.0044C8.34101 18.0032 8.34048 18.002 8.33998 18.001C8.33881 18.0009 8.33755 18.0009 8.33621 18.0009C8.30594 18.0001 8.26451 18 8.18442 18C8.14451 18 8.10515 18 8.06633 18C7.07897 18.0002 6.44169 18.0003 5.89017 17.8965C3.46098 17.4392 1.56079 15.539 1.10356 13.1098C0.999748 12.5583 0.999849 11.921 1.00001 10.9337C1.00001 10.8949 1.00002 10.8555 1.00002 10.8156V9.13826C1.00002 9.07613 0.999998 9.0147 0.999978 8.95396C0.999383 7.13737 0.998989 5.93322 1.54238 4.74356C2.02707 3.68239 3.08998 2.53823 4.11264 1.97681C5.25848 1.34777 6.30294 1.27104 7.86493 1.1563C7.9087 1.15308 7.95287 1.14984 7.99746 1.14655Z"/>
                             </svg>
                             <p className="text-sm">0</p>
-                        </div>
+                          </button>
 
                         {/* Repost */}
                         <div className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-green hover:fill-accent-green flex flex-row gap-2 items-center">
@@ -304,11 +387,19 @@ const FeedPage = () => {
                         </div>
 
                         {/* Like */}
-                        <div className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-red hover:fill-accent-red flex flex-row gap-2 items-center">
+                        <div className={`text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-red hover:fill-accent-red flex flex-row gap-2 items-center cursor-pointer`}
+                            onClick={() => {
+                              if (post.post.likeIds.indexOf(user.id) !== -1) {
+                                handleUnlike(post.post.id); // Unlike if already liked
+                              } else {
+                                handleLike(post.post.id); // Like if not already liked
+                              }
+                            }}>
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.78125 4C4.53699 4 2 6.81981 2 10.1559C2 11.8911 2.27768 13.32 3.31283 14.8234C4.3005 16.258 5.9429 17.7056 8.49134 19.6155L12 22L15.5084 19.6158C18.057 17.7058 19.6995 16.258 20.6872 14.8234C21.7223 13.32 22 11.8911 22 10.1559C22 6.81982 19.463 4 16.2188 4C14.5909 4 13.1818 4.66321 12 5.86323C10.8182 4.66321 9.40906 4 7.78125 4ZM7.78125 6C5.77551 6 4 7.7855 4 10.1559C4 10.7049 4.03107 11.1875 4.10853 11.6325C4.23826 12.378 4.49814 13.0182 4.96014 13.6893C5.74532 14.8297 7.14861 16.11 9.69156 18.0157L12 19.7494L14.3084 18.0157C16.8514 16.11 18.2547 14.8297 19.0399 13.6893C19.7777 12.6176 20 11.6245 20 10.1559C20 7.7855 18.2245 6 16.2188 6C14.9831 6 13.8501 6.58627 12.8033 7.99831C12.6147 8.25274 12.3167 8.40277 12 8.40277C11.6833 8.40277 11.3853 8.25274 11.1967 7.99831C10.1499 6.58627 9.01689 6 7.78125 6Z"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.78125 4C4.53699 4 2 6.81981 2 10.1559C2 11.8911 2.27768 13.32 3.31283 14.8234C4.3005 16.258 5.9429 17.7056 8.49134 19.6155L12 22L15.5084 19.6158C18.057 17.7058 19.6995 16.258 20.6872 14.8234C21.7223 13.32 22 11.8911 22 10.1559C22 6.81982 19.463 4 16.2188 4C14.5909 4 13.1818 4.66321 12 5.86323C10.8182 4.66321 9.40906 4 7.78125 4ZM7.78125 6C5.77551 6 4 7.7855 4 10.1559C4 10.7049 4.03107 11.1875 4.10853 11.6325C4.23826 12.378 4.49814 13.0182 4.96014 13.6893C5.74532 14.8297 7.14861 16.11 9.69156 18.0157L12 19.7494L14.3084 18.0157C16.8514 16.11 18.2547 14.8297 19.0399 13.6893C19.7777 12.6176 20 11.6245 20 10.1559C20 7.7855 18.2245 6 16.2188 6C14.9831 6 13.8501 6.58627 12.8033 7.99831C12.6147 8.25274 12.3167 8.40277 12 8.40277C11.6833 8.40277 11.3853 8.25274 11.1967 7.99831C10.1499 6.58627 9.01689 6 7.78125 6Z"
+                                fill={post.post.likeIds.indexOf(user?.id) !== -1 ? "#ff0000" : "currentColor"}/>
                             </svg>
-                            <p className="text-sm">0</p>
+                            <p className="text-sm">{post.post.likeIds.length}</p>
                         </div>
                     </div>
 
@@ -328,6 +419,9 @@ const FeedPage = () => {
                         </div>
                     </div>
                 </div>
+                {openComments.has(post.post.id) && ( // Render the comments
+                  <Comments parentId={post.post.id} />
+                )}
             </div>
           ))}
         </div>

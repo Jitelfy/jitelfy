@@ -6,6 +6,7 @@ import { IconArray, BannerArray } from "../UserContext";
 import {BASE_URL, RestoreUser } from "../api";
 
 let NewIcon = -1;
+let NewBanner = -1;
 
 const handleChangeIcon = async (icon: number, user: User) => {
     if (!user) return; // ensure user exists
@@ -57,12 +58,148 @@ const handleIconClick = async (imgID: string, user: User) => {
     }
 };
 
+const handleBannerClick = async (banID: string, user: User) => {
+    console.log("Handle banner click" + banID);
+    const ban = document.getElementById(banID);
+
+    if (ban != null) {
+        if (NewBanner != parseInt(banID)) {
+            { /* Unselect the old new icon */ }
+            let oldBan = document.getElementById(NewBanner.toString(10));
+            if (oldBan != null) {
+                oldBan.style.padding = "0.75rem";
+                oldBan.style.border = "none";
+            }
+
+            { /* Select the new banner */ }
+            NewBanner = parseInt(banID);
+            ban.style.padding = "0.63rem"
+            ban.style.border = "2px solid #3354c8";
+        }
+    }
+};
+
+const handleChangeBanner = async (banner: number, user: User) => {
+    if (!user) return; // ensure user exists
+
+    console.log("New banner will be of index " + banner);
+    if (banner != user?.banner) {
+        console.log("Sending request for banner change and reloading...");
+
+        const bannerData = {
+            banner: banner
+        };
+
+        const response = await fetch(`${BASE_URL}/customize/banner`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + user?.token
+            },
+            body: JSON.stringify(bannerData),
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to change banner", await response.text());
+            return;
+        }
+        window.location.reload();
+    }
+};
+
+const handleChangeDisplayName = async (newName: string, user: User) => {
+    if (!user) return; // ensure user exists
+
+    console.log("New display name will be " + newName);
+    if (newName.length > 0 && newName != user?.displayname) {
+        console.log("Sending request for name change and reloading...");
+
+        const nameData = {
+            displayname: newName
+        };
+
+        const response = await fetch(`${BASE_URL}/customize/displayname`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + user?.token
+            },
+            body: JSON.stringify(nameData),
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to change display name", await response.text());
+            return;
+        }
+        window.location.reload();
+    }
+};
+
+const handleChangeBio = async (newBio: string, user: User) => {
+    if (!user) return; // ensure user exists
+
+    if (newBio != null && newBio != user?.bio) {
+        console.log("New bio will be " + newBio);
+        console.log("Sending request for bio change and reloading...");
+
+        const bioData = {
+            bio: newBio
+        };
+
+        const response = await fetch(`${BASE_URL}/customize/bio`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + user?.token
+            },
+            body: JSON.stringify(bioData),
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to change bio", await response.text());
+            return;
+        }
+        window.location.reload();
+    }
+};
+
+const handleChangeSong = async (newSong: string, user: User) => {
+    if (!user) return; // ensure user exists
+
+    if (newSong != null && newSong != user?.song) {
+        console.log("New song will be " + newSong);
+        console.log("Sending request for song change and reloading...");
+
+        const songData = {
+            song: newSong
+        };
+
+        const response = await fetch(`${BASE_URL}/customize/favsong`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + user?.token
+            },
+            body: JSON.stringify(songData),
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to change song", await response.text());
+            return;
+        }
+        window.location.reload();
+    }
+};
+
 const SettingsPage = () => {
     const { user, setUser } = useContext(UserContext);
 
-
-    let newBio: string = "";
     const [newDisplayName, setNewDisplayName] = useState("");
+    const [newBio, setNewBio] = useState("");
     const [newProfileSong, setNewProfileSong] = useState("");
 
     useEffect(() => {
@@ -95,11 +232,13 @@ const SettingsPage = () => {
     }
 
     const SelectedIcon = user?.icon;
+    const SelectedBanner = user?.banner;
     NewIcon = -1;
-    let rv = handleIconClick(IconArray[SelectedIcon], user);
+    NewBanner = -1;
 
     return (
-        <div className="h-screen bg-background-main flex">
+        <div className="h-screen bg-background-main flex"
+             onLoad={() => handleBannerClick(SelectedBanner, user)}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -123,7 +262,7 @@ const SettingsPage = () => {
                         />
 
                         <button className="w-1/4"
-                        >
+                                onClick={() => handleChangeDisplayName(newDisplayName, user)}>
                             <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                                 Save
                             </p>
@@ -136,8 +275,9 @@ const SettingsPage = () => {
                     <h2 className=" text-text-main text-lg">Biography</h2>
 
                     <textarea
-                        id="biography"
-                        placeholder="What are you all about?"
+                        placeholder={user?.bio || "What are you all about?"}
+                        value={newBio}
+                        onChange={(e) => setNewBio(e.target.value)}
                         rows={3}
                         className="resize-none whitespace-pre-wrap bg-background-main w-full mt-2 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                     >
@@ -146,7 +286,7 @@ const SettingsPage = () => {
                     <hr className="border-1 border-background-tertiary w-full my-3"></hr>
 
                     <button className="w-1/4 self-end"
-                    >
+                            onClick={() => handleChangeBio(newBio, user)}>
                         <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                             Save
                         </p>
@@ -192,11 +332,15 @@ const SettingsPage = () => {
 
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
+                         onLoad={() => handleBannerClick(SelectedBanner, user)}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
 
                         {BannerArray.map((color) => (
                             <svg height="140" width="140"
-                                className="p-3 rounded-lg bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out">
+                                 id={BannerArray.indexOf(color).toString(10)}
+                                 className="p-3 rounded-lg bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
+                                 onClick={() => handleBannerClick(BannerArray.indexOf(color).toString(10), user)}
+                            >
                                 <rect width="110" height="110" x="3" y="3" rx="10" ry="10" fill={color} />
                             </svg>
                         ))}
@@ -206,7 +350,7 @@ const SettingsPage = () => {
                     <hr className="border-1 border-background-tertiary w-full my-3"></hr>
 
                     <button className="w-1/4 self-end"
-                            >
+                            onClick={() => handleChangeBanner(NewBanner, user)}>
                         <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                             Save
                         </p>
@@ -224,12 +368,12 @@ const SettingsPage = () => {
                             type="url"
                             value={newProfileSong}
                             onChange={(e) => setNewProfileSong(e.target.value)}
-                            placeholder="What song best represents you?"
+                            placeholder={user?.song || "What song best represents you?"}
                             className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
                         />
 
                         <button className="w-1/4"
-                        >
+                                onClick={() => handleChangeSong(newProfileSong, user)}>
                             <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                                 Save
                             </p>

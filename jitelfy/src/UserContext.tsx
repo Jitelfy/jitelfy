@@ -24,4 +24,4 @@ export const IconArray = ["/src/user_icons/icon_1.png", "/src/user_icons/icon_2.
 export const BannerArray = ["#ff3131", "#ff5757", "#e4571a", "#ff914d",
                                     "#ffcc00", "#ffde59", "#00bf63", "#7ed957",
                                     "#004aad", "#6cabff", "#5e17eb", "#9b34b8",
-                                    "#9b34b8", "#ffb3e2", "#cb6ce6", "#ff66c4"];
+                                    "#ffb3e2", "#cb6ce6", "#ff66c4", "#ffffff"];

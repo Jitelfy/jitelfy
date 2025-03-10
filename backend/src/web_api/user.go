@@ -34,15 +34,22 @@ type User struct {
 
 func GetUser(c echo.Context) error {
 
-	var userid, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid parameter (userid)")
-	}
+	param := c.Param("id")
+	var filter bson.D
 
-	filter := bson.D{{Key: "_id", Value: userid}}
+	// Try to interpret the param as an objectiD
+	if objID, err := primitive.ObjectIDFromHex(param); err == nil {
+		filter = bson.D{{Key: "_id", Value: objID}}
+	} else {
+		// Otherwise treat it as a username
+		filter = bson.D{{Key: "username", Value: param}}
+	}
+	
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
-	if err = result.Decode(&user); err != nil {
+
+	var err = result.Decode(&user)
+	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user")
 		} else {
@@ -221,6 +228,16 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
+	// Make sure the actual arrays themselves are null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
+
 	// update DB
 	var user User
 	var follow User
@@ -265,6 +282,16 @@ func UnfollowUser(c echo.Context) error {
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
+
+	// Make sure the actual arrays themselves are NOT null
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
+	)
+	UserColl.UpdateOne(context.TODO(),
+		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
+		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
+	)
 
 	// update DB
 	var user User

@@ -59,7 +59,7 @@ func init() {
 	router.POST("/posts/bookmark/:id", web_api.BookmarkPost)
 	router.POST("/posts/unbookmark/:id", web_api.UnbookmarkPost)
 
-	router.GET("/users", web_api.GetUser)
+	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
 
 
