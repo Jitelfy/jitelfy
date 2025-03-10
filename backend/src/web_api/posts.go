@@ -3,6 +3,7 @@ package web_api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	ParentId primitive.ObjectID   `json:"parentid" bson:"parentid"`
-	ChildIds int `json:"childids" bson:"childids"`
+	ChildIds int                  `json:"childids" bson:"childids"`
 	LikeIds  []primitive.ObjectID `json:"likeIds" bson:"likeids"`
 	Time     string               `json:"time" bson:"time"`
 	Text     string               `json:"text" bson:"text"`
@@ -185,55 +186,55 @@ func CreatePost(c echo.Context) error {
 }
 
 func CreateComment(c echo.Context) error {
-    post := Post{}
+	post := Post{}
 
-    var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, "invalid parameter (parentid)")
-    }
+	var parentId, err = primitive.ObjectIDFromHex(c.QueryParam("parent"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid parameter (parentid)")
+	}
 
-    // Bind the incoming JSON
-    if err := c.Bind(&post); err != nil {
-        return c.JSON(http.StatusBadRequest, "invalid json")
-    }
+	// Bind the incoming JSON
+	if err := c.Bind(&post); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid json")
+	}
 
-    // Conver song url to an embed
-    if post.Song != "" {
-        if strings.Contains(post.Song, "https://open.spotify.com/track/") {
-            post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
-        } else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
-            return c.JSON(http.StatusBadRequest, "invalid song link")
-        }
-    }
+	// Conver song url to an embed
+	if post.Song != "" {
+		if strings.Contains(post.Song, "https://open.spotify.com/track/") {
+			post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
+		} else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
+			return c.JSON(http.StatusBadRequest, "invalid song link")
+		}
+	}
 
-    // Get the user ID from the token
-    userIdHex := UserIdFromToken(c)
-    userId, err := primitive.ObjectIDFromHex(userIdHex)
-    if err != nil {
-        return c.JSON(http.StatusBadRequest, "invalid user token")
-    }
+	// Get the user ID from the token
+	userIdHex := UserIdFromToken(c)
+	userId, err := primitive.ObjectIDFromHex(userIdHex)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid user token")
+	}
 
-    // Build the new Post object with the converted song URL
-    newComment := Post{
-        Id:       primitive.NewObjectID(),
-        ParentId: parentId,
+	// Build the new Post object with the converted song URL
+	newComment := Post{
+		Id:       primitive.NewObjectID(),
+		ParentId: parentId,
 		ChildIds: 0,
-        UserId:   userId,
-        Time:     time.Now().Format(time.RFC3339),
-        Text:     post.Text,
-        Embed:    post.Embed,
-        Song:     post.Song,
-    }
+		UserId:   userId,
+		Time:     time.Now().Format(time.RFC3339),
+		Text:     post.Text,
+		Embed:    post.Embed,
+		Song:     post.Song,
+	}
 
-    // Marshal and insert into the database
-    bsonpost, err := bson.Marshal(newComment)
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, "bson conversion failed")
-    }
-    _, err = PostColl.InsertOne(context.TODO(), bsonpost)
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
-    }
+	// Marshal and insert into the database
+	bsonpost, err := bson.Marshal(newComment)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "bson conversion failed")
+	}
+	_, err = PostColl.InsertOne(context.TODO(), bsonpost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to insert post to db")
+	}
 	filter := bson.D{{Key: "_id", Value: parentId}}
 	change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: 1}}}}
 	var result *mongo.UpdateResult
@@ -242,9 +243,8 @@ func CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "failed to update parent")
 	}
 
-    return c.JSON(http.StatusOK, newComment)
+	return c.JSON(http.StatusOK, newComment)
 }
-
 
 func GetComments(c echo.Context) error {
 
@@ -345,6 +345,24 @@ func LikePost(c echo.Context) error {
 	).Decode(&liked)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not like post")
+	}
+	var liker User
+	err = UserColl.FindOne(context.TODO(), bson.M{"_id": likerObjID}).Decode(&liker)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "could not like post")
+	}
+	// notification
+	msg := fmt.Sprintf("%s liked you post", liker.Username)
+	alert := Alert{
+		AlerterId: likerObjID,
+		PostID:    likedObjID,
+		CreatedAt: time.Now(),
+		Type:      "like",
+		Message:   msg,
+	}
+	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"addToSet": bson.M{"alerts": alert}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -531,5 +549,3 @@ func GetAllPostsFromUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, packagedresults)
 }
-
-
