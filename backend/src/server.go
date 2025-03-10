@@ -63,6 +63,7 @@ func main() {
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
+	router.GET("/posts/from", web_api.GetAllPostsFromUser)
 
 	router.PUT("/customize/icon", web_api.SetIcon)
 	router.PUT("/customize/banner", web_api.SetBanner)

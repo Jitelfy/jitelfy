@@ -96,7 +96,7 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
   };
 
   return (
-    <div className="mt-4 ml-8 border-l-2 border-white pl-4">
+    <div className="mt-4 ml-8 bg-backgorund-main border-l-2 border-text-secondary pl-4">
       {comments.map((comment) => (
         <div
           key={comment.post.id}
@@ -128,7 +128,7 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
               alt={comment.user.displayname}
             />
             <div>
-              <Link to={`/profile/${comment.user.username}`} className="hover:underline">
+              <Link to={`/profile/${comment.user.username}`} className="hover:underline decoration-text-secondary">
                 <p className="text-text-main font-bold">{comment.user.displayname}</p>
                 <p className="text-text-secondary">@{comment.user.username}</p>
               </Link>

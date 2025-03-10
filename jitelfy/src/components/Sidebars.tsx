@@ -63,7 +63,7 @@ export const FriendActivity = () => {
 export const Quicklinks = (user: User) => {
 
     return (
-    <div className="static w-1/5 h-full bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
+    <div className="static h-full bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
           <Link to="/feed" className="text-text-main w-full text-left">
       <h1 className="text-text-main text-2xl mb-6">Jitelfy</h1>
           </Link>
@@ -158,7 +158,7 @@ const ProfileButton = (user: User) => {
 
     if (user == null) {
         return (
-            <div className="flex mt-auto mb-4 justify-center w-full flex-row border-2 p-10 text-text-main border-background-tertiary hover:bg-background-tertiary rounded-md"
+            <div className="flex mt-auto mb-4 justify-center w-full flex-row border-2 p-10 text-text-main border-background-tertiary hover:bg-background-tertiary hover:cursor-pointer rounded-md"
             onClick={() => login() }
             >
                 <h3 className="text-wrap text-xl"> Login </h3>
@@ -171,7 +171,7 @@ const ProfileButton = (user: User) => {
         <div className="flex flex-col mt-auto">
             {/* Pop up to view profile or log out*/}
             <div id="myPopup"
-                 className="invisible flex shadow-md shadow-background-main flex-col text-center w-full bg-background-main rounded-md"
+                 className="invisible absolute w-1/6 transform -translate-y-32 flex shadow-md shadow-background-main flex-col text-center bg-background-main rounded-md"
                  onMouseLeave={handlePopup}>
 
                 {/* Link to profile */}
@@ -186,7 +186,7 @@ const ProfileButton = (user: User) => {
                 </Link>
 
                 {/* Log out button */}
-                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red rounded-md"
+                <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red hover:cursor-pointer rounded-md"
                      onClick={() => logOut() }
                 >
                     <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
@@ -194,10 +194,10 @@ const ProfileButton = (user: User) => {
 
             </div>
                 <div
-                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary"
+                    className="relative bg-background-secondary rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
                     onClick={handlePopup}
                 >
-                    <div className="flex justify-start items-start justify-items-start w-full flex-row">
+                    <div className="flex justify-start items-start justify-items-start  flex-row">
                         {/* Profile picture */}
                         <img
                             className="size-14 rounded-full mb-2 mr-3"
@@ -211,15 +211,6 @@ const ProfileButton = (user: User) => {
                             <p className="text-text-secondary truncate">@{user?.username}</p>
                         </div>
 
-                        {/* Link to more options */}
-                        <svg
-                            className="ml-5"
-                            width="25px" height="25px" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                  d="M3 6C3 5.44772 3.44772 5 4 5H20C20.5523 5 21 5.44772 21 6C21 6.55228 20.5523 7 20 7H4C3.44772 7 3 6.55228 3 6ZM3 12C3 11.4477 3.44772 11 4 11H20C20.5523 11 21 11.4477 21 12C21 12.5523 20.5523 13 20 13H4C3.44772 13 3 12.5523 3 12ZM3 18C3 17.4477 3.44772 17 4 17H20C20.5523 17 21 17.4477 21 18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z"
-                                  fill="white"/>
-                        </svg>
                     </div>
                 </div>
         </div>

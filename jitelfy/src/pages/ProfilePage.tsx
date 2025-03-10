@@ -22,14 +22,14 @@ const ProfilePage = () => {
           // Refresh user data immediately after following
           const updatedUser = await RestoreUser();
           setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+          setUserData(prev => user && prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
           setIsFollowing(true);
         } else {
           await unfollowUser(userData.id);
           // Refresh user data immediately after unfollowing
           const updatedUser = await RestoreUser();
           setUser(updatedUser);
-          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+          setUserData(prev => user && prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
           setIsFollowing(false);
         }
       };
