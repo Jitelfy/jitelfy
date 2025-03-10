@@ -36,7 +36,16 @@ const ProfilePage = () => {
       
     
     useEffect(() => {
+        const restore = async () => {
+            const loggedInUser: User = await RestoreUser();
+            if (loggedInUser.id != null) {
+                setUser(loggedInUser);
+            }
+
+        };
+
         const fetchUser = async () => {
+
             if (username != null) {
                 // Fetching user data
                 const profileUser = await getUser(username);
@@ -46,10 +55,12 @@ const ProfilePage = () => {
                 }
             }
         };
+        if (user == null) {
+            // actually keep user logged in
+            restore();
+        }
         fetchUser();
     }, [user, username]); // Run when username changes
-
-    console.log(userData);
 
     if (user == null || userData == null) {
         return (
