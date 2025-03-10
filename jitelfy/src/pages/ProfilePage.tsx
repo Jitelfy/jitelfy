@@ -13,6 +13,20 @@ const ProfilePage = () => {
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
+    
+    const handleToggleFollow = async () => {
+        if (!userData) return;
+        if (!isFollowing) {
+          await followUser(userData.id);
+          setIsFollowing(true);
+          setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+        } else {
+          await unfollowUser(userData.id);
+          setIsFollowing(false);
+          setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+        }
+      };
+    
     useEffect(() => {
         const fetchUser = async () => {
             if (username != null) {
