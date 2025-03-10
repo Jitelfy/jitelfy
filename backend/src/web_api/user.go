@@ -34,9 +34,17 @@ type User struct {
 
 func GetUser(c echo.Context) error {
 
-	var userid = c.Param("id")
+	param := c.Param("id")
+	var filter bson.D
 
-	filter := bson.D{{Key: "username", Value: userid}}
+	// Try to interpret the param as an objectiD
+	if objID, err := primitive.ObjectIDFromHex(param); err == nil {
+		filter = bson.D{{Key: "_id", Value: objID}}
+	} else {
+		// Otherwise treat it as a username
+		filter = bson.D{{Key: "username", Value: param}}
+	}
+	
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 
@@ -217,7 +225,7 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
-	// Make sure the actual arrays themselves are NOT null
+	// Make sure the actual arrays themselves are null
 	UserColl.UpdateOne(context.TODO(),
 		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
 		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
