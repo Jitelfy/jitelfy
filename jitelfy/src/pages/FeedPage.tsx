@@ -261,7 +261,7 @@ const FeedPage = () => {
       {Quicklinks(user)}
 
       {/* Feed - Main Content */}
-      <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
+      <div className="flex-1 flex-col px-20 relative overflow-y-auto hide-scrollbar">
           <div className="sticky">
             <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
