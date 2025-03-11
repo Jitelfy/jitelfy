@@ -1,13 +1,13 @@
 import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
-import {getUser, RestoreUser} from "../api";
-import {User} from "../types";
+import {getUser, getUserActivity, RestoreUser} from "../api";
+import {User, UserAlerts} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
-  const [mutualFriend, setMutualFriend] = useState<any>(null);
+  const [ userAlerts, setUserAlerts ] = useState<UserAlerts>();
 
   useEffect(() => {
     const restore = async () => {
@@ -18,26 +18,18 @@ const ActivityPage = () => {
 
     };
 
+    const requestActivity= async () => {
+      const response = await getUserActivity();
+      setUserAlerts(response);
+    }
+
     if (user == null) {
       // Keep user logged in
       restore();
     }
 
-    if (user) {
-      // Calculate mutual friendships using the arrays of user IDs
-      const mutuals = user.followers.filter((follower: string) =>
-        user.following.includes(follower)
-      );
-
-      if (mutuals.length > 0) {
-        // Fetch details for the first mutual friend
-        getUser(mutuals[0])
-          .then((friend) => setMutualFriend(friend))
-          .catch((err) => console.error("Error fetching mutual friend:", err));
-      } else {
-        setMutualFriend(null);
-      }
-    }
+    requestActivity();
+    console.log(userAlerts);
   }, [user]); 
 
   if (!user) {
@@ -61,30 +53,33 @@ const ActivityPage = () => {
       <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
-          {mutualFriend && (
-            <div className="flex flex-row content-center bg-background-secondary p-4 rounded mt-2">
-              <img
-                  className="size-14 rounded-full mr-3"
-                  src={IconArray[mutualFriend.icon]}
-                  alt={mutualFriend.displayname}
-              />
-              <div className="flex flex-row text-white gap-2 text-center content-center">
-                <Link to={"/profile/" + mutualFriend.username}
-                      className="hover:underline hover:decoration-text-main text-center content-center">
-                  <p>
-                    @<b>{mutualFriend.username}</b>
-                  </p>
-                </Link>
-                <p className="text-center content-center">is now friends with you!</p>
-              </div>
-            </div>
-          )}
-        </div>
+          {userAlerts && userAlerts?.alerts && (
+              userAlerts.alerts.map((alert) => (
+                  <div className="flex flex-row content-center bg-background-secondary p-4 rounded mt-2">
+                    <img
+                        className="size-14 rounded-full mr-3"
+                        src={IconArray[15]}
+                        alt="Poop"
+                    />
+                    <div className="flex flex-col text-white gap-2 text-center content-center">
+                      <div>
+                        <Link to={"/profile/"}
+                              className="hover:underline hover:decoration-text-main text-center content-center">
+                          <p>
+                            @<b>{alert.AlerterId}</b>
+                          </p>
+                        </Link>
 
-        <div className="p-6 flex-1 bg-background-main relative overflow-auto hide-scrollbar">
-          {/* Other notifications can go here */}
+                        <p className="text-center content-center">is now friends with you!</p>
+                      </div>
+                      <p>{alert.created_at}</p>
+                    </div>
+                  </div>
+              ))
+          )};
         </div>
       </div>
+
       {/* Sidebar - Right */}
       {FriendActivity()}
     </div>

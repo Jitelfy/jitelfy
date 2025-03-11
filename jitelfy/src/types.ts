@@ -28,3 +28,19 @@ export interface PackagedPost {
     post: Post;
     user: User;
 }
+
+export interface Alert {
+    AlerterId: string;
+    postid: string;
+    created_at: string;
+    type: string;
+    message: string;
+}
+
+export interface UserAlerts {
+    id: string;
+    userid: string;
+    alerts: Alert[];
+}
+
+
