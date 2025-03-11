@@ -53,7 +53,6 @@ const ProfilePage = () => {
             if (loggedInUser.id != null) {
                 setUser(loggedInUser);
             }
-            console.log(loggedInUser);
         };
 
         const fetchUser = async () => {
@@ -85,7 +84,7 @@ const ProfilePage = () => {
                     </div>
                 </div>
                 {/* Sidebar - Right */}
-                {FriendActivity()}
+                {FriendActivity(user)}
             </div>
         );
     }
@@ -183,7 +182,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Sidebar - Right */}
-            {FriendActivity()}
+            {FriendActivity(user)}
         </div>
     );
 };

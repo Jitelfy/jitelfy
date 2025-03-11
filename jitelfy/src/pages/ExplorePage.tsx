@@ -21,7 +21,7 @@ const ExplorePage = () => {
                     </div>
                 </div>
                 {/* Sidebar - Right */}
-                {FriendActivity()}
+                {FriendActivity(user)}
             </div>
         );
     }
@@ -150,7 +150,7 @@ const ExplorePage = () => {
             </div>
 
             {/* Sidebar - Right */}
-            {FriendActivity()}
+            {FriendActivity(user)}
         </div>
     );
 };

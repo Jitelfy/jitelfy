@@ -212,7 +212,7 @@ const SettingsPage = () => {
                     </div>
                 </div>
                 {/* Sidebar - Right */}
-                {FriendActivity()}
+                {FriendActivity(user)}
             </div>
         );
     }
@@ -370,7 +370,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Sidebar - Right */}
-            {FriendActivity()}
+            {FriendActivity(user)}
         </div>
     );
 };

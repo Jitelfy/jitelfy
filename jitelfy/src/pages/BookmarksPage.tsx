@@ -99,7 +99,7 @@ const BookmarksPage = () => {
             </div>
 
             {/* Sidebar - Right */}
-            {FriendActivity()}
+            {FriendActivity(user)}
         </div>
     );
 };

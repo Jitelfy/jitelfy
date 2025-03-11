@@ -42,7 +42,7 @@ const ActivityPage = () => {
         <div className="flex-1 bg-background-main p-6 overflow-auto">
           <div className="relative w-full"></div>
         </div>
-        {FriendActivity()}
+        {FriendActivity(user)}
       </div>
     );
   }
@@ -92,7 +92,7 @@ const ActivityPage = () => {
       </div>
 
       {/* Sidebar - Right */}
-      {FriendActivity()}
+      {FriendActivity(user)}
     </div>
   );
 };

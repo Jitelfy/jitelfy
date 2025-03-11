@@ -505,7 +505,7 @@ const FeedPage = () => {
       </div>
 
       {/* Sidebar - Right */}
-      {FriendActivity()}
+      {FriendActivity(user)}
     </div>
   );
 };

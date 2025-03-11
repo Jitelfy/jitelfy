@@ -1,63 +1,77 @@
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { BASE_URL } from '../api';
-import { User } from '../types';
+import {BASE_URL, getUser} from '../api';
+import {PackagedPost, User} from '../types';
 import { IconArray } from "../UserContext";
+import {useEffect, useState} from "react";
 
-export const FriendActivity = () => {
-    return (
+
+export const FriendActivity = (user: User | null) => {
+    const [friends, setFriends] = useState<User[]>([]);
+
+    const getFriends = async(): Promise<void> => {
+        const arr = new Array<User>();
+        if (user != null) {
+            let userInfo = await getUser(user.id);
+
+            if (userInfo) {
+                for (const f of userInfo.following) {
+                    if (userInfo.followers.includes(f)) {
+                        let friend = await getUser(f);
+                        if (friend != null && friend.song != "") {
+                            arr.push(friend);
+                        }
+                    }
+                }
+                console.log(arr);
+                setFriends(arr);
+            }
+        }
+    }
+
+    useEffect(() => {
+        getFriends()
+    },[user]);
+
+
+    if (user != null) {
+
+        return (
       <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
 
           <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
 
-          {/* Sample friend activity #1 */}
-          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
-              {/* Friend's profile picture and username */}
-              <div className="flex flex-row items-center text-text-main">
-                  <img
-                      className="size-9 rounded-full mr-3"
-                      src="/src/user_icons/icon_5.png"
-                      alt="Friend icon"
-                  ></img>
-                  <p>@username_1</p>
-              </div>
+          {/* Friend activity */}
+          {friends.map((friend) => {
+              return (
+              <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+                  {/* Friend's profile picture and username */}
+                  <div className="flex flex-row items-center text-text-main">
+                      <img
+                          className="size-11 rounded-full mr-3"
+                          src={IconArray[friend.icon]}
+                          alt={friend.displayname}
+                      ></img>
+                      <Link to={"/profile/" + friend.username} className="flex flex-col w-full hover:underline hover:decoration-text-secondary">
+                          <p className="text-text-main"><b>{friend.displayname}</b></p>
+                          <p className="text-text-secondary text-sm">@{friend.username}</p>
+                      </Link>
+                  </div>
 
-              {/* Friend's profile song */}
-              <div className="mt-4">
-                  <iframe
-                      src="https://open.spotify.com/embed/track/0gzy4HT0Ifnxm7T2U0XzdM?si=12a67ae2d83744e4"
-                      className="w-full h-20"
-                      title="Friend song"
-                      allowFullScreen
-                  ></iframe>
+                  {/* Friend's profile song */}
+                  <div className="mt-4">
+                      <iframe
+                          src={friend.song}
+                          className="w-full h-20"
+                          title="Friend song"
+                          allowFullScreen
+                      ></iframe>
+                  </div>
               </div>
-          </div>
-
-          {/* Sample friend activity #2 */}
-          <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
-              {/* Friend's profile picture and username */}
-              <div className="flex flex-row items-center text-text-main">
-                  <img
-                      className="size-9 rounded-full mr-3"
-                      src="/src/user_icons/icon_10.png"
-                      alt="Friend icon"
-                  ></img>
-                  <p>@username_2</p>
-              </div>
-
-              {/* Friend's profile song */}
-              <div className="mt-4">
-                  <iframe
-                      src="https://open.spotify.com/embed/track/0RvBKchlzAHN59rGJ64qOM?si=8f09ef85b1074bcf"
-                      className="w-full h-20"
-                      title="Friend song"
-                      allowFullScreen
-                  ></iframe>
-              </div>
-          </div>
-
+              )
+          })}
       </div>
-    );
+    )}
 }
 
 export const Quicklinks = (user: User | null) => {
