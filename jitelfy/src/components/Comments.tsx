@@ -194,10 +194,13 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
               />
             </div>
           </div>
-          <div className="flex justify-end mt-2">
+
+          <hr className="border-1 mt-4 border-background-tertiary"></hr>
+
+          <div className="flex justify-end mt-3">
             <button
               onClick={handleSubmitComment}
-              className="bg-accent-blue-light text-text-main px-4 py-2 rounded hover:bg-accent-blue"
+              className="bg-accent-blue-light text-text-main px-6 py-2 rounded-xl hover:bg-accent-blue"
             >
               Post
             </button>
