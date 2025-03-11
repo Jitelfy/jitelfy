@@ -85,7 +85,7 @@ export const FriendActivity = (user: User | null) => {
 export const Quicklinks = (user: User | null) => {
 
     return (
-    <div className="static h-full bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
+    <div className="static h-full w-1/5 bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
           <Link to="/feed" className="text-text-main w-full text-left">
       <h1 className="text-text-main text-2xl mb-6">Jitelfy</h1>
           </Link>
@@ -211,7 +211,7 @@ const ProfileButton = (user: User | null) => {
                 <div className="p-4 bg-red-950 border-2 border-red-950 hover:bg-red-900 hover:underline hover:decoration-accent-red hover:cursor-pointer rounded-md"
                      onClick={() => logOut() }
                 >
-                    <h3 className="text-accent-red text-wrap"> Log out @{user?.username} </h3>
+                    <h3 className="text-accent-red overflow-ellipsis"> Log out @{user?.username} </h3>
                 </div>
 
             </div>
@@ -219,7 +219,7 @@ const ProfileButton = (user: User | null) => {
                     className="relative bg-background-secondary pl-auto rounded-lg border-2 border-background-tertiary mb-6 p-5 duration-100 ease-in hover:bg-background-tertiary hover:cursor-pointer"
                     onClick={handlePopup}
                 >
-                    <div className="flex justify-start items-start justify-items-start  flex-row">
+                    <div className="flex justify-start items-start justify-items-start pr-5 flex-row truncate">
                         {/* Profile picture */}
                         <img
                             className="size-14 rounded-full mb-2 mr-3"
@@ -229,8 +229,8 @@ const ProfileButton = (user: User | null) => {
 
                         {/* Username, display name */}
                         <div className="justify-start">
-                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis truncate">{user?.displayname}</p>
-                            <p className="text-text-secondary truncate">@{user?.username}</p>
+                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname}</p>
+                            <p className="text-text-secondary overflow-ellipsis">@{user?.username}</p>
                         </div>
 
                     </div>

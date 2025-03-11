@@ -49,14 +49,16 @@ const BookmarksPage = () => {
             {Quicklinks(user)}
 
             {/* Main Content - Middle */}
-            <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
+            <div className="flex-1 flex-col px-20 relative overflow-auto">
                 <div className="sticky">
                     <h1 className="text-white text-2xl top-0 my-6">Bookmarks</h1>
                 </div>
 
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
                     {bookmarkedPosts.length === 0 ? (
-                        <p className="text-background-tertiary text-center">Nothing to see here yet...</p>
+                        <div className="flex flex-col h-full content-center mt-10">
+                            <p className="text-background-tertiary text-center">Nothing to see here yet...</p>
+                        </div>
                     ) : (
                         bookmarkedPosts.map((post) => (
                             <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
