@@ -33,15 +33,26 @@ export const FriendActivity = (user: User | null) => {
         getFriends()
     },[user]);
 
-
-    if (user != null) {
-
+    if (user == null) {
         return (
+            <div className="w-1/4 bg-background-secondary p-6 relative grid grid-auto-flow auto-rows-auto">
+                <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
+
+                <p className="text-text-secondary text-center">No recent friend activity...</p>
+            </div>
+        )
+    }
+
+    return (
       <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
 
           <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
 
           {/* Friend activity */}
+          { friends.length == 0 && (
+              <p className="text-text-secondary text-center">No recent friend activity...</p>
+              )}
+
           {friends.map((friend) => {
               return (
               <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
@@ -72,7 +83,6 @@ export const FriendActivity = (user: User | null) => {
           })}
       </div>
     )}
-}
 
 export const Quicklinks = (user: User | null) => {
 
