@@ -53,7 +53,7 @@ const ActivityPage = () => {
       {Quicklinks(user)}
 
       {/* Main Content - Middle */}
-      <div className="flex-1 flex-col px-20 relative overflow-y-auto hide-scrollbar">
+      <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
         </div>
