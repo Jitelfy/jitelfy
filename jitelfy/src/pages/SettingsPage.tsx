@@ -4,9 +4,96 @@ import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import * as API from "../api";
+import {BASE_URL} from "../api";
 
 let NewIcon = -1;
 let NewBanner = -1;
+
+export async function requestCustomizeDisplayName(newName: string, user: User): Promise<any> {
+    const nameData = {
+        displayname: newName
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/displayname`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(nameData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeBio(newBio: string, user: User): Promise<any> {
+    const bioData = {
+        bio: newBio
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/bio`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(bioData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeSong(newSong: string, user: User): Promise<any> {
+    const songData = {
+        song: newSong
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/favsong`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(songData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeBanner(newBanner: number, user: User): Promise<any> {
+    const bannerData = {
+        banner: newBanner
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/banner`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(bannerData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeIcon(newIcon: number, user: User): Promise<any> {
+    const iconData = {
+        icon: newIcon
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/icon`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(iconData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
 
 const handleIconClick = async (imgID: string, user: User) => {
     const img = document.getElementById(imgID);
@@ -53,8 +140,8 @@ const handleChangeIcon = async (icon: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (icon != user?.icon) {
-        await API.customizeIcon(icon, user);
-        window.location.reload();
+        let response = await requestCustomizeIcon(icon, user);
+        if (response) window.location.reload();
     }
 };
 
@@ -62,8 +149,8 @@ const handleChangeBanner = async (banner: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (banner != user?.banner) {
-        await API.customizeBanner(banner, user);
-        window.location.reload();
+        let response = await requestCustomizeBanner(banner, user);
+        if(response) window.location.reload();
     }
 };
 
@@ -71,8 +158,8 @@ const handleChangeDisplayName = async (newName: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newName.length > 0 && newName != user?.displayname) {
-        await API.customizeDisplayName(newName, user);
-        window.location.reload();
+        let response = await requestCustomizeDisplayName(newName, user);
+        if (response) window.location.reload();
     }
 };
 
@@ -80,8 +167,8 @@ const handleChangeBio = async (newBio: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newBio != null && newBio != user?.bio) {
-        await API.customizeBio(newBio, user);
-        window.location.reload();
+        let response = await requestCustomizeBio(newBio, user);
+        if (response) window.location.reload();
     }
 };
 
@@ -89,8 +176,8 @@ const handleChangeSong = async (newSong: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newSong != null && newSong != user?.song) {
-        await API.customizeSong(newSong, user);
-        window.location.reload();
+        let response = await requestCustomizeSong(newSong, user);
+        if (response) window.location.reload();
     }
 };
 
@@ -201,15 +288,15 @@ const SettingsPage = () => {
                          onLoad={() => handleIconClick(IconArray[SelectedIcon], user)}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
 
-                        {IconArray.map((img) => (
+                        {IconArray.map((imgIndex) => (
                             <img
-                                id={img}
-                                src={img}
+                                id={imgIndex}
+                                src={imgIndex}
                                 alt="Default"
                                 width = "140px"
                                 height = "140px"
                                 className="p-3 rounded-full bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
-                                onClick={() => handleIconClick(img, user)}
+                                onClick={() => handleIconClick(imgIndex, user)}
                             />
                         ))}
 
