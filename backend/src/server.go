@@ -46,6 +46,7 @@ func main() {
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
 	web_api.RepostColl = db.Collection("reposts")
+	web_api.BookmarkColl = db.Collection("bookmarks")
 
 	router := echo.New()
 	router.Debug = true

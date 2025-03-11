@@ -19,6 +19,7 @@ import (
 
 var PostColl *mongo.Collection
 var RepostColl *mongo.Collection
+var BookmarkColl *mongo.Collection
 
 type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
@@ -32,15 +33,16 @@ type Post struct {
 	Song     string               `json:"song" bson:"song"`
 }
 
-type Repost struct {
+type PostGroup struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
 	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
 	PostIds  []primitive.ObjectID `json:"postids" bson:"postids"`
 }
 
+
 type PostUserPackage struct {
 	Postjson Post `json:"post"`
-	Userjson User `json:"user"`
+	Userjson BaseUser `json:"user"`
 }
 
 /* I think this will be faster with many many posts but right now
@@ -117,11 +119,10 @@ func GetPosts(c echo.Context) error {
 		go func(post Post) {
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			var result = UserColl.FindOne(context.TODO(), userfilter)
-			var user User
+			var user BaseUser
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
-			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -280,11 +281,10 @@ func GetComments(c echo.Context) error {
 		go func(post Post) {
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			var result = UserColl.FindOne(context.TODO(), userfilter)
-			var user User
+			var user BaseUser
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
-			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -327,7 +327,7 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
 
-	if (post.ParentId != primitive.NilObjectID) {
+	if post.ParentId != primitive.NilObjectID {
 		filter = bson.D{{Key: "_id", Value: post.ParentId}}
 		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
 		var update_result *mongo.UpdateResult
@@ -371,17 +371,19 @@ func LikePost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not like post")
 	}
 	// notification
-	msg := fmt.Sprintf("%s liked you post", liker.Username)
-	alert := Alert{
-		AlerterId: likerObjID,
-		PostID:    likedObjID,
-		CreatedAt: time.Now(),
-		Type:      "like",
-		Message:   msg,
-	}
-	_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"$addToSet": bson.M{"alerts": alert}})
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if liker.Id != liked.UserId {
+		msg := fmt.Sprintf("%s liked you post", liker.Username)
+		alert := Alert{
+			AlerterId: likerObjID,
+			PostID:    likedObjID,
+			CreatedAt: time.Now(),
+			Type:      "like",
+			Message:   msg,
+		}
+		_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": liked.UserId}, bson.M{"$addToSet": bson.M{"alerts": alert}})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -429,20 +431,20 @@ func BookmarkPost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
-	var user User
-	err = UserColl.FindOneAndUpdate(
+	var bookmarks PostGroup
+	err = BookmarkColl.FindOneAndUpdate(
 		context.TODO(),
-		bson.M{"_id": bookmarker},
-		bson.M{"$addToSet": bson.M{"bookmarks": post}},
+		bson.M{"userid": bookmarker},
+		bson.M{"$addToSet": bson.M{"postids": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
+	).Decode(&bookmarks)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "post bookmarked",
-		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
+		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
 
@@ -457,20 +459,20 @@ func UnbookmarkPost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (liked)")
 	}
-	var user User
-	err = UserColl.FindOneAndUpdate(
+	var bookmarks PostGroup
+	err = BookmarkColl.FindOneAndUpdate(
 		context.TODO(),
-		bson.M{"_id": bookmarker},
-		bson.M{"$pull": bson.M{"bookmarks": post}},
+		bson.M{"userid": bookmarker},
+		bson.M{"$pull": bson.M{"postids": post}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
+	).Decode(&bookmarks)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "could not bookmark post")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post bookmarked",
-		"total bookmarks for user": strconv.Itoa(len(user.Bookmarks)),
+		"message":          "post unbookmarked",
+		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
 
@@ -482,10 +484,10 @@ func GetBookmarks(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "could not get user from cookie")
 	}
 
-	filter := bson.D{{Key: "_id", Value: userid}}
-	var result = UserColl.FindOne(context.TODO(), filter)
-	var user User
-	if err := result.Decode(&user); err != nil {
+	filter := bson.D{{Key: "userid", Value: userid}}
+	var result = BookmarkColl.FindOne(context.TODO(), filter)
+	var bookmarks PostGroup
+	if err := result.Decode(&bookmarks); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user")
 		} else {
@@ -493,10 +495,10 @@ func GetBookmarks(c echo.Context) error {
 		}
 	}
 
-	var packagedresults = make([]PostUserPackage, len(user.Bookmarks))
+	var packagedresults = make([]PostUserPackage, len(bookmarks.PostIds))
 	var ch = make(chan *PostUserPackage)
 
-	for _, post_id := range user.Bookmarks {
+	for _, post_id := range bookmarks.PostIds {
 		go func(post_id primitive.ObjectID) {
 			var postfilter = bson.D{{Key: "_id", Value: post_id}}
 			var result = PostColl.FindOne(context.TODO(), postfilter)
@@ -506,11 +508,10 @@ func GetBookmarks(c echo.Context) error {
 			}
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			result = UserColl.FindOne(context.TODO(), userfilter)
-			var user User
+			var user BaseUser
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
-			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -518,7 +519,7 @@ func GetBookmarks(c echo.Context) error {
 		}(post_id)
 	}
 
-	for idx := range user.Bookmarks {
+	for idx := range bookmarks.PostIds {
 		var packagedpost = <-ch
 		// for now just ignore posts without users
 		if packagedpost != nil {
@@ -544,7 +545,7 @@ func MakeRepost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid parameter (id)")
 	}
 
-	var repost Repost
+	var repost PostGroup
 	err = PostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
@@ -556,11 +557,10 @@ func MakeRepost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post reposted",
+		"message":                   "post reposted",
 		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
 	})
 }
-
 
 func DeleteRepost(c echo.Context) error {
 	// liker
@@ -577,7 +577,7 @@ func DeleteRepost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid parameter (id)")
 	}
 
-	var repost Repost
+	var repost PostGroup
 	err = PostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
@@ -589,7 +589,7 @@ func DeleteRepost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post unreposted",
+		"message":                   "post unreposted",
 		"number of reposts by user": strconv.Itoa(len(repost.PostIds)),
 	})
 }
@@ -603,7 +603,7 @@ func GetAllReposts(c echo.Context) error {
 
 	filter := bson.D{{Key: "userid", Value: userid}}
 	var result = RepostColl.FindOne(context.TODO(), filter)
-	var reposts Repost
+	var reposts PostGroup
 	if err := result.Decode(&reposts); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return c.JSON(http.StatusBadRequest, "could not find user repost document")
@@ -625,11 +625,10 @@ func GetAllReposts(c echo.Context) error {
 			}
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			result = UserColl.FindOne(context.TODO(), userfilter)
-			var user User
+			var user BaseUser
 			if user_err := result.Decode(&user); user_err != nil {
 				ch <- nil
 			}
-			user.Password = ""
 			ch <- &PostUserPackage{
 				Postjson: post,
 				Userjson: user,
@@ -655,14 +654,12 @@ func GetAllPostsFromUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
 	}
 
-	var user User
+	var user BaseUser
 	filter := bson.D{{Key: "_id", Value: userId}}
 	user_result := UserColl.FindOne(context.TODO(), filter)
 	if err := user_result.Decode(&user); err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to get user")
 	}
-	user.Password = ""
-	user.Bookmarks = nil
 
 	filter = bson.D{{Key: "userid", Value: userId}}
 	var cursor *mongo.Cursor
@@ -686,6 +683,5 @@ func GetAllPostsFromUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
-
 
 }
