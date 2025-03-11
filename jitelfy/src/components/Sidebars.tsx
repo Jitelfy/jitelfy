@@ -23,7 +23,6 @@ export const FriendActivity = (user: User | null) => {
                         }
                     }
                 }
-                console.log(arr);
                 setFriends(arr);
             }
         }

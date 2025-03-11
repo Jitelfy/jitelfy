@@ -56,9 +56,7 @@ const BookmarksPage = () => {
 
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
                     {bookmarkedPosts.length === 0 ? (
-                        <div className="flex flex-col h-full content-center mt-10">
-                            <p className="text-background-tertiary text-center">Nothing to see here yet...</p>
-                        </div>
+                        <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
                         bookmarkedPosts.map((post) => (
                             <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">

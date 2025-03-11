@@ -8,6 +8,7 @@ import {Link} from "react-router-dom";
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
   const [ userAlerts, setUserAlerts ] = useState<PackagedUserAlert[]>();
+  const [ dummy, setDummy ]= useState<PackagedUserAlert[]>();
 
   useEffect(() => {
     const restore = async () => {
@@ -20,9 +21,11 @@ const ActivityPage = () => {
 
     const requestActivity= async () => {
       const response = await getUserActivity();
-      response.sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      if (typeof response == typeof dummy && response.length > 0) {
+        response.sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
       setUserAlerts(response);
     }
 
@@ -32,7 +35,6 @@ const ActivityPage = () => {
     }
 
     requestActivity();
-    console.log(userAlerts);
   }, [user]); 
 
   if (!user) {
@@ -57,6 +59,11 @@ const ActivityPage = () => {
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
         </div>
+
+        {/* No user alerts? */}
+        {!userAlerts || userAlerts?.length == 0 && (
+              <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
+        )}
 
         {userAlerts && (
             userAlerts.map((alert) => (
@@ -83,11 +90,6 @@ const ActivityPage = () => {
                   </div>
                 </div>
             ))
-        )}
-
-        {/* No user alerts? */}
-        {userAlerts?.length == 0 && (
-            <p className="text-background-tertiary text-center h-full">Nothing to see here yet...</p>
         )}
       </div>
 
