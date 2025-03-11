@@ -1,4 +1,4 @@
-import {PackagedPost, Post, User, UserAlerts} from './types';
+import {PackagedPost, PackagedUserAlert, Post, User, UserAlerts} from './types';
 
 export const BASE_URL = "http://localhost:8080";
 
@@ -17,8 +17,9 @@ export async function getUser(path: string): Promise<User> {
   return JSON.parse(response);
 }
 
-export async function getUserActivity(): Promise<UserAlerts> {
+export async function getUserActivity(): Promise<PackagedUserAlert[]> {
   const response = await getContent("/users/alerts");
+  console.log(response);
   return JSON.parse(response);
 }
 

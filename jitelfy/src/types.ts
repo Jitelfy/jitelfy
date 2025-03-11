@@ -43,4 +43,14 @@ export interface UserAlerts {
     alerts: Alert[];
 }
 
+export interface PackagedUserAlert {
+    AlerterId: string;
+    postid: string;
+    created_at: string;
+    type: string;
+    message: string;
+    user: User;
+    post: Post;
+}
+
 

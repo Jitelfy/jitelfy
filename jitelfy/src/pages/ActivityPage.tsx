@@ -2,12 +2,12 @@ import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
 import {getUser, getUserActivity, RestoreUser} from "../api";
-import {User, UserAlerts} from "../types";
+import {PackagedUserAlert, User, UserAlerts} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
-  const [ userAlerts, setUserAlerts ] = useState<UserAlerts>();
+  const [ userAlerts, setUserAlerts ] = useState<PackagedUserAlert[]>();
 
   useEffect(() => {
     const restore = async () => {
@@ -53,30 +53,35 @@ const ActivityPage = () => {
       <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
-          {userAlerts && userAlerts?.alerts && (
-              userAlerts.alerts.map((alert) => (
-                  <div className="flex flex-row content-center bg-background-secondary p-4 rounded mt-2">
+          {userAlerts && (
+              userAlerts.map((alert) => (
+                  <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
                     <img
                         className="size-14 rounded-full mr-3"
-                        src={IconArray[15]}
-                        alt="Poop"
+                        src={IconArray[alert.user.icon]}
+                        alt="User icon"
                     />
                     <div className="flex flex-col text-white gap-2 text-center content-center">
-                      <div>
+                      <div className="flex flex-row">
                         <Link to={"/profile/"}
                               className="hover:underline hover:decoration-text-main text-center content-center">
                           <p>
-                            @<b>{alert.AlerterId}</b>
+                            @<b>{alert.user.username}</b>
                           </p>
                         </Link>
 
-                        <p className="text-center content-center">is now friends with you!</p>
+                        {/* Change text based on alert type */}
+                        {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
+                        {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
                       </div>
-                      <p>{alert.created_at}</p>
+                      <p className="text-text-secondary text-sm">{new Date(alert.created_at).toLocaleString()}</p>
                     </div>
                   </div>
               ))
           )};
+          {!userAlerts && (
+              <p className="text-background-tertiary text-center">Nothing to see here yet...</p>
+          )}
         </div>
       </div>
 
