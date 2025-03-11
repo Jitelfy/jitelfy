@@ -2,9 +2,11 @@ import {useContext, useEffect, useState} from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
-import {useParams} from "react-router-dom";
+import {Link, useParams} from "react-router-dom";
 import {getPosts, getUser, RestoreUser, followUser, unfollowUser} from "../api"
-import {User} from "../types";
+import {PackagedPost, User} from "../types";
+import * as API from "../api";
+import Comments from "../components/Comments";
 
 
 
@@ -12,6 +14,7 @@ const ProfilePage = () => {
     const { user, setUser } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
+    const [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
@@ -56,13 +59,14 @@ const ProfilePage = () => {
         };
 
         const fetchUser = async () => {
-
             if (username != null) {
                 // Fetching user data
                 const profileUser = await getUser(username);
                 setUserData(profileUser);
                 if (profileUser && user) {
                     setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
+                    const fetched = await API.getPostsByUser(profileUser.id);
+                    setPosts(fetched);
                 }
             }
         };
@@ -72,6 +76,7 @@ const ProfilePage = () => {
             restore();
         }
         fetchUser();
+
     }, [user, username]); // Run when username changes
 
     if (user == null || userData == null) {
@@ -109,15 +114,15 @@ const ProfilePage = () => {
                     <div className="flex flex-row w-full self-start justify-start items-center">
                         <img src={IconArray[userData.icon]}
                              alt="profile picture"
-                             className="absolute transform translate-x-1/4 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-secondary"></img>
+                             className="transform -translate-y-8 translate-x-6 w-32 h-32 bg-background-tertiary rounded-full border-4 border-background-secondary"></img>
 
                         {/* Display name & username */}
-                        <div className="flex-col ml-44 mt-4">
+                        <div className="flex-col ml-10 mt-4 self-start max-w-64 truncate">
                             <h2 className="text-xl text-text-main">{userData.displayname || userData.username || 'user cannot be loaded'}</h2>
                             <p className="text-md text-text-secondary">@{userData.username || 'username'}</p>
                         </div>
 
-                        <div className="ml-auto mt-4 flex flex-row items-center">
+                        <div className="ml-auto flex flex-row items-center w-full max-w-64 min-w-64">
                             {userData.song && (
                                 <iframe
                                     src={userData.song}
@@ -130,7 +135,7 @@ const ProfilePage = () => {
 
                     {/* Bio */}
                     <div className="flex flex-row self-start w-full text-wrap">
-                        <p className="text-text-main self-start ml-10 mr-10 mt-10 mb-5 break-all text-wrap">
+                        <p className="text-text-main self-start ml-10 mr-10 mb-5 break-all text-wrap">
                             {userData.bio || "This user has no bio."}
                         </p>
                     </div>
@@ -179,6 +184,45 @@ const ProfilePage = () => {
                         </g>
                     </svg>
                 </div>
+
+                {/* User posts */}
+                {posts && posts.map((post: PackagedPost) => (
+                    <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg my-6 hide-scrollbar">
+                            <div className="flex items-center">
+                                <div>
+                                    <img
+                                        className="size-14 rounded-full mb-2 mr-3"
+                                        src={IconArray[post.user.icon]}
+                                        alt={post.user.displayname}
+                                    />
+                                </div>
+                                <div>
+                                    <Link to={"/profile/" + post.user.username} className="hover:underline hover:decoration-background-tertiary">
+                                        <p className="text-text-main font-bold">{post.user.displayname}</p>
+                                        <p className="text-text-secondary font-normal">@{post.user.username}</p>
+                                    </Link>
+                                    <p className="text-text-secondary text-sm">{new Date(post.post.time).toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
+                            {post.post.embed && (
+                                <div className="mt-2">
+                                    <img src={post.post.embed} className="w-full h-40 rounded-md" alt="" />
+                                </div>
+                            )}
+                            {post.post.song && (
+                                <div className="mt-2">
+                                    <iframe
+                                        src={post.post.song}
+                                        className="w-full h-20"
+                                        title={`Song for ${post.post.id}`}
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                            )}
+                        </div>
+                ))}
+
             </div>
 
             {/* Sidebar - Right */}
