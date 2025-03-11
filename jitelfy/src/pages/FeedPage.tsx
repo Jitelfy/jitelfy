@@ -341,7 +341,7 @@ const FeedPage = () => {
           {posts.map((post) => (
             <div
               key={post.post.id}
-              className="bg-background-secondary p-4 rounded-lg mb-6 relative"
+              className="bg-background-secondary p-4 rounded-lg mb-6 relative truncate"
             >
               {/* Delete Button (only for our own posts)*/}
               {user != null && post.user.id === user.id && (

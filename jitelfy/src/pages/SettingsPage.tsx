@@ -157,7 +157,7 @@ const handleChangeBanner = async (banner: number, user: User) => {
 const handleChangeDisplayName = async (newName: string, user: User) => {
     if (!user) return; // Ensure user exists
 
-    if (newName.length > 0 && newName != user?.displayname) {
+    if (newName.length > 0 && newName.length <= 40 && newName != user?.displayname) {
         let response = await requestCustomizeDisplayName(newName, user);
         if (response) window.location.reload();
     }
@@ -166,7 +166,7 @@ const handleChangeDisplayName = async (newName: string, user: User) => {
 const handleChangeBio = async (newBio: string, user: User) => {
     if (!user) return; // Ensure user exists
 
-    if (newBio != null && newBio != user?.bio) {
+    if (newBio != null && newBio.length <= 250 && newBio != user?.bio) {
         let response = await requestCustomizeBio(newBio, user);
         if (response) window.location.reload();
     }
