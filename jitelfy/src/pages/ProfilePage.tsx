@@ -24,6 +24,7 @@ const ProfilePage = () => {
           setUser(updatedUser);
           setUserData(prev => user && prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
           setIsFollowing(true);
+
         } else {
           await unfollowUser(userData.id);
           // Refresh user data immediately after unfollowing
@@ -112,7 +113,7 @@ const ProfilePage = () => {
 
                         {/* Display name & username */}
                         <div className="flex-col ml-44 mt-4">
-                            <h2 className="text-xl text-text-main">{userData.displayname || 'user cannot be loaded'}</h2>
+                            <h2 className="text-xl text-text-main">{userData.displayname || userData.username || 'user cannot be loaded'}</h2>
                             <p className="text-md text-text-secondary">@{userData.username || 'username'}</p>
                         </div>
 
