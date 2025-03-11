@@ -2,7 +2,7 @@ export interface Post {
     id: string;
     userid: string;
     parentId: string;
-    childIds: string[];
+    childids: number;
     likeIds: string[];
     time: string;
     text: string;
@@ -20,6 +20,7 @@ export interface User {
     song: string;
     following: string[];
     followers: string[];
+    bookmarks: string[];
     token: string;
 }
 

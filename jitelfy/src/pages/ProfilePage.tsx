@@ -18,25 +18,32 @@ const ProfilePage = () => {
     const handleToggleFollow = async () => {
         if (!userData) return;
         if (!isFollowing) {
-            await followUser(userData.id);
-            // Refresh user data immediately after following
-            const updatedUser = await RestoreUser();
-            setUser(updatedUser);
-            if (user != null) {
-                setUserData(prev => prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
-                setIsFollowing(true);
-            }
+          await followUser(userData.id);
+          // Refresh user data immediately after following
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => user && prev ? { ...prev, followers: [...prev.followers, user.id] } : prev);
+          setIsFollowing(true);
         } else {
-            await unfollowUser(userData.id);
-            // Refresh user data immediately after unfollowing
-            const updatedUser = await RestoreUser();
-            setUser(updatedUser);
-            if (user != null) {
-                setUserData(prev => prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
-                setIsFollowing(false);
-            }
+          await unfollowUser(userData.id);
+          // Refresh user data immediately after unfollowing
+          const updatedUser = await RestoreUser();
+          setUser(updatedUser);
+          setUserData(prev => user && prev ? { ...prev, followers: prev.followers.filter(id => id !== user.id) } : prev);
+          setIsFollowing(false);
         }
       };
+
+    const handleMouseOver = ()=> {
+        let el = document.getElementById("followedText");
+        if (el != null) {
+            if (el.textContent == "Following") {
+                el.textContent = "Unfollow";
+            } else {
+                el.textContent = "Following";
+            }
+        }
+    };
       
     
     useEffect(() => {
@@ -60,7 +67,7 @@ const ProfilePage = () => {
             }
         };
         if (user == null) {
-            // actually keep user logged in
+            // Keep user logged in
             restore();
         }
         fetchUser();
@@ -87,7 +94,7 @@ const ProfilePage = () => {
             {Quicklinks(user)}
 
             {/* Main Content - Middle */}
-            <div className="flex-1 flex-col bg-background-main p-6 overflow-auto">
+            <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto">
 
                 {/* Container for all user data */}
                 <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md">
@@ -110,18 +117,6 @@ const ProfilePage = () => {
                         </div>
 
                         <div className="ml-auto mt-4 flex flex-row items-center">
-                            {userData.username !== user.username && (
-                                <button
-                                    onClick={handleToggleFollow}
-                                    className={
-                                        isFollowing
-                                            ? "mr-4 px-4 py-2 bg-transparent text-white border border-white rounded hover:bg-opacity-20"
-                                            : "mr-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                    }
-                                >
-                                    {isFollowing ? "Following" : "Follow"}
-                                </button>
-                            )}
                             {userData.song && (
                                 <iframe
                                     src={userData.song}
@@ -133,18 +128,40 @@ const ProfilePage = () => {
                     </div>
 
                     {/* Bio */}
-                    <p className="text-text-main self-start ml-10 mr-10 mt-10 overflow-auto text-wrap">
-                        {userData.bio || "This user has no bio."}
-                    </p>
+                    <div className="flex flex-row self-start w-full text-wrap">
+                        <p className="text-text-main self-start ml-10 mr-10 mt-10 mb-5 break-all text-wrap">
+                            {userData.bio || "This user has no bio."}
+                        </p>
+                    </div>
 
-                    {/* Followers & following */}
-                    <div className="flex flex-row w-full my-5 justify-evenly">
-                    <p className="text-text-main">
-                        <b>{userData.followers?.length || 0}</b> Followers
-                    </p>
-                    <p className="text-text-main">
-                        <b>{userData.following?.length || 0}</b> Following
-                    </p>
+                    <div className="flex flex-row w-full my-5 justify-center gap-5 pl-10">
+                        {/* Followers & following */}
+                        <div className="flex flex-row gap-44 ">
+                            <p className="text-text-main content-center">
+                                <b>{userData.followers?.length || 0}</b> Followers
+                            </p>
+                            <p className="text-text-main content-center">
+                                <b>{userData.following?.length || 0}</b> Following
+                            </p>
+                        </div>
+
+                        {/* Follow/following button */}
+                        {userData.username !== user.username && !isFollowing && (
+                            <button
+                                onClick={handleToggleFollow}
+                                className="px-4 w-1/4 py-2 ml-auto border border-accent-blue bg-accent-blue text-white rounded-full hover:bg-accent-blue-light">
+                                <p>Follow</p>
+                            </button>
+                        )}
+                        {userData.username !== user.username && isFollowing && (
+                            <button
+                                onClick={handleToggleFollow}
+                                className="px-4 w-1/4 py-2 ml-auto bg-transparent text-white border border-white rounded-full hover:bg-background-tertiary"
+                                onMouseEnter={handleMouseOver}
+                                onMouseLeave={handleMouseOver}>
+                                <p id="followedText">Following</p>
+                            </button>
+                        )}
                     </div>
 
                     <hr className="border-1 w-full self-start border-background-tertiary"></hr>

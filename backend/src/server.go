@@ -41,8 +41,11 @@ func init() {
 		return
 	}
 
+	web_api.AlertColl = db.Collection("alerts")
 	web_api.PostColl = db.Collection("posts")
 	web_api.UserColl = db.Collection("users")
+	web_api.RepostColl = db.Collection("reposts")
+	web_api.BookmarkColl = db.Collection("bookmarks")
 
 	echo.NotFoundHandler = func(c echo.Context) error {
 		return c.String(http.StatusBadRequest, c.Request().URL.String())
@@ -58,10 +61,14 @@ func init() {
 	router.POST("/posts/unlike/:id", web_api.UnlikePost)
 	router.POST("/posts/bookmark/:id", web_api.BookmarkPost)
 	router.POST("/posts/unbookmark/:id", web_api.UnbookmarkPost)
+	router.POST("/posts/repost/:id", web_api.MakeRepost)
+	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
+	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
-
+	router.GET("/users/alerts", web_api.GetUserAlerts)
+	router.GET("/posts/from", web_api.GetAllPostsFromUser)
 
 	router.PUT("/customize/icon", web_api.SetIcon)
 	router.PUT("/customize/banner", web_api.SetBanner)

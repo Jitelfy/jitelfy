@@ -6,30 +6,41 @@ import (
 	"net/http"
 	"time"
 
+	"strconv"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strconv"
 )
 
 var UserColl *mongo.Collection
 
-type User struct {
+type BaseUser struct {
 	Id          primitive.ObjectID   `json:"id" bson:"_id"`
 	DisplayName string               `json:"displayname" bson:"displayname"`
 	Username    string               `json:"username" bson:"username"`
 	Icon        int                  `json:"icon" bson:"icon"`
+}
+
+type User struct {
+	BaseUser `bson:"inline"`
 	Banner      int                  `json:"banner" bson:"banner"`
 	Bio         string               `json:"bio" bson:"bio"`
 	Song        string               `json:"song" bson:"song"`
 	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
 	Following   []primitive.ObjectID `json:"following" bson:"following"`
-	Bookmarks   []primitive.ObjectID `json:"bookmarks" bson:"bookmarks"`
 	Token       string               `json:"token" bson:"token"`
-	Password    string               `json:"password" bson:"password"`
+	Password    string               `json:"-" bson:"password"`
+}
+
+type LoggedInUser struct {
+	User `bson:"inline"`
+	Bookmarks []primitive.ObjectID `json:"bookmarks"`
+	Reposts []primitive.ObjectID `json:"reposts"`
+	Alerts []Alert `json:"alerts"`
 }
 
 func GetUser(c echo.Context) error {
@@ -44,7 +55,7 @@ func GetUser(c echo.Context) error {
 		// Otherwise treat it as a username
 		filter = bson.D{{Key: "username", Value: param}}
 	}
-	
+
 	var result = UserColl.FindOne(context.TODO(), filter)
 	var user User
 
@@ -84,23 +95,67 @@ func MakeUser(c echo.Context) error {
 	}
 
 	user := User{
-		Id:          primitive.NewObjectID(),
-		DisplayName: req.DisplayName,
-		Username:    req.Username,
+		BaseUser: BaseUser{
+			Id:          primitive.NewObjectID(),
+			DisplayName: req.DisplayName,
+			Username:    req.Username,
+		},
 		Followers:   []primitive.ObjectID{},
 		Following:   []primitive.ObjectID{},
 		Password:    encryptedPass,
+	}
+	userAlerts := UserAlerts{
+		Id:     primitive.NewObjectID(),
+		UserId: user.Id,
+		Alert:  []Alert{},
+	}
+
+	repost := PostGroup{
+		Id: primitive.NewObjectID(),
+		UserId: user.Id,
+		PostIds: []primitive.ObjectID{},
+	}
+
+	bookmark := PostGroup{
+		Id: primitive.NewObjectID(),
+		UserId: user.Id,
+		PostIds: []primitive.ObjectID{},
 	}
 
 	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to create user")
 	}
+	_, err = AlertColl.InsertOne(context.TODO(), userAlerts)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create alert")
+	}
+	_, err = RepostColl.InsertOne(context.TODO(), repost)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
+	}
+	_, err = BookmarkColl.InsertOne(context.TODO(), bookmark)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
+	}
 
 	user.Password = ""
 
 	return c.JSON(http.StatusOK, user)
 }
+
+const (
+	INVALID_USERNAME = iota + 1
+	INVALID_PASSWORD
+	NO_TOKEN
+	BAD_USERID
+	BAD_PW
+	NO_BOOKMARKS
+	NO_REPOSTS
+	NO_ALERTS
+	TOKEN_SUCCESS
+)
+
 
 func Login(c echo.Context) error {
 	req := struct {
@@ -110,20 +165,119 @@ func Login(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
-	filter := bson.D{{Key: "username", Value: req.Username}}
-	var result User
-	err := UserColl.FindOne(context.TODO(), filter).Decode(&result)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "incorrect username man")
-	}
-	err = VerifyPassword(result.Password, req.Password)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, "incorrect password")
-	}
-	// generate token
-	result.Token, err = createToken(result.Username, result.Id)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create token")
+	var result LoggedInUser
+	var bookmarksResult PostGroup
+	var repostsResult PostGroup
+	var alertsResult UserAlerts
+	var ch = make(chan int)
+	var userid_ch = make(chan int)
+	var pw_ch = make(chan int)
+
+
+	go func() {
+		pw := <-pw_ch
+		if (pw == -1) {
+			ch <- BAD_PW
+			return
+		}
+		err := VerifyPassword(result.Password, req.Password)
+		if err != nil {
+			ch <- INVALID_PASSWORD
+			return
+		}
+		ch <- 0
+	}()
+
+
+	go func() {
+		userid := <-userid_ch
+		if (userid == -1) {
+			ch <- BAD_USERID
+			return
+		}
+		filter := bson.D{{Key: "userid", Value: result.Id}}
+		err := BookmarkColl.FindOne(context.TODO(), filter).Decode(&bookmarksResult)
+		if err != nil {
+			ch <- NO_BOOKMARKS
+			return
+		}
+		result.Bookmarks = bookmarksResult.PostIds
+		ch <- 0
+	}()
+
+	go func() {
+		userid := <-userid_ch
+		if (userid == -1) {
+			ch <- BAD_USERID
+			return
+		}
+		filter := bson.D{{Key: "userid", Value: result.Id}}
+		err := RepostColl.FindOne(context.TODO(), filter).Decode(&repostsResult)
+		if err != nil {
+			ch <- NO_REPOSTS
+			return
+		}
+		result.Reposts = repostsResult.PostIds
+		ch <- 0
+	}()
+
+	// should i get alerts too?
+	go func() {
+		userid := <-userid_ch
+		if (userid == -1) {
+			ch <- BAD_USERID
+			return
+		}
+		filter := bson.D{{Key: "userid", Value: result.Id}}
+		err := AlertColl.FindOne(context.TODO(), filter).Decode(&alertsResult)
+		if err != nil {
+			ch <- NO_ALERTS
+			return
+		}
+		result.Alerts = alertsResult.Alert
+		ch <- 0
+	}()
+
+	go func() {
+		filter := bson.D{{Key: "username", Value: req.Username}}
+		err := UserColl.FindOne(context.TODO(), filter).Decode(&result.User.BaseUser)
+		if err != nil {
+			ch <- INVALID_USERNAME
+			userid_ch <- -1
+			userid_ch <- -1
+			userid_ch <- -1
+			pw_ch <- -1
+			return
+		}
+		userid_ch <- 0
+		userid_ch <- 0
+		userid_ch <- 0
+		pw_ch <- 0
+		// generate token
+		result.Token, err = createToken(result.Username, result.Id)
+		if err != nil {
+			ch <- NO_TOKEN
+			return
+		}
+		ch <- TOKEN_SUCCESS
+	}()
+
+
+	for i := 0; i < 5; i++ {
+		switch errCode:= <- ch; errCode {
+		case INVALID_USERNAME:
+		case INVALID_PASSWORD:
+		case BAD_USERID:
+			case NO_TOKEN: // if token validation failed it should probably be considered the same way
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+		case NO_BOOKMARKS:
+			return c.JSON(http.StatusInternalServerError, "could not get bookmarks")
+		case NO_ALERTS:
+			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+		case NO_REPOSTS:
+			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+		case 0:
+		}
 	}
 
 	result.Password = ""
@@ -168,19 +322,74 @@ func RestoreUserFromCookie(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "failed to parse userid from cookie")
 	}
 
-	filter := bson.D{{Key: "_id", Value: userid}}
-	var result = UserColl.FindOne(context.TODO(), filter)
-	var user User
-	if err = result.Decode(&user); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return c.JSON(http.StatusBadRequest, "could not find user")
-		} else {
-			return c.JSON(http.StatusBadRequest, err.Error())
+	var bookmarksResult PostGroup
+	var repostsResult PostGroup
+	var alertsResult UserAlerts
+	var result LoggedInUser
+	ch := make(chan int)
+
+	filter := bson.D{{Key: "userid", Value: userid}}
+	go func() {
+		err := BookmarkColl.FindOne(context.TODO(), filter).Decode(&bookmarksResult)
+		if err != nil {
+			ch <- NO_BOOKMARKS
+			return
+		}
+		result.Bookmarks = bookmarksResult.PostIds
+		ch <- 0
+	}()
+
+	go func() {
+		err := RepostColl.FindOne(context.TODO(), filter).Decode(&repostsResult)
+		if err != nil {
+			ch <- NO_REPOSTS
+			return
+		}
+		result.Reposts = repostsResult.PostIds
+		ch <- 0
+	}()
+
+	go func() {
+		err := AlertColl.FindOne(context.TODO(), filter).Decode(&alertsResult)
+		if err != nil {
+			ch <- NO_ALERTS
+			return
+		}
+		result.Alerts = alertsResult.Alert
+		ch <- 0
+	}()
+
+	go func() {
+		user_filter := bson.D{{Key: "_id", Value: userid}}
+		err := UserColl.FindOne(context.TODO(), user_filter).Decode(&result.User.BaseUser)
+		if err != nil {
+			ch <- INVALID_USERNAME
+			return
+		}
+		ch <- 0
+	}()
+
+
+	for i := 0; i < 4; i++ {
+		switch errCode:= <- ch; errCode {
+		case INVALID_USERNAME:
+		case INVALID_PASSWORD:
+		case BAD_USERID:
+			case NO_TOKEN: // if token validation failed it should probably be considered the same way
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+		case NO_BOOKMARKS:
+			return c.JSON(http.StatusInternalServerError, "could not get bookmarks")
+		case NO_ALERTS:
+			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+		case NO_REPOSTS:
+			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+		case 0:
 		}
 	}
 
-	return c.JSON(http.StatusOK, user)
+	result.Password = ""
 
+	return c.JSON(http.StatusOK, result)
 }
 
 func UserIdFromCookie(c echo.Context) (string, error) {
@@ -228,37 +437,59 @@ func FollowUser(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "you can't follow yourself")
 	}
 
-	// Make sure the actual arrays themselves are null
-	UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
-	)
-	UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": followObjectID, "followers": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
-	)
-
+	var ch = make(chan int)
 	// update DB
 	var user User
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": userObjectID},
+			bson.M{"$addToSet": bson.M{"following": followObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&user)
+		if err != nil {
+			ch <- -1
+		}
+		ch <- 0
+	}()
 	var follow User
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": userObjectID},
-		bson.M{"$addToSet": bson.M{"following": followObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": followObjectID},
+			bson.M{"$addToSet": bson.M{"followers": userObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&follow)
+		if err != nil {
+			ch<--1
+		}
+		ch<-0
+	}()
+
+	go func() {
+		// notification
+		alert := Alert{
+			AlerterId: userObjectID,
+			CreatedAt: time.Now(),
+			Type:      "follow",
+		}
+		_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
+		if err != nil {
+			ch<--1
+		}
+		ch<-0
+	}()
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to follow")
 	}
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": followObjectID},
-		bson.M{"$addToSet": bson.M{"followers": userObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&follow)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to follow")
 	}
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to alert")
+	}
+
 	return c.JSON(http.StatusOK, map[string]string{
 		"message":          "followed user",
 		"user following":   strconv.Itoa(len(user.Following)),
@@ -282,37 +513,40 @@ func UnfollowUser(c echo.Context) error {
 	if unfollowObjectID == userObjectID {
 		return c.JSON(http.StatusForbidden, "you can't unfollow yourself")
 	}
-
-	// Make sure the actual arrays themselves are NOT null
-	UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": userObjectID, "following": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"following": []primitive.ObjectID{}}},
-	)
-	UserColl.UpdateOne(context.TODO(),
-		bson.M{"_id": unfollowObjectID, "followers": bson.M{"$type": "null"}},
-		bson.M{"$set": bson.M{"followers": []primitive.ObjectID{}}},
-	)
-
 	// update DB
 	var user User
 	var follow User
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": userObjectID},
-		bson.M{"$pull": bson.M{"following": unfollowObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&user)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	var ch = make(chan int)
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": userObjectID},
+			bson.M{"$pull": bson.M{"following": unfollowObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&user)
+		if err != nil {
+			ch <- -1
+		}
+		ch <- 0
+	}()
+	go func() {
+		err = UserColl.FindOneAndUpdate(
+			context.TODO(),
+			bson.M{"_id": unfollowObjectID},
+			bson.M{"$pull": bson.M{"followers": userObjectID}},
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		).Decode(&follow)
+		if err != nil {
+			ch <- -1
+		}
+		ch <- 0
+	}()
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to unfollow")
 	}
-	err = UserColl.FindOneAndUpdate(
-		context.TODO(),
-		bson.M{"_id": unfollowObjectID},
-		bson.M{"$pull": bson.M{"followers": userObjectID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&follow)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to unfollow")
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
