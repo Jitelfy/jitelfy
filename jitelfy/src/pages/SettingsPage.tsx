@@ -286,7 +286,7 @@ const SettingsPage = () => {
                     {/* Container for default icons */}
                     <div id="iconContainer"
                          onLoad={() => handleIconClick(IconArray[SelectedIcon], user)}
-                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
+                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {IconArray.map((imgIndex) => (
                             <img
@@ -319,7 +319,7 @@ const SettingsPage = () => {
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
                          onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}
-                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
+                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {BannerArray.map((color) => (
                             <svg height="140" width="140"
