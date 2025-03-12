@@ -136,7 +136,7 @@ const FeedPage = () => {
                       {/* Updated: Use the logged-in user's icon */}
                       {user && (
                           <img
-                              className="size-14 rounded-full mr-3"
+                              className="size-16 rounded-full mr-3"
                               src={IconArray[user.icon]}
                               alt={user.displayname}
                           />

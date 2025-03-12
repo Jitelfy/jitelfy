@@ -229,9 +229,7 @@ const SettingsPage = () => {
         );
     }
 
-    console.log(userData)
-
-    const SelectedIcon = user.icon;
+    const SelectedIcon = userData && userData.icon;
     const SelectedBanner = userData && userData.banner;
     NewIcon = -1;
     NewBanner = -1;
@@ -239,7 +237,8 @@ const SettingsPage = () => {
 
     return (
         <div className="h-screen bg-background-main flex"
-             onLoad={() => {SelectedBanner && handleBannerClick(SelectedBanner.toString(10))}}>
+             onLoad={() => {SelectedBanner && handleBannerClick(SelectedBanner.toString(10))
+                                    SelectedIcon && handleIconClick(IconArray[SelectedIcon])}}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -301,7 +300,6 @@ const SettingsPage = () => {
 
                         {/* Container for default icons */}
                         <div id="iconContainer"
-                             onLoad={() => handleIconClick(IconArray[SelectedIcon])}
                              className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                             {IconArray.map((imgIndex) => (

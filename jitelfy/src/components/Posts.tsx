@@ -266,7 +266,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
             <div className="flex items-center">
                 <div>
                     <img
-                        className="size-14 rounded-full mb-2 mr-3"
+                        className="size-16 rounded-full mb-2 mr-3"
                         src={IconArray[postUser.icon]}
                         alt={postUser.displayname}
                     />
