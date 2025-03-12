@@ -147,6 +147,28 @@ export const handleRepost = async (
     }
   };
 
+export const handleUnRepost = async (
+  postId: string,
+  user: User | null,
+  setUser: (u: User) => any
+) => {
+  if (!user) return;
+  try {
+    const response = await fetch(`${API.BASE_URL}/posts/unrepost/${postId}`, {
+      method: "POST", // Matches your backend unrepost endpoint
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + user.token
+      },
+      credentials: "include",
+    });
+    if (response.ok) {
+      setUser({ ...user, reposts: user.reposts.filter((id) => id !== postId) });
+    }
+  } catch (error) {
+    console.error("Error unreposting:", error);
+  }
+};
 
 
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
