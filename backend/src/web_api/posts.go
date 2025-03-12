@@ -565,14 +565,14 @@ func MakeRepost(c echo.Context) error {
 }
 
 func DeleteRepost(c echo.Context) error {
-	// liker
+	// Get user ID from cookie
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
 	}
 
-	// liked
+	// Get post ID from URL parameter
 	postStrID := c.Param("id")
 	postObjID, err := primitive.ObjectIDFromHex(postStrID)
 	if err != nil {
@@ -580,14 +580,16 @@ func DeleteRepost(c echo.Context) error {
 	}
 
 	var repost PostGroup
-	err = PostColl.FindOneAndUpdate(
+	updateOpts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	err = RepostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
 		bson.M{"$pull": bson.M{"postids": postObjID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
+		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not unrepost post")
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post: " + err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
