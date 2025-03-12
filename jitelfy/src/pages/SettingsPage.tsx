@@ -3,41 +3,99 @@ import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
-import {BASE_URL, RestoreUser } from "../api";
+import * as API from "../api";
+import {BASE_URL} from "../api";
 
 let NewIcon = -1;
 let NewBanner = -1;
 
-const handleChangeIcon = async (icon: number, user: User) => {
-    if (!user) return; // ensure user exists
+export async function requestCustomizeDisplayName(newName: string, user: User): Promise<any> {
+    const nameData = {
+        displayname: newName
+    };
 
-    console.log("New icon will be of index " + icon);
-    if (icon != user?.icon) {
-        console.log("Sending request for icon change and reloading...");
+    const response = await fetch(`${BASE_URL}/customize/displayname`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(nameData),
+        credentials: "include",
+    });
+    return response.ok;
+}
 
-        const iconData = {
-            icon: icon
-        };
+export async function requestCustomizeBio(newBio: string, user: User): Promise<any> {
+    const bioData = {
+        bio: newBio
+    };
 
-        const response = await fetch(`${BASE_URL}/customize/icon`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user?.token
-            },
-            body: JSON.stringify(iconData),
-            credentials: "include",
-        });
+    const response = await fetch(`${BASE_URL}/customize/bio`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(bioData),
+        credentials: "include",
+    });
+    return response.ok;
+}
 
-        if (!response.ok) {
-            console.error("Failed to change icon", await response.text());
-            return;
-        }
-        window.location.reload();
-    }
-};
+export async function requestCustomizeSong(newSong: string, user: User): Promise<any> {
+    const songData = {
+        song: newSong
+    };
 
-const handleIconClick = async (imgID: string, user: User) => {
+    const response = await fetch(`${BASE_URL}/customize/favsong`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(songData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeBanner(newBanner: number, user: User): Promise<any> {
+    const bannerData = {
+        banner: newBanner
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/banner`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(bannerData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+export async function requestCustomizeIcon(newIcon: number, user: User): Promise<any> {
+    const iconData = {
+        icon: newIcon
+    };
+
+    const response = await fetch(`${BASE_URL}/customize/icon`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + user?.token
+        },
+        body: JSON.stringify(iconData),
+        credentials: "include",
+    });
+    return response.ok;
+}
+
+
+const handleIconClick = async (imgID: string) => {
     const img = document.getElementById(imgID);
     if (img != null) {
         const iconIndex = IconArray.indexOf(img.id);
@@ -58,8 +116,7 @@ const handleIconClick = async (imgID: string, user: User) => {
     }
 };
 
-const handleBannerClick = async (banID: string, user: User) => {
-    console.log("Handle banner click" + banID);
+const handleBannerClick = async (banID: string) => {
     const ban = document.getElementById(banID);
 
     if (ban != null) {
@@ -79,119 +136,48 @@ const handleBannerClick = async (banID: string, user: User) => {
     }
 };
 
+const handleChangeIcon = async (icon: number, user: User) => {
+    if (!user) return; // Ensure user exists
+
+    if (icon != user?.icon) {
+        let response = await requestCustomizeIcon(icon, user);
+        if (response) window.location.reload();
+    }
+};
+
 const handleChangeBanner = async (banner: number, user: User) => {
-    if (!user) return; // ensure user exists
+    if (!user) return; // Ensure user exists
 
-    console.log("New banner will be of index " + banner);
     if (banner != user?.banner) {
-        console.log("Sending request for banner change and reloading...");
-
-        const bannerData = {
-            banner: banner
-        };
-
-        const response = await fetch(`${BASE_URL}/customize/banner`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user?.token
-            },
-            body: JSON.stringify(bannerData),
-            credentials: "include",
-        });
-
-        if (!response.ok) {
-            console.error("Failed to change banner", await response.text());
-            return;
-        }
-        window.location.reload();
+        let response = await requestCustomizeBanner(banner, user);
+        if(response) window.location.reload();
     }
 };
 
 const handleChangeDisplayName = async (newName: string, user: User) => {
-    if (!user) return; // ensure user exists
+    if (!user) return; // Ensure user exists
 
-    console.log("New display name will be " + newName);
-    if (newName.length > 0 && newName != user?.displayname) {
-        console.log("Sending request for name change and reloading...");
-
-        const nameData = {
-            displayname: newName
-        };
-
-        const response = await fetch(`${BASE_URL}/customize/displayname`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user?.token
-            },
-            body: JSON.stringify(nameData),
-            credentials: "include",
-        });
-
-        if (!response.ok) {
-            console.error("Failed to change display name", await response.text());
-            return;
-        }
-        window.location.reload();
+    if (newName.length > 0 && newName.length <= 40 && newName != user?.displayname) {
+        let response = await requestCustomizeDisplayName(newName, user);
+        if (response) window.location.reload();
     }
 };
 
 const handleChangeBio = async (newBio: string, user: User) => {
-    if (!user) return; // ensure user exists
+    if (!user) return; // Ensure user exists
 
-    if (newBio != null && newBio != user?.bio) {
-        console.log("New bio will be " + newBio);
-        console.log("Sending request for bio change and reloading...");
-
-        const bioData = {
-            bio: newBio
-        };
-
-        const response = await fetch(`${BASE_URL}/customize/bio`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user?.token
-            },
-            body: JSON.stringify(bioData),
-            credentials: "include",
-        });
-
-        if (!response.ok) {
-            console.error("Failed to change bio", await response.text());
-            return;
-        }
-        window.location.reload();
+    if (newBio != null && newBio.length <= 250 && newBio != user?.bio) {
+        let response = await requestCustomizeBio(newBio, user);
+        if (response) window.location.reload();
     }
 };
 
 const handleChangeSong = async (newSong: string, user: User) => {
-    if (!user) return; // ensure user exists
+    if (!user) return; // Ensure user exists
 
     if (newSong != null && newSong != user?.song) {
-        console.log("New song will be " + newSong);
-        console.log("Sending request for song change and reloading...");
-
-        const songData = {
-            song: newSong
-        };
-
-        const response = await fetch(`${BASE_URL}/customize/favsong`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user?.token
-            },
-            body: JSON.stringify(songData),
-            credentials: "include",
-        });
-
-        if (!response.ok) {
-            console.error("Failed to change song", await response.text());
-            return;
-        }
-        window.location.reload();
+        let response = await requestCustomizeSong(newSong, user);
+        if (response) window.location.reload();
     }
 };
 
@@ -204,7 +190,7 @@ const SettingsPage = () => {
 
     useEffect(() => {
         const restore = async () => {
-            const loggedInUser: User = await RestoreUser();
+            const loggedInUser: User = await API.RestoreUser();
             if (loggedInUser.id != null) {
                 setUser(loggedInUser);
             }
@@ -226,7 +212,7 @@ const SettingsPage = () => {
                     </div>
                 </div>
                 {/* Sidebar - Right */}
-                {FriendActivity()}
+                {FriendActivity(user)}
             </div>
         );
     }
@@ -238,7 +224,7 @@ const SettingsPage = () => {
 
     return (
         <div className="h-screen bg-background-main flex"
-             onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}>
+             onLoad={() => handleBannerClick(SelectedBanner.toString(10))}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -257,7 +243,7 @@ const SettingsPage = () => {
                             type="text"
                             value={newDisplayName}
                             onChange={(e) => setNewDisplayName(e.target.value)}
-                            placeholder={user?.displayname}
+                            placeholder={user?.displayname || "What should others call you?"}
                             className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
                         />
 
@@ -299,18 +285,18 @@ const SettingsPage = () => {
 
                     {/* Container for default icons */}
                     <div id="iconContainer"
-                         onLoad={() => handleIconClick(IconArray[SelectedIcon], user)}
-                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
+                         onLoad={() => handleIconClick(IconArray[SelectedIcon])}
+                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
-                        {IconArray.map((img) => (
+                        {IconArray.map((imgIndex) => (
                             <img
-                                id={img}
-                                src={img}
+                                id={imgIndex}
+                                src={imgIndex}
                                 alt="Default"
                                 width = "140px"
                                 height = "140px"
                                 className="p-3 rounded-full bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
-                                onClick={() => handleIconClick(img, user)}
+                                onClick={() => handleIconClick(imgIndex)}
                             />
                         ))}
 
@@ -332,14 +318,14 @@ const SettingsPage = () => {
 
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
-                         onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}
-                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar items-start p-2  rounded-mb">
+                         onLoad={() => handleBannerClick(BannerArray[SelectedBanner])}
+                         className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {BannerArray.map((color) => (
                             <svg height="140" width="140"
                                  id={BannerArray.indexOf(color).toString(10)}
                                  className="p-3 rounded-lg bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
-                                 onClick={() => handleBannerClick(BannerArray.indexOf(color).toString(10), user)}
+                                 onClick={() => handleBannerClick(BannerArray.indexOf(color).toString(10))}
                             >
                                 <rect width="110" height="110" x="3" y="3" rx="10" ry="10" fill={color} />
                             </svg>
@@ -384,7 +370,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Sidebar - Right */}
-            {FriendActivity()}
+            {FriendActivity(user)}
         </div>
     );
 };

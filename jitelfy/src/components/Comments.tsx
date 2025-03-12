@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useContext } from "react";
-import { PackagedPost } from "../types";
+import {PackagedPost, User} from "../types";
 import { BASE_URL } from "../api";
 import { UserContext } from "../UserContext";
 import { IconArray } from "../UserContext";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import * as POST from "./Posts";
 
 interface CommentsProps {
   parentId: string;
+  setUser: (user: User) => any;
 }
 
-const Comments: React.FC<CommentsProps> = ({ parentId }) => {
+const Comments: React.FC<CommentsProps> = ({ parentId, setUser }) => {
   const [comments, setComments] = useState<PackagedPost[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [newCommentSong, setNewCommentSong] = useState("");
@@ -86,82 +88,10 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
-    await fetch(`${BASE_URL}/posts?id=${commentId}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
-    setComments((prev) => prev.filter((c) => c.post.id !== commentId));
-  };
-
   return (
     <div className="mt-4 ml-8 bg-backgorund-main border-l-2 border-text-secondary pl-4">
       {comments.map((comment) => (
-        <div
-          key={comment.post.id}
-          className="relative bg-background-secondary p-4 rounded-lg mb-4"
-        >
-          <button
-            onClick={() => handleDeleteComment(comment.post.id)}
-            className="absolute top-2 right-2 hover:cursor-pointer"
-          >
-            <svg
-              width="25px"
-              height="25px"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 5.29289Z"
-                fill="#7e7e7e"
-              />
-            </svg>
-          </button>
-          <div className="flex items-center">
-            <img
-              className="size-12 rounded-full mb-2 mr-3"
-              src={IconArray[comment.user.icon]}
-              alt={comment.user.displayname}
-            />
-            <div>
-              <Link to={`/profile/${comment.user.username}`} className="hover:underline decoration-text-secondary">
-                <p className="text-text-main font-bold">{comment.user.displayname}</p>
-                <p className="text-text-secondary">@{comment.user.username}</p>
-              </Link>
-              <p className="text-text-secondary text-sm">
-                {new Date(comment.post.time).toLocaleString()}
-              </p>
-            </div>
-          </div>
-          <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
-            {renderTextWithHashtags(comment.post.text)}
-          </p>
-          <div className="post-details">
-            {comment.post.embed && (
-              <img
-                src={comment.post.embed}
-                className="w-full h-40 rounded-md"
-                alt="embedded content"
-              />
-            )}
-            {comment.post.song && (
-              <div className="mt-2">
-                <iframe
-                  src={comment.post.song}
-                  className="w-full h-20"
-                  title={`Song for comment ${comment.post.id}`}
-                  frameBorder="0"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            )}
-          </div>
-        </div>
+          POST.ChildPost(comment.post, comment.user, user, comments, renderTextWithHashtags, setUser, setComments)
       ))}
 
       {/* Comment creation form */}
@@ -190,10 +120,13 @@ const Comments: React.FC<CommentsProps> = ({ parentId }) => {
               />
             </div>
           </div>
-          <div className="flex justify-end mt-2">
+
+          <hr className="border-1 mt-4 border-background-tertiary"></hr>
+
+          <div className="flex justify-end mt-3">
             <button
               onClick={handleSubmitComment}
-              className="bg-accent-blue-light text-text-main px-4 py-2 rounded hover:bg-accent-blue"
+              className="bg-accent-blue-light text-text-main px-6 py-2 rounded-xl hover:bg-accent-blue"
             >
               Post
             </button>

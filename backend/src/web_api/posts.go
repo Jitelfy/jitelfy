@@ -226,6 +226,7 @@ func CreateComment(c echo.Context) error {
 	newComment := Post{
 		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
+		LikeIds:  []primitive.ObjectID{},
 		ChildIds: 0,
 		UserId:   userId,
 		Time:     time.Now().Format(time.RFC3339),
