@@ -5,6 +5,7 @@ import { UserContext, IconArray } from "../UserContext";
 import * as API from "../api";
 import { PackagedPost } from "../types";
 import { useSearchParams} from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -92,6 +93,12 @@ const FeedPage = () => {
     setSearchParams({ flair });
   };
 
+  const postQuery = useQuery({
+      queryKey: ['posts'],
+      queryFn: API.getPosts,
+      staleTime: 1000 * 60,
+  })
+
   useEffect(() => {
     const fetchPostsData = async () => {
       if (user === null) {
@@ -100,7 +107,8 @@ const FeedPage = () => {
           setUser(userjson);
         }
       }
-      const fetched = await API.getPosts();
+      if (postQuery.isSuccess) {
+      const fetched = postQuery.data;
       fetched.sort(
           (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
@@ -109,9 +117,10 @@ const FeedPage = () => {
           ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
           : fetchedPosts;
       setPosts(filtered);
+      }
     };
     fetchPostsData();
-  }, [user, flairFilter]);
+  }, [user, flairFilter, postQuery]);
 
   return (
       <div className="h-screen bg-background-main flex">

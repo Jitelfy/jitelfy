@@ -7,10 +7,13 @@ import SettingsPage from "./pages/SettingsPage";
 import ExplorePage from "./pages/ExplorePage";
 import ActivityPage from "./pages/ActivityPage";
 import BookmarksPage from "./pages/BookmarksPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+const queryClient = new QueryClient();
 
 function App() {
   return (
+<QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
           <Route index element={<LoginPage />} />
@@ -24,6 +27,7 @@ function App() {
           <Route path="/bookmarks" element={<BookmarksPage />} />
       </Routes>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
