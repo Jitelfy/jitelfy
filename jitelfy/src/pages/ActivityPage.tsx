@@ -23,7 +23,7 @@ const ActivityPage = () => {
       const response = await getUserActivity();
       if (typeof response == typeof dummy && response.length > 0) {
         response.sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
       }
       setUserAlerts(response);
