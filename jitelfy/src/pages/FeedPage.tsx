@@ -46,6 +46,9 @@ const FeedPage = () => {
 
     const textValue = (document.getElementById('posttext') as HTMLInputElement).value;
 
+    if (!textValue) return;
+    if (!newPostSong) return;
+
     // Find the first hashtag in the text and extract it as flair
     const match = textValue.match(/#[A-Za-z0-9_]+/);
     let flair = "";
@@ -55,7 +58,7 @@ const FeedPage = () => {
 
     const postData = {
       userid: user.id, // use the logged-in user's ID
-      text: (document.getElementById('posttext') as HTMLInputElement).value,
+      text: textValue,
       song: newPostSong,
       flair: flair, //flair in the post data
     };
