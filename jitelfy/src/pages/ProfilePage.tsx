@@ -8,6 +8,7 @@ import {PackagedPost, User} from "../types";
 import * as API from "../api";
 import * as POST from "../components/Posts"
 
+
 const ProfilePage = () => {
     const { user, setUser } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
@@ -18,6 +19,9 @@ const ProfilePage = () => {
 
     const [followers, setFollowers] = useState<Array<User>>([]);
     const [following, setFollowing] = useState<Array<User>>([]);
+
+    const [showPosts, setShowPosts] = useState<Boolean>(true);
+    const [showComments, setShowComments] = useState<Boolean>(false);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
@@ -52,6 +56,20 @@ const ProfilePage = () => {
         }
     };
 
+    const toggleShowPosts = ()=> {
+        if (!showPosts) {
+            setShowPosts(true);
+            setShowComments(false);
+        }
+    };
+
+    const toggleShowComments = ()=> {
+        if (!showComments) {
+            setShowPosts(false);
+            setShowComments(true);
+        }
+    };
+
     const renderTextWithHashtags = (text: string) => {
         return text;
     };
@@ -72,7 +90,7 @@ const ProfilePage = () => {
                 if (profileUser && user) {
                     setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
 
-                    // Get this user's posts (not comments)
+                    // Get this user's posts
                     const fetched = await API.getPostsByUser(profileUser.id);
                     fetched.sort(
                         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
@@ -113,10 +131,10 @@ const ProfilePage = () => {
             {Quicklinks(user)}
 
             {/* Main Content - Middle */}
-            <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto">
+            <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto hide-scrollbar">
 
                 {/* Container for all user data */}
-                <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md mb-8">
+                <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md">
                     {/* Banner */}
                     <div className="w-full h-44 rounded-md flex items-center justify-center"
                         id="banner"
@@ -198,8 +216,32 @@ const ProfilePage = () => {
                     </svg>
                 </div>
 
+                {/* Button to choose user posts, replies, or likes */}
+                <div className="flex flex-row justify-evenly mb-8">
+                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75"
+                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                            onClick={toggleShowPosts}>
+                        <p className="text-md">
+                            Posts
+                        </p>
+                    </button>
+
+                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75"
+                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                             onClick={toggleShowComments}>
+                        <p className="text-md">
+                            Comments
+                        </p>
+                    </button>
+                </div>
+
                 {/* User posts (posts) */}
-                {posts && posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000").map((post: PackagedPost) => (
+                {posts && showPosts && posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000").map((post: PackagedPost) => (
+                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                ))}
+
+                {/* User posts (comments) */}
+                {posts && showComments && posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000").map((post: PackagedPost) => (
                     POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
                 ))}
 

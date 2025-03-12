@@ -21,7 +21,7 @@ const ActivityPage = () => {
 
     const requestActivity= async () => {
       const response = await getUserActivity();
-      if (typeof response == typeof dummy && response.length > 0) {
+      if (response.length > 0) {
         response.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
@@ -55,7 +55,7 @@ const ActivityPage = () => {
       {Quicklinks(user)}
 
       {/* Main Content - Middle */}
-      <div className="flex-1 flex-col px-20 overflow-auto">
+      <div className="flex-1 flex-col px-20 overflow-auto hide-scrollbar">
         <div className="sticky">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
         </div>
@@ -73,7 +73,7 @@ const ActivityPage = () => {
                       src={IconArray[alert.user.icon]}
                       alt="User icon"
                   />
-                  <div className="flex flex-col text-white gap-2 text-center content-center">
+                  <div className="flex flex-col text-white gap-2 w-full text-center content-center">
                     <div className="flex flex-row">
                       <Link to={"/profile/" + alert.user.username}
                             className="hover:underline hover:decoration-text-main text-center content-center">
@@ -86,7 +86,7 @@ const ActivityPage = () => {
                       {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
                       {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
                     </div>
-                    <p className="text-text-secondary text-sm">{new Date(alert.created_at).toLocaleString()}</p>
+                    <p className="text-text-secondary text-left text-sm">{new Date(alert.created_at).toLocaleString().trim()}</p>
                   </div>
                 </div>
             ))

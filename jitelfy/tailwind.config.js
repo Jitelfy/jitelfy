@@ -15,6 +15,7 @@ export default {
         "background-main": "var(--background-main)",
         "background-secondary": "var(--background-secondary)",
         "background-tertiary": "var(--background-tertiary)",
+        "background-fourth": "var(--background-fourth)",
         "text-main": "var(--text-main)",
         "text-secondary": "var(--text-secondary)",
         "text-tertiary": "var(--text-tertiary)",

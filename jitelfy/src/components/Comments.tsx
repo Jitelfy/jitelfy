@@ -60,6 +60,8 @@ const Comments: React.FC<CommentsProps> = ({ parentId, setUser }) => {
     e.preventDefault();
     if (!user) return;
 
+    if (!newCommentText) return;
+
     const commentData = {
       userid: user.id,
       text: newCommentText,

@@ -4,7 +4,7 @@ import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import * as API from "../api";
-import {BASE_URL} from "../api";
+import {BASE_URL, getUser} from "../api";
 
 let NewIcon = -1;
 let NewBanner = -1;
@@ -184,6 +184,7 @@ const handleChangeSong = async (newSong: string, user: User) => {
 const SettingsPage = () => {
     const { user, setUser } = useContext(UserContext);
 
+    const [userData, setUserData] = useState<User | null>(null);
     const [newDisplayName, setNewDisplayName] = useState("");
     const [newBio, setNewBio] = useState("");
     const [newProfileSong, setNewProfileSong] = useState("");
@@ -194,13 +195,24 @@ const SettingsPage = () => {
             if (loggedInUser.id != null) {
                 setUser(loggedInUser);
             }
+        };
 
+        const getUserData = async () => {
+            if (!user) return;
+
+            const loggedInUser: User = await API.getUser(user.id);
+            console.log(loggedInUser);
+            if (loggedInUser.id != null) {
+                setUserData(loggedInUser);
+            }
         };
 
         if (user == null) {
             restore();
         }
-  });
+
+        getUserData();
+  }, [user]);
 
     if (user == null) {
         return (
@@ -217,14 +229,17 @@ const SettingsPage = () => {
         );
     }
 
-    const SelectedIcon = user?.icon;
-    const SelectedBanner = user?.banner;
+    console.log(userData)
+
+    const SelectedIcon = user.icon;
+    const SelectedBanner = userData && userData.banner;
     NewIcon = -1;
     NewBanner = -1;
 
+
     return (
         <div className="h-screen bg-background-main flex"
-             onLoad={() => handleBannerClick(SelectedBanner.toString(10))}>
+             onLoad={() => {SelectedBanner && handleBannerClick(SelectedBanner.toString(10))}}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -261,7 +276,7 @@ const SettingsPage = () => {
                     <h2 className=" text-text-main text-lg">Biography</h2>
 
                     <textarea
-                        placeholder={user?.bio || "What are you all about?"}
+                        placeholder={userData && userData.bio || "What are you all about?"}
                         value={newBio}
                         onChange={(e) => setNewBio(e.target.value)}
                         rows={3}
@@ -318,7 +333,7 @@ const SettingsPage = () => {
 
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
-                         onLoad={() => handleBannerClick(BannerArray[SelectedBanner])}
+                         onLoad={() => {SelectedBanner && handleBannerClick(BannerArray[SelectedBanner])}}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {BannerArray.map((color) => (
