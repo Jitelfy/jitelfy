@@ -242,7 +242,7 @@ const ProfilePage = () => {
 
                 {/* User posts (comments) */}
                 {posts && showComments && posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000").map((post: PackagedPost) => (
-                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                    POST.ChildPost(post.post, post.user, user, posts, renderTextWithHashtags, setUser, setPosts)
                 ))}
 
             </div>
