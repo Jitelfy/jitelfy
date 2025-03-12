@@ -113,7 +113,7 @@ const ProfilePage = () => {
             {Quicklinks(user)}
 
             {/* Main Content - Middle */}
-            <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto">
+            <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto hide-scrollbar">
 
                 {/* Container for all user data */}
                 <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md mb-8">
