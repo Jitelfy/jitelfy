@@ -124,6 +124,31 @@ export const handleUnBookmark = async (postId: string, user: User | null, setUse
     }
 }
 
+export const handleRepost = async (
+    postId: string,
+    user: User | null,
+    setUser: (u: User) => any
+  ) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${API.BASE_URL}/posts/repost/${postId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        setUser({ ...user, reposts: [...user.reposts, postId] });
+      }
+    } catch (error) {
+      console.error("Error reposting:", error);
+    }
+  };
+
+
+
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
     const newSet = new Set(openComments);
     if (newSet.has(postId)) {
