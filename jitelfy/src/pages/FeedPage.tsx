@@ -11,7 +11,7 @@ let fetchedPosts: Array<PackagedPost>;
 const FeedPage = () => {
   const { user, setUser } = useContext(UserContext);
   // State to store fetched posts.
-  const [posts, setPosts] = useState<Array<PackagedPost>>([]);
+  let [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
   // State variables for new post text and song that goes in the feed
   const [newPostSong, setNewPostSong] = useState("");
@@ -79,12 +79,15 @@ const FeedPage = () => {
       user: user,
     };
 
-    fetchedPosts.unshift({ ...newPost });
-    fetchedPosts.sort(
+    posts.unshift({ ...newPost });
+    posts.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
     );
-    setPosts(fetchedPosts);
+    setPosts(posts.filter((post: PackagedPost) => post.post.childids !== -1)
+    );
+
     setNewPostSong("");
+
     (document.getElementById("posttext") as HTMLInputElement).value = "";
   };
 
@@ -120,11 +123,11 @@ const FeedPage = () => {
 
         {/* Feed - Main Content */}
         <div className="flex-1 flex-col px-20 relative overflow-y-auto hide-scrollbar">
-          <div className="sticky">
+          <div className="fixed z-20 bg-background-main opacity-95 w-full">
             <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
-          <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
+          <div className="flex-1 bg-background-main relative mt-20 overflow-auto hide-scrollbar">
             {/* Post header */}
             {!flairFilter && user && (
                 <div>
@@ -133,7 +136,7 @@ const FeedPage = () => {
                       {/* Updated: Use the logged-in user's icon */}
                       {user && (
                           <img
-                              className="size-14 rounded-full mr-3"
+                              className="size-16 rounded-full mr-3"
                               src={IconArray[user.icon]}
                               alt={user.displayname}
                           />
@@ -196,9 +199,9 @@ const FeedPage = () => {
                 </div>
             )}
 
-            {posts.map((post) => (
-                POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-            ))}
+            {
+              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
+            }
           </div>
         </div>
 

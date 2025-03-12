@@ -56,7 +56,7 @@ const ProfilePage = () => {
         }
     };
 
-    const toggleShowPosts = ()=> {
+    const toggleShowPosts = () => {
         if (!showPosts) {
             setShowPosts(true);
             setShowComments(false);
@@ -133,8 +133,33 @@ const ProfilePage = () => {
             {/* Main Content - Middle */}
             <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto hide-scrollbar">
 
+                {/* User display at top thingy (with back button) */}
+                <div className="fixed fill-text-main bg-background-main z-10 p-4 transform -translate-x-16 -translate-y-6 w-full opacity-95 flex flex-row items-center">
+                    <button className="p-3 border-2 border-background-main hover:bg-background-secondary hover:border-background-secondary transition-colors ease-in duration-75 rounded-full mr-4 ml-6"
+                            onClick={() => history.back()}>
+                        <svg width="22px" height="22px" viewBox="0 0 24 24">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M15.7071 5.29289C16.0976 5.68342 16.0976 6.31658 15.7071 6.70711L10.4142 12L15.7071 17.2929C16.0976 17.6834 16.0976 18.3166 15.7071 18.7071C15.3165 19.0976 14.6834 19.0976 14.2929 18.7071L8.46963 12.8839C7.98148 12.3957 7.98148 11.6043 8.46963 11.1161L14.2929 5.29289C14.6834 4.90237 15.3165 4.90237 15.7071 5.29289Z"/>
+                        </svg>
+                    </button>
+
+                    {/* Username and number of posts */}
+                    <div className="flex flex-col">
+                        <h2 className="text-text-main text-2xl">
+                            {userData.displayname || userData.username}
+                        </h2>
+                            {posts && (
+                                <p className="text-text-main text-sm ml-2">
+                                    {posts.length}
+                                    {posts.length > 1 && " posts" || posts.length <= 1 && " post"}
+                                </p>
+                            )}
+                    </div>
+
+
+                </div>
+
                 {/* Container for all user data */}
-                <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md">
+                <div className="flex flex-col items-center bg-background-secondary p-4 mt-12 rounded-md">
                     {/* Banner */}
                     <div className="w-full h-44 rounded-md flex items-center justify-center"
                         id="banner"
@@ -216,18 +241,18 @@ const ProfilePage = () => {
                     </svg>
                 </div>
 
-                {/* Button to choose user posts, replies, or likes */}
+                {/* Button to choose user posts or replies */}
                 <div className="flex flex-row justify-evenly mb-8">
-                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75"
-                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
                             onClick={toggleShowPosts}>
                         <p className="text-md">
                             Posts
                         </p>
                     </button>
 
-                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75"
-                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
                              onClick={toggleShowComments}>
                         <p className="text-md">
                             Comments
@@ -235,15 +260,9 @@ const ProfilePage = () => {
                     </button>
                 </div>
 
-                {/* User posts (posts) */}
-                {posts && showPosts && posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000").map((post: PackagedPost) => (
-                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-                ))}
-
-                {/* User posts (comments) */}
-                {posts && showComments && posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000").map((post: PackagedPost) => (
-                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-                ))}
+                {
+                    POST.mapProfilePosts(posts, user, showPosts, showComments, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                }
 
             </div>
 

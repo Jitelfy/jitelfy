@@ -83,11 +83,11 @@ const BookmarksPage = () => {
 
             {/* Main Content - Middle */}
             <div className="flex-1 flex-col px-20 relative overflow-auto">
-                <div className="sticky">
+                <div className="fixed z-20 bg-background-main opacity-95 w-full">
                     <h1 className="text-white text-2xl top-0 my-6">Bookmarks</h1>
                 </div>
 
-                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                <div className="flex-1 bg-background-main relative mt-20 overflow-auto hide-scrollbar">
                     {flairFilter && (
                         <div className="mx-10 my-4">
                             <p className="text-white">
@@ -105,10 +105,7 @@ const BookmarksPage = () => {
                     {bookmarkedPosts.length === 0 ? (
                         <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
-                        bookmarkedPosts.map((post) => (
-                            post.post.parentid == "000000000000000000000000" ? POST.ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
-                                : POST.ChildPost(post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
-                        ))
+                        POST.mapBookmarks(bookmarkedPosts, user, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments, () => true)
                     )}
                 </div>
             </div>

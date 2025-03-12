@@ -23,8 +23,8 @@ func SetIcon(c echo.Context) error {
 		Icon int `json:"icon"`
 	}{}
 
-	if req.Icon < 0 || req.Icon > 15 {
-		return c.JSON(http.StatusBadRequest, "icon must be between 0 and 15")
+	if req.Icon < 0 || req.Icon > 36 {
+		return c.JSON(http.StatusBadRequest, "icon must be between 0 and 36")
 	}
 
 	if err := c.Bind(&req); err != nil {
@@ -59,6 +59,10 @@ func SetBanner(c echo.Context) error {
 	req := struct {
 		Banner int `json:"banner"`
 	}{}
+
+	if req.Banner < 0 || req.Banner > 19 {
+    	return c.JSON(http.StatusBadRequest, "banner must be between 0 and 19")
+    }
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid json")

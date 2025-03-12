@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import {PackagedPost, User} from "../types";
+import {PackagedPost, Post, User} from "../types";
 import { BASE_URL } from "../api";
 import { UserContext } from "../UserContext";
 import { IconArray } from "../UserContext";
@@ -8,10 +8,11 @@ import * as POST from "./Posts";
 
 interface CommentsProps {
   parentId: string;
+  parentPost: Post;
   setUser: (user: User) => any;
 }
 
-const Comments: React.FC<CommentsProps> = ({ parentId, setUser }) => {
+const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) => {
   const [comments, setComments] = useState<PackagedPost[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [newCommentSong, setNewCommentSong] = useState("");
@@ -85,16 +86,18 @@ const Comments: React.FC<CommentsProps> = ({ parentId, setUser }) => {
         { post: newComment, user: user },
         ...prev,
       ]);
+
+      {/* Mock add comment number to post so we don't have to reload */}
+      parentPost.childids++;
+
       setNewCommentText("");
       setNewCommentSong("");
     }
   };
 
   return (
-    <div className="mt-4 ml-8 bg-backgorund-main border-l-2 border-text-secondary pl-4">
-      {comments.map((comment) => (
-          POST.ChildPost(comment.post, comment.user, user, comments, renderTextWithHashtags, setUser, setComments)
-      ))}
+    <div className="mt-4 ml-8 bg-backgorund-main border-l border-text-secondary pl-4">
+      {POST.mapComments(parentPost, comments, user, renderTextWithHashtags, setUser, setComments, () => true)}
 
       {/* Comment creation form */}
       {user && (

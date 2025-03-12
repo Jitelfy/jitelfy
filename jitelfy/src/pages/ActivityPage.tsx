@@ -2,13 +2,12 @@ import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
 import {getUser, getUserActivity, RestoreUser} from "../api";
-import {PackagedUserAlert, User, UserAlerts} from "../types";
+import {PackagedPost, PackagedUserAlert, User, UserAlerts} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
   const [ userAlerts, setUserAlerts ] = useState<PackagedUserAlert[]>();
-  const [ dummy, setDummy ]= useState<PackagedUserAlert[]>();
 
   useEffect(() => {
     const restore = async () => {
@@ -21,7 +20,7 @@ const ActivityPage = () => {
 
     const requestActivity= async () => {
       const response = await getUserActivity();
-      if (response.length > 0) {
+      if (response && response.length > 0) {
         response.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
@@ -56,41 +55,43 @@ const ActivityPage = () => {
 
       {/* Main Content - Middle */}
       <div className="flex-1 flex-col px-20 overflow-auto hide-scrollbar">
-        <div className="sticky">
+        <div className="fixed z-20 bg-background-main opacity-95 w-full">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
         </div>
 
-        {/* No user alerts? */}
-        {!userAlerts || userAlerts?.length == 0 && (
-              <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
-        )}
+        {/* Alerts */}
+          <div className="mt-40">
+            {userAlerts && userAlerts.length > 0 ? (
+                    userAlerts.map((alert) => (
+                        <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
+                          <img
+                              className="size-14 rounded-full mr-3"
+                              src={IconArray[alert.user.icon]}
+                              alt="User icon"
+                          />
+                          <div className="flex flex-col text-white gap-2 w-full text-center content-center">
+                            <div className="flex flex-row">
+                              <Link to={"/profile/" + alert.user.username}
+                                    className="hover:underline hover:decoration-text-main text-center content-center">
+                                <p>
+                                  @<b>{alert.user.username}</b>
+                                </p>
+                              </Link>
 
-        {userAlerts && (
-            userAlerts.map((alert) => (
-                <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
-                  <img
-                      className="size-14 rounded-full mr-3"
-                      src={IconArray[alert.user.icon]}
-                      alt="User icon"
-                  />
-                  <div className="flex flex-col text-white gap-2 w-full text-center content-center">
-                    <div className="flex flex-row">
-                      <Link to={"/profile/" + alert.user.username}
-                            className="hover:underline hover:decoration-text-main text-center content-center">
-                        <p>
-                          @<b>{alert.user.username}</b>
-                        </p>
-                      </Link>
-
-                      {/* Change text based on alert type */}
-                      {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
-                      {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
-                    </div>
-                    <p className="text-text-secondary text-left text-sm">{new Date(alert.created_at).toLocaleString().trim()}</p>
-                  </div>
-                </div>
-            ))
-        )}
+                              {/* Change text based on alert type */}
+                              {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
+                              {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
+                            </div>
+                            <p className="text-text-secondary text-left text-sm">{new Date(alert.created_at).toLocaleString().trim()}</p>
+                          </div>
+                        </div>
+                    ))
+                ) :
+                (
+                    <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
+                )
+            }
+          </div>
       </div>
 
       {/* Sidebar - Right */}
