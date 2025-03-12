@@ -677,6 +677,19 @@ func GetAllPostsFromUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
+	// Also fetch reposts for the user
+    var repostGroup PostGroup
+    if err = RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup); err == nil {
+        // For each reposted post id, fetch the corresponding post.
+        for _, repId := range repostGroup.PostIds {
+            var repPost Post
+            if err := PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost); err == nil {
+                // Optionally, you could add a flag here to indicate this is a repost.
+                result = append(result, repPost)
+            }
+        }
+    }
+
 	var packagedresults = make([]PostUserPackage, len(result))
 
 	for i, currpost := range result {
