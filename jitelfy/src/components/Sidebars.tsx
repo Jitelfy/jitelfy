@@ -192,7 +192,7 @@ const ProfileButton = (user: User | null) => {
         <div className="flex flex-col w-full mt-auto">
             {/* Pop up to view profile or log out*/}
             <div id="myPopup"
-                 className="invisible absolute w-1/6 transform -translate-y-32 flex shadow-md shadow-background-main flex-col text-center bg-background-main rounded-md"
+                 className="invisible fixed w-1/6 transform -translate-y-32 flex shadow-md shadow-background-main flex-col text-center bg-background-main rounded-md"
                  onMouseLeave={handlePopup}>
 
                 {/* Link to profile */}

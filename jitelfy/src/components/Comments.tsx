@@ -96,7 +96,7 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
   };
 
   return (
-    <div className="mt-4 ml-8 bg-backgorund-main border-l-2 border-text-secondary pl-4">
+    <div className="mt-4 ml-8 bg-backgorund-main border-l border-text-secondary pl-4">
       {POST.mapComments(parentPost, comments, user, renderTextWithHashtags, setUser, setComments, () => true)}
 
       {/* Comment creation form */}

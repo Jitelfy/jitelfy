@@ -2,13 +2,12 @@ import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
 import {getUser, getUserActivity, RestoreUser} from "../api";
-import {PackagedUserAlert, User, UserAlerts} from "../types";
+import {PackagedPost, PackagedUserAlert, User, UserAlerts} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
   const [ userAlerts, setUserAlerts ] = useState<PackagedUserAlert[]>();
-  const [ dummy, setDummy ]= useState<PackagedUserAlert[]>();
 
   useEffect(() => {
     const restore = async () => {
@@ -21,7 +20,7 @@ const ActivityPage = () => {
 
     const requestActivity= async () => {
       const response = await getUserActivity();
-      if (typeof response == typeof dummy && response.length > 0) {
+      if (response && response.length > 0) {
         response.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
@@ -61,8 +60,8 @@ const ActivityPage = () => {
         </div>
 
         {/* Alerts */}
-          <div className="mt-20">
-            {userAlerts ? (
+          <div className="mt-40">
+            {userAlerts && userAlerts.length > 0 ? (
                     userAlerts.map((alert) => (
                         <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
                           <img

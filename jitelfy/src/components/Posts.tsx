@@ -199,7 +199,7 @@ export const mapPosts = (posts: Array<PackagedPost>, user: User | null, openComm
     return (
         posts.filter(filter).map((post) => (
             post.post.childids !== -1 ? ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-                : <p className="text-text-secondary text-sm mb-4">This post has been deleted...</p>
+                : <p className="text-text-secondary text-sm mb-4 mt-2">This post has been deleted.</p>
         ))
     )
 };
@@ -208,7 +208,7 @@ export const mapComments = (parentPost: Post | null, posts: Array<PackagedPost>,
     return (
         posts.filter(filter).map((comment) => (
             comment.post.childids !== -1 ? ChildPost(parentPost, comment.post, comment.user, user, posts, renderTextWithHashtags, setUser, setPosts)
-                : <p className="text-text-secondary text-sm mb-4">This comment has been deleted...</p>
+                : <p className="text-text-secondary text-sm mb-4 mt-2">This comment has been deleted.</p>
         ))
     )
 };
@@ -459,7 +459,7 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
 
             <div className="flex items-center">
                 <img
-                    className="size-14 rounded-full mb-2 mr-3"
+                    className="size-16 rounded-full mb-2 mr-3"
                     src={IconArray[postUser.icon]}
                     alt={postUser.displayname}
                 />
