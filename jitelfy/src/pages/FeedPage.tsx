@@ -252,9 +252,9 @@ const FeedPage = () => {
                 </div>
             )}
 
-            {posts.map((post) => (
-                POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-            ))}
+            {
+              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+            }
           </div>
         </div>
 

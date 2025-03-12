@@ -105,10 +105,7 @@ const BookmarksPage = () => {
                     {bookmarkedPosts.length === 0 ? (
                         <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
-                        bookmarkedPosts.map((post) => (
-                            post.post.parentid == "000000000000000000000000" ? POST.ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
-                                : POST.ChildPost(post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
-                        ))
+                        POST.mapBookmarks(bookmarkedPosts, user, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
                     )}
                 </div>
             </div>

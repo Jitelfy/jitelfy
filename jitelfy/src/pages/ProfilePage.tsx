@@ -236,14 +236,14 @@ const ProfilePage = () => {
                 </div>
 
                 {/* User posts (posts) */}
-                {posts && showPosts && posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000").map((post: PackagedPost) => (
-                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-                ))}
+                {posts && showPosts && (
+                    POST.mapPosts(posts.filter((post: PackagedPost) => post.post.parentid === "000000000000000000000000"), user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                )}
 
                 {/* User posts (comments) */}
-                {posts && showComments && posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000").map((post: PackagedPost) => (
-                    POST.ChildPost(post.post, post.user, user, posts, renderTextWithHashtags, setUser, setPosts)
-                ))}
+                {posts && showComments && (
+                    POST.mapComments(posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000"), user, renderTextWithHashtags, setUser, setPosts)
+                )}
 
             </div>
 
