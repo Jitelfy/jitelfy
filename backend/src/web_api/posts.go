@@ -532,14 +532,14 @@ func GetBookmarks(c echo.Context) error {
 }
 
 func MakeRepost(c echo.Context) error {
-	// liker
+	// Get post ID from url param
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
 	}
 
-	// liked
+	// Get post ID from URL parameter
 	postStrID := c.Param("id")
 	postObjID, err := primitive.ObjectIDFromHex(postStrID)
 	if err != nil {
@@ -547,14 +547,15 @@ func MakeRepost(c echo.Context) error {
 	}
 
 	var repost PostGroup
-	err = PostColl.FindOneAndUpdate(
+	updateOpts := options.FindOneAndUpdate().SetReturnDocument(options.After).SetUpsert(true)
+	err = RepostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
 		bson.M{"$addToSet": bson.M{"postids": postObjID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
+		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not repost post")
+		return c.JSON(http.StatusInternalServerError, "could not repost post: " + err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -564,14 +565,14 @@ func MakeRepost(c echo.Context) error {
 }
 
 func DeleteRepost(c echo.Context) error {
-	// liker
+	// Get user ID from cookie
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
 	}
 
-	// liked
+	// Get post ID from URL parameter
 	postStrID := c.Param("id")
 	postObjID, err := primitive.ObjectIDFromHex(postStrID)
 	if err != nil {
@@ -579,14 +580,16 @@ func DeleteRepost(c echo.Context) error {
 	}
 
 	var repost PostGroup
-	err = PostColl.FindOneAndUpdate(
+	updateOpts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	err = RepostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
 		bson.M{"$pull": bson.M{"postids": postObjID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
+		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not unrepost post")
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post: " + err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -650,39 +653,41 @@ func GetAllReposts(c echo.Context) error {
 
 func GetAllPostsFromUser(c echo.Context) error {
 
-	var userId, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
-	}
+	var userId, _ = primitive.ObjectIDFromHex(c.QueryParam("userid"))
 
 	var user BaseUser
-	filter := bson.D{{Key: "_id", Value: userId}}
-	user_result := UserColl.FindOne(context.TODO(), filter)
-	if err := user_result.Decode(&user); err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to get user")
-	}
+	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
 
-	filter = bson.D{{Key: "userid", Value: userId}}
-	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), filter)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
-	}
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}})
 	var result []Post
-	err = cursor.All(context.TODO(), &result)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not parse posts")
+	cursor.All(context.TODO(), &result)
+
+	// Also fetch reposts for the user.
+	var repostGroup PostGroup
+	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
+		for _, repId := range repostGroup.PostIds {
+			var repPost Post
+			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+				result = append(result, repPost)
+			}
+		}
 	}
 
 	var packagedresults = make([]PostUserPackage, len(result))
-
 	for i, currpost := range result {
+		var postUser BaseUser
+		// Use the fetched profile user if the post was created by them;
+		// otherwise, fetch the original data from the og poster
+		if currpost.UserId == user.Id {
+			postUser = user
+		} else {
+			UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+		}
 		packagedresults[i] = PostUserPackage{
-			Userjson: user,
+			Userjson: postUser,
 			Postjson: currpost,
 		}
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
-
 }

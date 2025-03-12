@@ -124,6 +124,53 @@ export const handleUnBookmark = async (postId: string, user: User | null, setUse
     }
 }
 
+export const handleRepost = async (
+    postId: string,
+    user: User | null,
+    setUser: (u: User) => any
+  ) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${API.BASE_URL}/posts/repost/${postId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + user.token
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        setUser({ ...user, reposts: [...user.reposts, postId] });
+      }
+    } catch (error) {
+      console.error("Error reposting:", error);
+    }
+  };
+
+export const handleUnRepost = async (
+  postId: string,
+  user: User | null,
+  setUser: (u: User) => any
+) => {
+  if (!user) return;
+  try {
+    const response = await fetch(`${API.BASE_URL}/posts/unrepost/${postId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + user.token
+      },
+      credentials: "include",
+    });
+    if (response.ok) {
+      setUser({ ...user, reposts: user.reposts.filter((id) => id !== postId) });
+    }
+  } catch (error) {
+    console.error("Error unreposting:", error);
+  }
+};
+
+
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
     const newSet = new Set(openComments);
     if (newSet.has(postId)) {
@@ -231,13 +278,33 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
                         }
                     </button>
 
-                    {/* Repost */}
-                    <div className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-green hover:fill-accent-green flex flex-row gap-2 items-center">
-                        <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M16.2929 3.29289C16.6834 2.90237 17.3166 2.90237 17.7071 3.29289L20.7071 6.29289C21.0976 6.68342 21.0976 7.31658 20.7071 7.70711L17.7071 10.7071C17.3166 11.0976 16.6834 11.0976 16.2929 10.7071C15.9024 10.3166 15.9024 9.68342 16.2929 9.29289L17.5857 8.00006H7.85181C5.70703 8.00006 4 9.75511 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12C2 8.72205 4.53229 6.00006 7.85181 6.00006H17.5858L16.2929 4.70711C15.9024 4.31658 15.9024 3.68342 16.2929 3.29289ZM21 11C21.5523 11 22 11.4477 22 12C22 15.3283 19.2275 18.0001 15.9578 18.0001H6.41427L7.70711 19.2929C8.09763 19.6834 8.09763 20.3166 7.70711 20.7071C7.31658 21.0976 6.68342 21.0976 6.29289 20.7071L3.29289 17.7071C2.90237 17.3166 2.90237 16.6834 3.29289 16.2929L6.29289 13.2929C6.68342 12.9024 7.31658 12.9024 7.70711 13.2929C8.09763 13.6834 8.09763 14.3166 7.70711 14.7071L6.41415 16.0001H15.9578C18.1524 16.0001 20 14.1945 20 12C20 11.4477 20.4477 11 21 11Z"/>
-                        </svg>
-                        <p className="text-sm">0</p>
-                    </div>
+                    {/* Repost (already reposted) */}
+                    {loggedInUser != null && loggedInUser.reposts.includes(post.id) && (
+                        <div className="flex flex-row gap-2 cursor-pointer"
+                            onClick={() => { handleUnRepost(post.id, loggedInUser, setUser); }}>
+                                <svg className="fill-accent-green duration-75 ease-in" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M16.2929 3.29289C16.6834 2.90237 17.3166 2.90237 17.7071 3.29289L20.7071 6.29289C21.0976 6.68342 21.0976 7.31658 20.7071 7.70711L17.7071 10.7071C17.3166 11.0976 16.6834 11.0976 16.2929 10.7071C15.9024 10.3166 15.9024 9.68342 16.2929 9.29289L17.5857 8.00006H7.85181C5.70703 8.00006 4 9.75511 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12C2 8.72205 4.53229 6.00006 7.85181 6.00006H17.5858L16.2929 4.70711C15.9024 4.31658 15.9024 3.68342 16.2929 3.29289ZM21 11C21.5523 11 22 11.4477 22 12C22 15.3283 19.2275 18.0001 15.9578 18.0001H6.41427L7.70711 19.2929C8.09763 19.6834 8.09763 20.3166 7.70711 20.7071C7.31658 21.0976 6.68342 21.0976 6.29289 20.7071L3.29289 17.7071C2.90237 17.3166 2.90237 16.6834 3.29289 16.2929L6.29289 13.2929C6.68342 12.9024 7.31658 12.9024 7.70711 13.2929C8.09763 13.6834 8.09763 14.3166 7.70711 14.7071L6.41415 16.0001H15.9578C18.1524 16.0001 20 14.1945 20 12C20 11.4477 20.4477 11 21 11Z"
+                                    />
+                                </svg>
+                        </div>
+                    )}
+
+                    {/* Repost (not reposted) */}
+                    {loggedInUser != null && !loggedInUser.reposts.includes(post.id) && (
+                        <div className="flex flex-row gap-2 cursor-pointer text-text-secondary fill-text-secondary hover:text-accent-green hover:fill-accent-green duration-75 ease-in"
+                            onClick={() => { handleRepost(post.id, loggedInUser, setUser); }}>
+                                <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M16.2929 3.29289C16.6834 2.90237 17.3166 2.90237 17.7071 3.29289L20.7071 6.29289C21.0976 6.68342 21.0976 7.31658 20.7071 7.70711L17.7071 10.7071C17.3166 11.0976 16.6834 11.0976 16.2929 10.7071C15.9024 10.3166 15.9024 9.68342 16.2929 9.29289L17.5857 8.00006H7.85181C5.70703 8.00006 4 9.75511 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12C2 8.72205 4.53229 6.00006 7.85181 6.00006H17.5858L16.2929 4.70711C15.9024 4.31658 15.9024 3.68342 16.2929 3.29289ZM21 11C21.5523 11 22 11.4477 22 12C22 15.3283 19.2275 18.0001 15.9578 18.0001H6.41427L7.70711 19.2929C8.09763 19.6834 8.09763 20.3166 7.70711 20.7071C7.31658 21.0976 6.68342 21.0976 6.29289 20.7071L3.29289 17.7071C2.90237 17.3166 2.90237 16.6834 3.29289 16.2929L6.29289 13.2929C6.68342 12.9024 7.31658 12.9024 7.70711 13.2929C8.09763 13.6834 8.09763 14.3166 7.70711 14.7071L6.41415 16.0001H15.9578C18.1524 16.0001 20 14.1945 20 12C20 11.4477 20.4477 11 21 11Z"
+                                />
+                            </svg>
+                        </div>  
+                    )}
 
                     {/* Like (already liked) */}
                     {loggedInUser != null && post.likeIds.indexOf(loggedInUser.id) !== -1 && (
