@@ -333,10 +333,10 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
                     </button>
 
                     {/* Repost */}
-                    {loggedInUser && (loggedInUser.reposts.includes(post.id) ? (
-                        <div className="flex flex-row gap-2 cursor-pointer"
+                    {loggedInUser && loggedInUser.reposts.includes(post.id) ? (
+                        <div className="flex flex-row gap-2 text-accent-green fill-accent-green cursor-pointer"
                              onClick={() => { handleUnRepost(post.id, loggedInUser, setUser); }}>
-                            <svg className="fill-accent-green duration-75 ease-in" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     fillRule="evenodd"
                                     clipRule="evenodd"
@@ -355,7 +355,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
                                     />
                                 </svg>
                             </div>
-                    )}
+                    }
 
 
                     {/* Like */}
