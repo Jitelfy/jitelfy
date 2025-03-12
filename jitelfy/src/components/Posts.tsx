@@ -68,7 +68,7 @@ export const handleUnlike = async (postId: string, user: User | null, posts: Arr
     }
 };
 
-export const handleDeletePost = async (id: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
+export const handleDeletePost = async (id: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any, parentPost: Post | null) => {
     if (!user) return; // ensure user exists
     const response = await API.requestDeletePost(id);
     if (!response) {
@@ -77,7 +77,6 @@ export const handleDeletePost = async (id: string, user: User | null, posts: Arr
     }
 
     // Remove the deleted post from state without refetching/reloading
-    setPosts(posts.filter((post: PackagedPost) => post.post.id == id));
     setPosts(posts.map((post) => {
         if (post.post.id === id) {
             return {
@@ -90,6 +89,10 @@ export const handleDeletePost = async (id: string, user: User | null, posts: Arr
         }
         return post;
     }))
+
+    if (parentPost) {
+        parentPost.childids--;
+    }
 };
 
 export const handleBookmark = async (postId: string, user: User | null, setUser: (u: User) => any) => {
@@ -146,29 +149,41 @@ const toggleComments = (postId: string, openComments: Set<string>, setOpenCommen
     setOpenComments(newSet);
 };
 
-export const mapPosts = (posts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
+export const mapPosts = (posts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any,  filter:(post: PackagedPost) => boolean) => {
     return (
-        posts.map((post) => (
+        posts.filter(filter).map((post) => (
             post.post.childids !== -1 ? ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
                 : <p className="text-text-secondary text-sm mb-4">This post has been deleted...</p>
         ))
     )
 };
 
-export const mapBookmarks = (bookmarkedPosts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setBookmarkedPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
+export const mapComments = (parentPost: Post | null, posts: Array<PackagedPost>, user: User | null, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any,  filter:(post: PackagedPost) => boolean) => {
     return (
-        bookmarkedPosts.map((post) => (
-            post.post.parentid == "000000000000000000000000" ? ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
-                : ChildPost(post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
+        posts.filter(filter).map((comment) => (
+            comment.post.childids !== -1 ? ChildPost(parentPost, comment.post, comment.user, user, posts, renderTextWithHashtags, setUser, setPosts)
+                : <p className="text-text-secondary text-sm mb-4">This comment has been deleted...</p>
         ))
     )
 };
 
-export const mapComments = (posts: Array<PackagedPost>, user: User | null, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any) => {
+export const mapProfilePosts = (posts: Array<PackagedPost>, user: User | null, showPosts: Boolean, showComments: Boolean, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
     return (
-        posts.map((comment) => (
-            comment.post.childids !== -1 ? ChildPost(comment.post, comment.user, user, posts, renderTextWithHashtags, setUser, setPosts)
-                : <p className="text-text-secondary text-sm mb-4">This comment has been deleted...</p>
+        <div>
+            {/* User posts */}
+            { showPosts && (mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments, (post: PackagedPost) => post.post.parentid === "000000000000000000000000"))}
+
+            {/* User comments */}
+            { showComments && (mapComments(null, posts, user, renderTextWithHashtags, setUser, setPosts, (post: PackagedPost) => post.post.parentid !== "000000000000000000000000"))}
+        </div>
+    )
+};
+
+export const mapBookmarks = (bookmarkedPosts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setBookmarkedPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any,  filter:(post: PackagedPost) => boolean) => {
+    return (
+        bookmarkedPosts.filter(filter).map((post) => (
+            post.post.parentid == "000000000000000000000000" ? ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
+                : ChildPost(null, post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
         ))
     )
 };
@@ -182,7 +197,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
             {/* Delete Button (only for our own posts)*/}
             {loggedInUser != null && postUser.id === loggedInUser.id && (
                 <button
-                    onClick={() => handleDeletePost(post.id, loggedInUser, posts, setPosts)}
+                    onClick={() => handleDeletePost(post.id, loggedInUser, posts, setPosts, null)}
                     className="absolute top-2 right-2 hover:cursor-pointer"
                 >
                     <svg
@@ -348,7 +363,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
     )
 }
 
-export const ChildPost = (post: Post, postUser: User, loggedInUser: User | null,  posts: Array<PackagedPost>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any) => {
+export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, loggedInUser: User | null,  posts: Array<PackagedPost>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any) => {
     return (
         <div
             key={post.id}
@@ -358,7 +373,7 @@ export const ChildPost = (post: Post, postUser: User, loggedInUser: User | null,
             {/* Delete Button (only for our own posts)*/}
             {loggedInUser != null && postUser.id === loggedInUser.id && (
                 <button
-                    onClick={() => handleDeletePost(post.id, loggedInUser, posts, setPosts)}
+                    onClick={() => handleDeletePost(post.id, loggedInUser, posts, setPosts, parentPost)}
                     className="absolute top-2 right-2 hover:cursor-pointer"
                 >
                     <svg

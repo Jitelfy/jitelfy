@@ -5,7 +5,6 @@ import { UserContext, IconArray } from "../UserContext";
 import * as API from "../api";
 import { PackagedPost } from "../types";
 import { useSearchParams} from "react-router-dom";
-import {getUser} from "../api";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -80,12 +79,15 @@ const FeedPage = () => {
       user: user,
     };
 
-    fetchedPosts.unshift({ ...newPost });
-    fetchedPosts.sort(
+    posts.unshift({ ...newPost });
+    posts.sort(
         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
     );
-    setPosts(fetchedPosts);
+    setPosts(posts.filter((post: PackagedPost) => post.post.childids !== -1)
+    );
+
     setNewPostSong("");
+
     (document.getElementById("posttext") as HTMLInputElement).value = "";
   };
 
@@ -113,61 +115,6 @@ const FeedPage = () => {
     };
     fetchPostsData();
   }, [user, flairFilter]);
-
-  // useEffect(() => {
-  //   const fetchPostsData = async () => {
-  //     if (user === null) {
-  //       const userjson = await API.RestoreUser();
-  //       if (userjson.id != null) {
-  //         setUser(userjson);
-  //       }
-  //     }
-  //
-  //     /* Only fetch your own posts, and those of who you follow */
-  //     if (user != null) {
-  //       const profileUser = await getUser(user.id);
-  //
-  //       if (profileUser) {
-  //         const userPosts = await API.getPostsByUser(user.id);
-  //         if (userPosts) setPosts(userPosts);
-  //
-  //         {/* Get all followed user's posts */}
-  //         for (const followed of profileUser.following) {
-  //
-  //           const followedPosts = await API.getPostsByUser(followed);
-  //           if (followedPosts) {
-  //
-  //             for (const post of followedPosts) {
-  //               console.log(post);
-  //               {/* Get parent post of this comment */}
-  //               if (post.post.parentid == "000000000000000000000000") {
-  //                 {/* TODO: get specific post with post ID */}
-  //
-  //               } else {
-  //                 setPosts(posts.concat([post]));
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     } else {
-  //       const allPosts = await API.getPosts();
-  //       if (allPosts) setPosts(allPosts);
-  //     }
-  //
-  //     /* Sort chronologically */
-  //     posts.sort(
-  //         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
-  //     );
-  //     posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000")
-  //
-  //     setPosts(posts = flairFilter
-  //         ? posts.filter(p => p.post.text.includes(`#${flairFilter}`))
-  //         : posts);
-  //   }
-  //   fetchPostsData();
-  //
-  // }, [user, flairFilter]);
 
   return (
       <div className="h-screen bg-background-main flex">
@@ -253,7 +200,7 @@ const FeedPage = () => {
             )}
 
             {
-              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
             }
           </div>
         </div>

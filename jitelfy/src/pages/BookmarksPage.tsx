@@ -105,7 +105,7 @@ const BookmarksPage = () => {
                     {bookmarkedPosts.length === 0 ? (
                         <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
-                        POST.mapBookmarks(bookmarkedPosts, user, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
+                        POST.mapBookmarks(bookmarkedPosts, user, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments, () => true)
                     )}
                 </div>
             </div>

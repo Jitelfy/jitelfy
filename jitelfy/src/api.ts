@@ -24,7 +24,6 @@ export async function getUser(path: string): Promise<User> {
 
 export async function getUserActivity(): Promise<PackagedUserAlert[]> {
   const response = await getContent("/users/alerts");
-  console.log(response);
   return JSON.parse(response);
 }
 

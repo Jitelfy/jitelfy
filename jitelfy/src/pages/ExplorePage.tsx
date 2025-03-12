@@ -105,7 +105,7 @@ const ExplorePage = () => {
                     )}
 
                     {
-                        POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                        POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments, () => true)
                     }
                 </div>
             </div>

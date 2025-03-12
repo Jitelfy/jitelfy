@@ -21,12 +21,12 @@ const ActivityPage = () => {
 
     const requestActivity= async () => {
       const response = await getUserActivity();
-      if (response.length > 0) {
+      if (typeof response == typeof dummy && response.length > 0) {
         response.sort(
             (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
+        setUserAlerts(response);
       }
-      setUserAlerts(response);
     }
 
     if (user == null) {
@@ -60,12 +60,8 @@ const ActivityPage = () => {
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
         </div>
 
-        {/* No user alerts? */}
-        {!userAlerts || userAlerts?.length == 0 && (
-              <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
-        )}
-
-        {userAlerts && (
+        {/* Alerts */}
+        {userAlerts ? (
             userAlerts.map((alert) => (
                 <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
                   <img
@@ -90,7 +86,11 @@ const ActivityPage = () => {
                   </div>
                 </div>
             ))
-        )}
+        ) :
+            (
+                <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
+            )
+        }
       </div>
 
       {/* Sidebar - Right */}

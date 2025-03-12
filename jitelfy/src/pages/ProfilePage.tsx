@@ -56,7 +56,7 @@ const ProfilePage = () => {
         }
     };
 
-    const toggleShowPosts = ()=> {
+    const toggleShowPosts = () => {
         if (!showPosts) {
             setShowPosts(true);
             setShowComments(false);
@@ -235,15 +235,9 @@ const ProfilePage = () => {
                     </button>
                 </div>
 
-                {/* User posts (posts) */}
-                {posts && showPosts && (
-                    POST.mapPosts(posts.filter((post: PackagedPost) => post.post.parentid === "000000000000000000000000"), user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
-                )}
-
-                {/* User posts (comments) */}
-                {posts && showComments && (
-                    POST.mapComments(posts.filter((post: PackagedPost) => post.post.parentid !== "000000000000000000000000"), user, renderTextWithHashtags, setUser, setPosts)
-                )}
+                {
+                    POST.mapProfilePosts(posts, user, showPosts, showComments, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                }
 
             </div>
 
