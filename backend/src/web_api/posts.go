@@ -653,49 +653,35 @@ func GetAllReposts(c echo.Context) error {
 
 func GetAllPostsFromUser(c echo.Context) error {
 
-	var userId, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
-	}
+	var userId, _ = primitive.ObjectIDFromHex(c.QueryParam("userid"))
 
 	var user BaseUser
-	filter := bson.D{{Key: "_id", Value: userId}}
-	user_result := UserColl.FindOne(context.TODO(), filter)
-	if err := user_result.Decode(&user); err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to get user")
-	}
+	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
 
-	filter = bson.D{{Key: "userid", Value: userId}}
-	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), filter)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
-	}
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}})
 	var result []Post
-	err = cursor.All(context.TODO(), &result)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not parse posts")
-	}
+	cursor.All(context.TODO(), &result)
 
-	// append reposted posts
+	// Also fetch reposts for the user.
 	var repostGroup PostGroup
-	if err = RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup); err == nil {
+	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
 		for _, repId := range repostGroup.PostIds {
 			var repPost Post
-			if err := PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost); err == nil {
+			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
 				result = append(result, repPost)
 			}
 		}
 	}
 
-	// pack each post with the correct user info.
 	var packagedresults = make([]PostUserPackage, len(result))
 	for i, currpost := range result {
 		var postUser BaseUser
+		// Use the fetched profile user if the post was created by them;
+		// otherwise, fetch the original data from the og poster
 		if currpost.UserId == user.Id {
 			postUser = user
 		} else {
-			_ = UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+			UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
 		}
 		packagedresults[i] = PostUserPackage{
 			Userjson: postUser,
