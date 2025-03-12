@@ -1,27 +1,55 @@
 import { useEffect, useState, useContext } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
-import { IconArray } from "../UserContext";
-import { getPosts, RestoreUser, BASE_URL } from "../api";
-import { PackagedPost, Post, User } from "../types";
-import { Link, useSearchParams } from "react-router-dom";
-import Comments from "../components/Comments";
+import * as API from  "../api";
+import * as POST from "../components/Posts"
+import { PackagedPost } from "../types";
+import {useSearchParams} from "react-router-dom";
+
+let fetchedPosts: Array<PackagedPost>;
 
 const BookmarksPage = () => {
     const { user, setUser } = useContext(UserContext);
+
     const [bookmarkedPosts, setBookmarkedPosts] = useState<Array<PackagedPost>>([]);
+    const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const flairFilter = searchParams.get("flair") || "";
+
+    const handleFlairClick = (flair: string) => {
+        setSearchParams({ flair });
+    };
+
+    const renderTextWithHashtags = (text: string) => {
+        return text.split(" ").map((word, index) => {
+            if (word.startsWith("#") && word.length > 1) {
+                const cleanWord = word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+                return (
+                    <span
+                        key={index}
+                        className="cursor-pointer text-accent-blue hover:underline"
+                        onClick={() => handleFlairClick(cleanWord.replace(/^#/, ""))}
+                    >
+            {word}{" "}
+          </span>
+                );
+            }
+            return <span key={index}>{word} </span>;
+        });
+    };
 
     useEffect(() => {
         const fetchBookmarkedPosts = async () => {
             if (user === null) {
-                const userjson = await RestoreUser();
+                const userjson = await API.RestoreUser();
                 if (userjson.id != null) {
                     setUser(userjson);
                 }
             }
             try {
                 if (!user) return;
-                const response = await fetch(`${BASE_URL}/users/bookmarks`, {
+                const response = await fetch(`${API.BASE_URL}/users/bookmarks`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -31,11 +59,17 @@ const BookmarksPage = () => {
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
-                    const filteredEmptyPosts = data.filter((post: PackagedPost) => post.post.id !== "000000000000000000000000");
-                    setBookmarkedPosts(filteredEmptyPosts);
-                }
+                    fetchedPosts = await response.json();
+                    fetchedPosts = fetchedPosts.filter((post: PackagedPost) => post.post.id !== "000000000000000000000000");
+                    fetchedPosts.sort(
+                        (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+                    );
 
+                    const filtered = flairFilter
+                        ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
+                        : fetchedPosts;
+                    setBookmarkedPosts(filtered);
+                }
             } catch (error) {
                 console.error("Error fetching bookmarked posts:", error);
             }
@@ -59,40 +93,8 @@ const BookmarksPage = () => {
                         <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
                         bookmarkedPosts.map((post) => (
-                            <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg mb-6">
-                                <div className="flex items-center">
-                                    <div>
-                                        <img
-                                            className="size-14 rounded-full mb-2 mr-3"
-                                            src={IconArray[post.user.icon]}
-                                            alt={post.user.displayname}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Link to={"/profile/" + post.user.username} className="hover:underline hover:decoration-background-tertiary">
-                                            <p className="text-text-main font-bold">{post.user.displayname}</p>
-                                            <p className="text-text-secondary font-normal">@{post.user.username}</p>
-                                        </Link>
-                                        <p className="text-text-secondary text-sm">{new Date(post.post.time).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                                <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
-                                {post.post.embed && (
-                                    <div className="mt-2">
-                                        <img src={post.post.embed} className="w-full h-40 rounded-md" alt="" />
-                                    </div>
-                                )}
-                                {post.post.song && (
-                                    <div className="mt-2">
-                                        <iframe
-                                            src={post.post.song}
-                                            className="w-full h-20"
-                                            title={`Song for ${post.post.id}`}
-                                            allowFullScreen
-                                        ></iframe>
-                                    </div>
-                                )}
-                            </div>
+                            post.post.parentId ? POST.ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
+                                : POST.ChildPost(post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
                         ))
                     )}
                 </div>

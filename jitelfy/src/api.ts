@@ -50,3 +50,14 @@ export async function unfollowUser(userId: string): Promise<any> {
 
   return response.json();
 }
+
+export async function requestDeletePost(id: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/posts?id=${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+  return response.ok;
+}

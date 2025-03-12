@@ -1,20 +1,23 @@
-import {useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
-import {Link, useParams} from "react-router-dom";
-import {getPosts, getUser, RestoreUser, followUser, unfollowUser} from "../api"
+import { useParams} from "react-router-dom";
+import { getUser, RestoreUser, followUser, unfollowUser } from "../api"
 import {PackagedPost, User} from "../types";
 import * as API from "../api";
-import Comments from "../components/Comments";
-
-
+import * as POST from "../components/Posts"
 
 const ProfilePage = () => {
     const { user, setUser } = useContext(UserContext);
     const [userData, setUserData] = useState<User | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean>(false);
+
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
+    const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+
+    const [followers, setFollowers] = useState<Array<User>>([]);
+    const [following, setFollowing] = useState<Array<User>>([]);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
@@ -48,7 +51,10 @@ const ProfilePage = () => {
             }
         }
     };
-      
+
+    const renderTextWithHashtags = (text: string) => {
+        return text;
+    };
     
     useEffect(() => {
         const restore = async () => {
@@ -65,8 +71,13 @@ const ProfilePage = () => {
                 setUserData(profileUser);
                 if (profileUser && user) {
                     setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
+
+                    // Get this user's posts (not comments)
                     const fetched = await API.getPostsByUser(profileUser.id);
+                    console.log(fetched.filter((p) => !p.post.parentId));
                     setPosts(fetched);
+
+                    // TODO: Get this user's followers & following
                 }
             }
         };
@@ -103,7 +114,7 @@ const ProfilePage = () => {
             <div className="flex-1 flex-col bg-background-main px-10 p-6 overflow-auto">
 
                 {/* Container for all user data */}
-                <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md">
+                <div className="flex flex-col items-center bg-background-secondary p-4 rounded-md mb-8">
                     {/* Banner */}
                     <div className="w-full h-44 rounded-md flex items-center justify-center"
                         id="banner"
@@ -185,42 +196,9 @@ const ProfilePage = () => {
                     </svg>
                 </div>
 
-                {/* User posts */}
-                {posts && posts.map((post: PackagedPost) => (
-                    <div key={post.post.id} className="bg-background-secondary p-4 rounded-lg my-6 hide-scrollbar">
-                            <div className="flex items-center">
-                                <div>
-                                    <img
-                                        className="size-14 rounded-full mb-2 mr-3"
-                                        src={IconArray[post.user.icon]}
-                                        alt={post.user.displayname}
-                                    />
-                                </div>
-                                <div>
-                                    <Link to={"/profile/" + post.user.username} className="hover:underline hover:decoration-background-tertiary">
-                                        <p className="text-text-main font-bold">{post.user.displayname}</p>
-                                        <p className="text-text-secondary font-normal">@{post.user.username}</p>
-                                    </Link>
-                                    <p className="text-text-secondary text-sm">{new Date(post.post.time).toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">{post.post.text}</p>
-                            {post.post.embed && (
-                                <div className="mt-2">
-                                    <img src={post.post.embed} className="w-full h-40 rounded-md" alt="" />
-                                </div>
-                            )}
-                            {post.post.song && (
-                                <div className="mt-2">
-                                    <iframe
-                                        src={post.post.song}
-                                        className="w-full h-20"
-                                        title={`Song for ${post.post.id}`}
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                            )}
-                        </div>
+                {/* User posts (posts) */}
+                {posts && posts.filter((p) => !p.post.parentId).map((post: PackagedPost) => (
+                    POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
                 ))}
 
             </div>
