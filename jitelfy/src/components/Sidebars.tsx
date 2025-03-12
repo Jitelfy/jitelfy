@@ -34,7 +34,7 @@ export const FriendActivity = (user: User | null) => {
 
     if (user == null) {
         return (
-            <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
+            <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto rounded-l-lg">
                 <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
                 <p className="text-text-secondary text-center h-full content-center">No recent friend activity...</p>
             </div>
@@ -42,7 +42,7 @@ export const FriendActivity = (user: User | null) => {
     }
 
     return (
-      <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto">
+      <div className="flex flex-col w-1/4 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
           <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
 
           {/* Friend activity */}
@@ -84,7 +84,7 @@ export const FriendActivity = (user: User | null) => {
 export const Quicklinks = (user: User | null) => {
 
     return (
-    <div className="static h-full w-1/5 bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start">
+    <div className="static h-full w-1/5 bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start rounded-r-lg z-20">
           <Link to="/feed" className="text-text-main w-full text-left">
       <h1 className="text-text-main text-2xl mb-6">Jitelfy</h1>
           </Link>

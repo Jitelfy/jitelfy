@@ -123,11 +123,11 @@ const FeedPage = () => {
 
         {/* Feed - Main Content */}
         <div className="flex-1 flex-col px-20 relative overflow-y-auto hide-scrollbar">
-          <div className="sticky">
+          <div className="fixed z-20 bg-background-main opacity-95 w-full">
             <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
-          <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
 
+          <div className="flex-1 bg-background-main relative mt-20 overflow-auto hide-scrollbar">
             {/* Post header */}
             {!flairFilter && user && (
                 <div>

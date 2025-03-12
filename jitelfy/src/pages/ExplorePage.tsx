@@ -85,11 +85,11 @@ const ExplorePage = () => {
 
             {/* Main Content - Middle */}
             <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
-                <div className="sticky">
+                <div className="fixed z-20 bg-background-main opacity-95 w-full">
                     <h1 className="text-white text-2xl top-0 my-6">Explore</h1>
                 </div>
 
-                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                <div className="flex-1 bg-background-main relative overflow-auto mt-20 hide-scrollbar">
                     {flairFilter && (
                         <div className="mx-10 my-4">
                             <p className="text-white">
