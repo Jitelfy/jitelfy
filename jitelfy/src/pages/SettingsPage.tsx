@@ -95,7 +95,7 @@ export async function requestCustomizeIcon(newIcon: number, user: User): Promise
 }
 
 
-const handleIconClick = async (imgID: string, user: User) => {
+const handleIconClick = async (imgID: string) => {
     const img = document.getElementById(imgID);
     if (img != null) {
         const iconIndex = IconArray.indexOf(img.id);
@@ -116,7 +116,7 @@ const handleIconClick = async (imgID: string, user: User) => {
     }
 };
 
-const handleBannerClick = async (banID: string, user: User) => {
+const handleBannerClick = async (banID: string) => {
     const ban = document.getElementById(banID);
 
     if (ban != null) {
@@ -224,7 +224,7 @@ const SettingsPage = () => {
 
     return (
         <div className="h-screen bg-background-main flex"
-             onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}>
+             onLoad={() => handleBannerClick(SelectedBanner.toString(10))}>
             {/* Sidebar - Left */}
             {Quicklinks(user)}
 
@@ -285,7 +285,7 @@ const SettingsPage = () => {
 
                     {/* Container for default icons */}
                     <div id="iconContainer"
-                         onLoad={() => handleIconClick(IconArray[SelectedIcon], user)}
+                         onLoad={() => handleIconClick(IconArray[SelectedIcon])}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {IconArray.map((imgIndex) => (
@@ -296,7 +296,7 @@ const SettingsPage = () => {
                                 width = "140px"
                                 height = "140px"
                                 className="p-3 rounded-full bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
-                                onClick={() => handleIconClick(imgIndex, user)}
+                                onClick={() => handleIconClick(imgIndex)}
                             />
                         ))}
 
@@ -318,14 +318,14 @@ const SettingsPage = () => {
 
                     {/* Container for banner colours */}
                     <div id="bannerContainer"
-                         onLoad={() => handleBannerClick(SelectedBanner.toString(10), user)}
+                         onLoad={() => handleBannerClick(BannerArray[SelectedBanner])}
                          className="flex flex-row flex-wrap max-h-64 overflow-auto hide-scrollbar justify-evenly rounded-mb">
 
                         {BannerArray.map((color) => (
                             <svg height="140" width="140"
                                  id={BannerArray.indexOf(color).toString(10)}
                                  className="p-3 rounded-lg bg-background-secondary hover:bg-background-tertiary transition-colors duration-100 ease-in-out"
-                                 onClick={() => handleBannerClick(BannerArray.indexOf(color).toString(10), user)}
+                                 onClick={() => handleBannerClick(BannerArray.indexOf(color).toString(10))}
                             >
                                 <rect width="110" height="110" x="3" y="3" rx="10" ry="10" fill={color} />
                             </svg>

@@ -95,7 +95,6 @@ export const handleBookmark = async (postId: string, user: User | null, setUser:
         if (response.ok) {
             const updatedUser = {...user, bookmarks: [...user.bookmarks, postId]};
             setUser(updatedUser);
-            console.log("BOOKMARKED");
         }
     }
     catch (error) {
@@ -118,7 +117,6 @@ export const handleUnBookmark = async (postId: string, user: User | null, setUse
         if (response.ok) {
             const updatedUser = { ...user, bookmarks: user.bookmarks.filter((id: string) => id !== postId) };
             setUser(updatedUser);
-            console.log("UNBOOKMARKED");
         }
     }
     catch (error) {
@@ -137,9 +135,6 @@ const toggleComments = (postId: string, openComments: Set<string>, setOpenCommen
 };
 
 export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
-    //const [openComments, setOpenComments] = useState<Set<string>>(new Set());
-    console.log("openComments " + openComments);
-
     return (
         <div
             key={post.id}

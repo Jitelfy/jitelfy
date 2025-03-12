@@ -74,7 +74,9 @@ const ProfilePage = () => {
 
                     // Get this user's posts (not comments)
                     const fetched = await API.getPostsByUser(profileUser.id);
-                    console.log(fetched.filter((p) => !p.post.parentId));
+                    fetched.sort(
+                        (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+                    );
                     setPosts(fetched);
 
                     // TODO: Get this user's followers & following
@@ -197,7 +199,7 @@ const ProfilePage = () => {
                 </div>
 
                 {/* User posts (posts) */}
-                {posts && posts.filter((p) => !p.post.parentId).map((post: PackagedPost) => (
+                {posts && posts.filter((post: PackagedPost) => post.post.parentid == "000000000000000000000000").map((post: PackagedPost) => (
                     POST.ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
                 ))}
 

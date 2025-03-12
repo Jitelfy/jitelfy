@@ -1,9 +1,9 @@
-import { useEffect, useState, useContext } from "react";
-import { Quicklinks, FriendActivity } from "../components/Sidebars";
-import { UserContext } from "../UserContext";
-import * as API from  "../api";
+import {useContext, useEffect, useState} from "react";
+import {FriendActivity, Quicklinks} from "../components/Sidebars";
+import {UserContext} from "../UserContext";
+import * as API from "../api";
 import * as POST from "../components/Posts"
-import { PackagedPost } from "../types";
+import {PackagedPost} from "../types";
 import {useSearchParams} from "react-router-dom";
 
 let fetchedPosts: Array<PackagedPost>;
@@ -60,7 +60,6 @@ const BookmarksPage = () => {
 
                 if (response.ok) {
                     fetchedPosts = await response.json();
-                    fetchedPosts = fetchedPosts.filter((post: PackagedPost) => post.post.id !== "000000000000000000000000");
                     fetchedPosts.sort(
                         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
                     );
@@ -75,7 +74,7 @@ const BookmarksPage = () => {
             }
         };
         fetchBookmarkedPosts();
-    }, [user]);
+    }, [user, flairFilter]);
 
     return (
         <div className="h-screen bg-background-main flex">
@@ -89,11 +88,25 @@ const BookmarksPage = () => {
                 </div>
 
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar">
+                    {flairFilter && (
+                        <div className="mx-10 my-4">
+                            <p className="text-white">
+                                Filtering posts by hashtag: <strong>#{flairFilter}</strong>
+                            </p>
+                            <button
+                                className="mt-2 px-4 py-1 bg-accent-blue-light rounded"
+                                onClick={() => setSearchParams({})}
+                            >
+                                Clear Filter
+                            </button>
+                        </div>
+                    )}
+
                     {bookmarkedPosts.length === 0 ? (
                         <p className="text-background-tertiary text-center mt-20">Nothing to see here yet...</p>
                     ) : (
                         bookmarkedPosts.map((post) => (
-                            post.post.parentId ? POST.ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
+                            post.post.parentid == "000000000000000000000000" ? POST.ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
                                 : POST.ChildPost(post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
                         ))
                     )}
