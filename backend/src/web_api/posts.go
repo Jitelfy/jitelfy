@@ -677,28 +677,31 @@ func GetAllPostsFromUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, "could not parse posts")
 	}
 
-	// Also fetch reposts for the user
-    var repostGroup PostGroup
-    if err = RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup); err == nil {
-        // For each reposted post id, fetch the corresponding post.
-        for _, repId := range repostGroup.PostIds {
-            var repPost Post
-            if err := PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost); err == nil {
-                // Optionally, you could add a flag here to indicate this is a repost.
-                result = append(result, repPost)
-            }
-        }
-    }
+	// append reposted posts
+	var repostGroup PostGroup
+	if err = RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup); err == nil {
+		for _, repId := range repostGroup.PostIds {
+			var repPost Post
+			if err := PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost); err == nil {
+				result = append(result, repPost)
+			}
+		}
+	}
 
+	// pack each post with the correct user info.
 	var packagedresults = make([]PostUserPackage, len(result))
-
 	for i, currpost := range result {
+		var postUser BaseUser
+		if currpost.UserId == user.Id {
+			postUser = user
+		} else {
+			_ = UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+		}
 		packagedresults[i] = PostUserPackage{
-			Userjson: user,
+			Userjson: postUser,
 			Postjson: currpost,
 		}
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
-
 }
