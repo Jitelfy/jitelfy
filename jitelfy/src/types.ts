@@ -21,6 +21,7 @@ export interface User {
     following: string[];
     followers: string[];
     bookmarks: string[];
+    reposts:   string[];
     token: string;
 }
 
