@@ -216,18 +216,18 @@ const ProfilePage = () => {
                     </svg>
                 </div>
 
-                {/* Button to choose user posts, replies, or likes */}
+                {/* Button to choose user posts or replies */}
                 <div className="flex flex-row justify-evenly mb-8">
-                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75"
-                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
                             onClick={toggleShowPosts}>
                         <p className="text-md">
                             Posts
                         </p>
                     </button>
 
-                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75"
-                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75"}
+                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
                              onClick={toggleShowComments}>
                         <p className="text-md">
                             Comments
