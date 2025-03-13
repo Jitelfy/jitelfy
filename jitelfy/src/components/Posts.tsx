@@ -136,8 +136,10 @@ export const handleDeletePost = async (id: string, user: User | null, posts: Arr
         return post;
     }))
 
+    {/* Mock decrease the comment number so we don't have to reload */}
     if (parentPost) {
-        parentPost.childids--;
+        const commentText = document.getElementById("commentNum" + parentPost.id);
+        if (commentText && commentText.textContent) commentText.textContent = (parseInt(commentText.textContent) - 1).toString(10);
     }
 };
 
@@ -340,7 +342,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
                                     <g clipPath="url(#07b7d0845c)"><g clipPath="url(#6aa6d25f6b)"><path d="M 81 94.996094 L 713.289062 94.996094 L 713.289062 550.957031 L 81 550.957031 Z M 81 94.996094 " fillOpacity="1" fillRule="nonzero"/></g></g><g clipPath="url(#efbbe830fc)"><g clipPath="url(#eac9b95abb)">
                                         <path d="M 224.753906 441.957031 L 570.441406 441.957031 L 570.441406 743.992188 L 224.753906 743.992188 Z M 224.753906 441.957031 " fillOpacity="1" fillRule="nonzero"/></g></g>
                                 </svg>
-                                <p className="text-sm">{post.childids || 0}</p>
+                                <p id={"commentNum" + post.id} className="text-sm">{post.childids || 0}</p>
                             </div>
                         }
                     </button>
@@ -550,7 +552,7 @@ export const ParentRepost = (post: Post, postUser: User, profileUser: User, logg
                                     <g clipPath="url(#07b7d0845c)"><g clipPath="url(#6aa6d25f6b)"><path d="M 81 94.996094 L 713.289062 94.996094 L 713.289062 550.957031 L 81 550.957031 Z M 81 94.996094 " fillOpacity="1" fillRule="nonzero"/></g></g><g clipPath="url(#efbbe830fc)"><g clipPath="url(#eac9b95abb)">
                                         <path d="M 224.753906 441.957031 L 570.441406 441.957031 L 570.441406 743.992188 L 224.753906 743.992188 Z M 224.753906 441.957031 " fillOpacity="1" fillRule="nonzero"/></g></g>
                                 </svg>
-                                <p className="text-sm">{post.childids || 0}</p>
+                                <p id={"commentNum" + post.id} className="text-sm">{post.childids || 0}</p>
                             </div>
                         }
                     </button>
