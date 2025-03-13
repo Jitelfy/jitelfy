@@ -309,7 +309,7 @@ func purgePost(post Post) error {
 	post_filter := bson.D{{Key: "postids", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: post.Id}}}}}}
 	update := bson.M{"$pull": bson.M{"postids": post.Id}}
 	alert_filter := bson.D{{Key: "alerts", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "postid", Value: post.Id}}}}}}
-	alert_update := bson.M{"$pull": bson.M{"alerts": bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "postid", Value: post.Id}}}}}}
+	alert_update := bson.M{"$pull": bson.M{"alerts": bson.D{{Key: "postid", Value: post.Id}}}}
 
 	go func() {
 		BookmarkColl.UpdateMany(context.TODO(), post_filter, update)
@@ -318,7 +318,8 @@ func purgePost(post Post) error {
 		RepostColl.UpdateMany(context.TODO(), post_filter, update)
 	}()
 	go func() {
-		AlertColl.UpdateMany(context.TODO(), alert_filter, alert_update)
+		result, _ := AlertColl.UpdateOne(context.TODO(), alert_filter, alert_update)
+		fmt.Println(result)
 	}()
 
 	return nil
