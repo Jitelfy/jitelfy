@@ -304,11 +304,55 @@ func GetComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
+
+func purgePost(post Post) error {
+	post_filter := bson.D{{Key: "postids", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: post.Id}}}}}}
+	update := bson.M{"$pull": bson.M{"postids": post.Id}}
+	alert_filter := bson.D{{Key: "alerts", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "postid", Value: post.Id}}}}}}
+	alert_update := bson.M{"$pull": bson.M{"alerts": bson.D{{Key: "postid", Value: post.Id}}}}
+
+	ch := make(chan int)
+
+	go func() {
+		_, err := BookmarkColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+	go func() {
+		_, err := RepostColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+	go func() {
+		_, err := AlertColl.UpdateOne(context.TODO(), alert_filter, alert_update)
+
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+
+	if <-ch == -1 {
+		return errors.New("failed to purge post")
+	}
+
+	return nil
+}
+
 func DeletePost(c echo.Context) error {
 	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
+
+	ch := make(chan int)
 
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
@@ -328,14 +372,60 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
 
-	if post.ParentId != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: post.ParentId}}
-		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
-		var update_result *mongo.UpdateResult
-		update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
-		if err != nil || update_result.MatchedCount == 0 {
-			return c.JSON(http.StatusInternalServerError, "failed to update parent")
+	go func() {
+		if post.ParentId != primitive.NilObjectID {
+			filter = bson.D{{Key: "_id", Value: post.ParentId}}
+			change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
+			var update_result *mongo.UpdateResult
+			update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+			if err != nil || update_result.MatchedCount == 0 {
+				ch <- -1
+			} else {
+				ch <- 0
+			}
 		}
+	}()
+
+	go func() {
+		err = purgePost(post)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+
+	if post.ChildIds != 0 {
+		filter = bson.D{{Key: "parentid", Value: post.Id}}
+		var child_result *mongo.Cursor
+		var child_posts []Post
+		child_result, err = PostColl.Find(context.TODO(), filter)
+		child_result.All(context.TODO(), &child_posts)
+		for _, currpost := range child_posts {
+			go func(currpost Post) {
+				if err = purgePost(currpost); err != nil {
+					ch <- -1
+				} else {
+					ch <- 0
+				}
+			}(currpost)
+		}
+		for range child_posts {
+			if <-ch == -1 {
+				return c.JSON(http.StatusInternalServerError, "failed to purge post")
+			}
+		}
+		_, err = PostColl.DeleteMany(context.TODO(), filter)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, "failed to delete comments")
+		}
+	}
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
+	}
+		if post.ParentId != primitive.NilObjectID && <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
 
 	return c.JSON(http.StatusOK, result)
