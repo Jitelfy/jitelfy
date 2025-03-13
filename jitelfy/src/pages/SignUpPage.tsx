@@ -30,7 +30,7 @@ const SignUpPage = () => {
       displayname: displayName,
       username: username,
       password: password,
-      icon: 1
+      icon: 0
     };
   
     // Send the POST request
@@ -43,9 +43,10 @@ const SignUpPage = () => {
   
     if (!response.ok) {
       const message = await response.text();
-      setError("Signup failed: " + message);
+      setError(message.replace("\"", "").replace("\"", ""));
       return;
     }
+
     navigate("/login");
   };
 
@@ -59,7 +60,7 @@ const SignUpPage = () => {
         onSubmit={handleSignUp} 
         className="bg-background-secondary p-8 rounded-lg shadow-lg w-96"
       >
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-accent-red text-sm mb-4">{error}</p>}
         
         {/* Display Name Input */}
         <input
