@@ -90,5 +90,5 @@ func GetUserAlerts(c echo.Context) error {
 	}
 
 	
-	return c.JSON(http.StatusOK, userAlerts)
+	return c.JSON(http.StatusOK, results)
 }

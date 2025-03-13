@@ -226,6 +226,7 @@ func CreateComment(c echo.Context) error {
 	newComment := Post{
 		Id:       primitive.NewObjectID(),
 		ParentId: parentId,
+		LikeIds:  []primitive.ObjectID{},
 		ChildIds: 0,
 		UserId:   userId,
 		Time:     time.Now().Format(time.RFC3339),
@@ -303,11 +304,55 @@ func GetComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
+
+func purgePost(post Post) error {
+	post_filter := bson.D{{Key: "postids", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: post.Id}}}}}}
+	update := bson.M{"$pull": bson.M{"postids": post.Id}}
+	alert_filter := bson.D{{Key: "alerts", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "postid", Value: post.Id}}}}}}
+	alert_update := bson.M{"$pull": bson.M{"alerts": bson.D{{Key: "postid", Value: post.Id}}}}
+
+	ch := make(chan int)
+
+	go func() {
+		_, err := BookmarkColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+	go func() {
+		_, err := RepostColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+	go func() {
+		_, err := AlertColl.UpdateOne(context.TODO(), alert_filter, alert_update)
+
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+
+	if <-ch == -1 {
+		return errors.New("failed to purge post")
+	}
+
+	return nil
+}
+
 func DeletePost(c echo.Context) error {
 	var Id, err = primitive.ObjectIDFromHex(c.QueryParam("id"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid paramater (postid)")
 	}
+
+	ch := make(chan int)
 
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
@@ -327,14 +372,60 @@ func DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusForbidden, "not allowed to delete this post")
 	}
 
-	if post.ParentId != primitive.NilObjectID {
-		filter = bson.D{{Key: "_id", Value: post.ParentId}}
-		change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
-		var update_result *mongo.UpdateResult
-		update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
-		if err != nil || update_result.MatchedCount == 0 {
-			return c.JSON(http.StatusInternalServerError, "failed to update parent")
+	go func() {
+		if post.ParentId != primitive.NilObjectID {
+			filter = bson.D{{Key: "_id", Value: post.ParentId}}
+			change := bson.D{{Key: "$inc", Value: bson.D{{Key: "childids", Value: -1}}}}
+			var update_result *mongo.UpdateResult
+			update_result, err = PostColl.UpdateOne(context.TODO(), filter, change)
+			if err != nil || update_result.MatchedCount == 0 {
+				ch <- -1
+			} else {
+				ch <- 0
+			}
 		}
+	}()
+
+	go func() {
+		err = purgePost(post)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
+	}()
+
+	if post.ChildIds != 0 {
+		filter = bson.D{{Key: "parentid", Value: post.Id}}
+		var child_result *mongo.Cursor
+		var child_posts []Post
+		child_result, err = PostColl.Find(context.TODO(), filter)
+		child_result.All(context.TODO(), &child_posts)
+		for _, currpost := range child_posts {
+			go func(currpost Post) {
+				if err = purgePost(currpost); err != nil {
+					ch <- -1
+				} else {
+					ch <- 0
+				}
+			}(currpost)
+		}
+		for range child_posts {
+			if <-ch == -1 {
+				return c.JSON(http.StatusInternalServerError, "failed to purge post")
+			}
+		}
+		_, err = PostColl.DeleteMany(context.TODO(), filter)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, "failed to delete comments")
+		}
+	}
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
+	}
+		if post.ParentId != primitive.NilObjectID && <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
 
 	return c.JSON(http.StatusOK, result)
@@ -531,14 +622,14 @@ func GetBookmarks(c echo.Context) error {
 }
 
 func MakeRepost(c echo.Context) error {
-	// liker
+	// Get post ID from url param
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
 	}
 
-	// liked
+	// Get post ID from URL parameter
 	postStrID := c.Param("id")
 	postObjID, err := primitive.ObjectIDFromHex(postStrID)
 	if err != nil {
@@ -546,14 +637,15 @@ func MakeRepost(c echo.Context) error {
 	}
 
 	var repost PostGroup
-	err = PostColl.FindOneAndUpdate(
+	updateOpts := options.FindOneAndUpdate().SetReturnDocument(options.After).SetUpsert(true)
+	err = RepostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
 		bson.M{"$addToSet": bson.M{"postids": postObjID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
+		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not repost post")
+		return c.JSON(http.StatusInternalServerError, "could not repost post: " + err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -563,14 +655,14 @@ func MakeRepost(c echo.Context) error {
 }
 
 func DeleteRepost(c echo.Context) error {
-	// liker
+	// Get user ID from cookie
 	userStrID, _ := UserIdFromCookie(c)
 	userObjID, err := primitive.ObjectIDFromHex(userStrID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "couldn't get userid from cookie")
 	}
 
-	// liked
+	// Get post ID from URL parameter
 	postStrID := c.Param("id")
 	postObjID, err := primitive.ObjectIDFromHex(postStrID)
 	if err != nil {
@@ -578,14 +670,16 @@ func DeleteRepost(c echo.Context) error {
 	}
 
 	var repost PostGroup
-	err = PostColl.FindOneAndUpdate(
+	updateOpts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	err = RepostColl.FindOneAndUpdate(
 		context.TODO(),
 		bson.M{"userid": userObjID},
 		bson.M{"$pull": bson.M{"postids": postObjID}},
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
+		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not unrepost post")
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post: " + err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -649,39 +743,41 @@ func GetAllReposts(c echo.Context) error {
 
 func GetAllPostsFromUser(c echo.Context) error {
 
-	var userId, err = primitive.ObjectIDFromHex(c.QueryParam("userid"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid paramater (userid)")
-	}
+	var userId, _ = primitive.ObjectIDFromHex(c.QueryParam("userid"))
 
 	var user BaseUser
-	filter := bson.D{{Key: "_id", Value: userId}}
-	user_result := UserColl.FindOne(context.TODO(), filter)
-	if err := user_result.Decode(&user); err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to get user")
-	}
+	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
 
-	filter = bson.D{{Key: "userid", Value: userId}}
-	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), filter)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not retrieve posts")
-	}
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}})
 	var result []Post
-	err = cursor.All(context.TODO(), &result)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not parse posts")
+	cursor.All(context.TODO(), &result)
+
+	// Also fetch reposts for the user.
+	var repostGroup PostGroup
+	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
+		for _, repId := range repostGroup.PostIds {
+			var repPost Post
+			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+				result = append(result, repPost)
+			}
+		}
 	}
 
 	var packagedresults = make([]PostUserPackage, len(result))
-
 	for i, currpost := range result {
+		var postUser BaseUser
+		// Use the fetched profile user if the post was created by them;
+		// otherwise, fetch the original data from the og poster
+		if currpost.UserId == user.Id {
+			postUser = user
+		} else {
+			UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+		}
 		packagedresults[i] = PostUserPackage{
-			Userjson: user,
+			Userjson: postUser,
 			Postjson: currpost,
 		}
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
-
 }

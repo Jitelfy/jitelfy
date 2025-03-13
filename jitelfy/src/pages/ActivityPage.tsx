@@ -1,13 +1,13 @@
 import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
-import {getUser, RestoreUser} from "../api";
-import {User} from "../types";
+import { getUserActivity, RestoreUser} from "../api";
+import { PackagedUserAlert, User} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
-  const [mutualFriend, setMutualFriend] = useState<any>(null);
+  const [ userAlerts, setUserAlerts ] = useState<PackagedUserAlert[]>();
 
   useEffect(() => {
     const restore = async () => {
@@ -18,26 +18,22 @@ const ActivityPage = () => {
 
     };
 
+    const requestActivity= async () => {
+      const response = await getUserActivity();
+      if (response && response.length > 0) {
+        response.sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
+      setUserAlerts(response);
+    }
+
     if (user == null) {
       // Keep user logged in
       restore();
     }
 
-    if (user) {
-      // Calculate mutual friendships using the arrays of user IDs
-      const mutuals = user.followers.filter((follower: string) =>
-        user.following.includes(follower)
-      );
-
-      if (mutuals.length > 0) {
-        // Fetch details for the first mutual friend
-        getUser(mutuals[0])
-          .then((friend) => setMutualFriend(friend))
-          .catch((err) => console.error("Error fetching mutual friend:", err));
-      } else {
-        setMutualFriend(null);
-      }
-    }
+    requestActivity();
   }, [user]); 
 
   if (!user) {
@@ -47,7 +43,7 @@ const ActivityPage = () => {
         <div className="flex-1 bg-background-main p-6 overflow-auto">
           <div className="relative w-full"></div>
         </div>
-        {FriendActivity()}
+        {FriendActivity(user)}
       </div>
     );
   }
@@ -58,35 +54,50 @@ const ActivityPage = () => {
       {Quicklinks(user)}
 
       {/* Main Content - Middle */}
-      <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
-        <div className="sticky">
+      <div className="flex-1 flex-col px-20 overflow-auto hide-scrollbar">
+        <div className="fixed z-20 bg-background-main opacity-95 w-full">
           <h1 className="text-white text-2xl top-0 my-6">Activity</h1>
-          {mutualFriend && (
-            <div className="flex flex-row content-center bg-background-secondary p-4 rounded mt-2">
-              <img
-                  className="size-14 rounded-full mr-3"
-                  src={IconArray[mutualFriend.icon]}
-                  alt={mutualFriend.displayname}
-              />
-              <div className="flex flex-row text-white gap-2 text-center content-center">
-                <Link to={"/profile/" + mutualFriend.username}
-                      className="hover:underline hover:decoration-text-main text-center content-center">
-                  <p>
-                    @<b>{mutualFriend.username}</b>
-                  </p>
-                </Link>
-                <p className="text-center content-center">is now friends with you!</p>
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="p-6 flex-1 bg-background-main relative overflow-auto hide-scrollbar">
-          {/* Other notifications can go here */}
-        </div>
+        {/* Alerts */}
+          <div className="mt-20">
+            {userAlerts && userAlerts.length > 0 ? (
+                    userAlerts.map((alert) => (
+                        <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
+                          <Link to={"/profile/" + alert.user.username} className="mr-3">
+                            <img
+                                className="size-14 rounded-full mr-3"
+                                src={IconArray[alert.user.icon]}
+                                alt="User icon"
+                            />
+                          </Link>
+                          <div className="flex flex-col text-white gap-2 w-full text-center content-center">
+                            <div className="flex flex-row">
+                              <Link to={"/profile/" + alert.user.username}
+                                    className="hover:underline hover:decoration-text-main text-center content-center">
+                                <p>
+                                  @<b>{alert.user.username}</b>
+                                </p>
+                              </Link>
+
+                              {/* Change text based on alert type */}
+                              {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
+                              {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
+                            </div>
+                            <p className="text-text-secondary text-left text-sm">{new Date(alert.created_at).toLocaleString().trim()}</p>
+                          </div>
+                        </div>
+                    ))
+                ) :
+                (
+                    <p className="text-background-tertiary text-center mt-40">Nothing to see here yet...</p>
+                )
+            }
+          </div>
       </div>
+
       {/* Sidebar - Right */}
-      {FriendActivity()}
+      {FriendActivity(user)}
     </div>
   );
 };
