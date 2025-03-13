@@ -68,7 +68,7 @@ const SignUpPage = () => {
           placeholder="Display Name"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full p-3 mb-4 mt-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
         />
         
         {/* Username Input */}
@@ -101,16 +101,16 @@ const SignUpPage = () => {
         {/* Sign-Up Button */}
         <button
           type="submit"
-          className="w-full p-3 mb-4 bg-accent-blue-light text-text-main rounded-lg hover:bg-accent-blue"
+          className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light transition-colors ease-in duration-75"
         >
           <p>Create Account</p>
         </button>
         
         {/* Divider */}
         <div className="flex items-center justify-center mb-4">
-          <hr className="w-1/3" />
-          <span className="mx-2 text-text-secondary">or</span>
-          <hr className="w-1/3" />
+          <hr className="w-1/3 border-1 border-text-secondary" />
+          <span className="mx-2 text-text-main">or</span>
+          <hr className="w-1/3 border-1 border-text-secondary" />
         </div>
         
         {/* Sign Up Link */}

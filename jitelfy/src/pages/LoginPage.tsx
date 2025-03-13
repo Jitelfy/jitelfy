@@ -84,16 +84,16 @@ const LoginPage = () => {
         {/* Login Button */}
         <button
             onClick={handleLogin}
-            className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light inline-block text-center"
+            className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light transition-colors ease-in duration-75"
         >
           Login
         </button>
 
         {/* Divider */}
         <div className="flex items-center justify-center mb-4">
-          <hr className="w-1/3" />
-          <span className="mx-2 text-text-secondary">or</span>
-          <hr className="w-1/3" />
+          <hr className="w-1/3 border-1 border-text-secondary" />
+          <span className="mx-2 text-text-main">or</span>
+          <hr className="w-1/3 border-1 border-text-secondary" />
         </div>
 
         {/* Sign Up Link */}
