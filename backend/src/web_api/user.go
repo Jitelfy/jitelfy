@@ -240,7 +240,7 @@ func Login(c echo.Context) error {
 
 	go func() {
 		filter := bson.D{{Key: "username", Value: req.Username}}
-		err := UserColl.FindOne(context.TODO(), filter).Decode(&result.User.BaseUser)
+		err := UserColl.FindOne(context.TODO(), filter).Decode(&result.User)
 		if err != nil {
 			ch <- INVALID_USERNAME
 			userid_ch <- -1
@@ -266,9 +266,14 @@ func Login(c echo.Context) error {
 	for i := 0; i < 5; i++ {
 		switch errCode:= <- ch; errCode {
 		case INVALID_USERNAME:
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case INVALID_PASSWORD:
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+		case BAD_PW:
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case BAD_USERID:
-			case NO_TOKEN: // if token validation failed it should probably be considered the same way
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+		case NO_TOKEN: // if token validation failed it should probably be considered the same way
 			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case NO_BOOKMARKS:
 			return c.JSON(http.StatusInternalServerError, "could not get bookmarks")
