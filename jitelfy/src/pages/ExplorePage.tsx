@@ -5,7 +5,6 @@ import {PackagedPost} from "../types";
 import * as API from "../api";
 import * as POST from "../components/Posts"
 import {useSearchParams} from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -13,12 +12,6 @@ let fetchedPosts: Array<PackagedPost>;
 const ExplorePage = () => {
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const { user, setUser } = useContext(UserContext);
-
-    const postQuery = useQuery({
-        queryKey: ['posts'],
-        queryFn: API.getPosts,
-        staleTime: 1000 * 60,
-    })
 
     // Setup search parameters for filtering
     const [searchParams, setSearchParams] = useSearchParams();
@@ -72,8 +65,7 @@ const ExplorePage = () => {
                     setUser(userjson);
                 }
             }
-            if (postQuery.isSuccess) {
-            const fetched = postQuery.data;
+            const fetched = await API.getPosts();
             fetched.sort(
                 (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
             );
@@ -82,7 +74,6 @@ const ExplorePage = () => {
                 ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
                 : fetchedPosts;
             setPosts(filtered);
-            }
         };
         fetchPostsData();
     }, [user, flairFilter]);

@@ -358,7 +358,7 @@ func RestoreUserFromCookie(c echo.Context) error {
 
 	go func() {
 		user_filter := bson.D{{Key: "_id", Value: userid}}
-		err := UserColl.FindOne(context.TODO(), user_filter).Decode(&result.User)
+		err := UserColl.FindOne(context.TODO(), user_filter).Decode(&result.User.BaseUser)
 		if err != nil {
 			ch <- INVALID_USERNAME
 			return
