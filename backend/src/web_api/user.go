@@ -240,7 +240,7 @@ func Login(c echo.Context) error {
 
 	go func() {
 		filter := bson.D{{Key: "username", Value: req.Username}}
-		err := UserColl.FindOne(context.TODO(), filter).Decode(&result.User.BaseUser)
+		err := UserColl.FindOne(context.TODO(), filter).Decode(&result.User)
 		if err != nil {
 			ch <- INVALID_USERNAME
 			userid_ch <- -1
@@ -268,6 +268,8 @@ func Login(c echo.Context) error {
 		case INVALID_USERNAME:
 			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case INVALID_PASSWORD:
+			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+		case BAD_PW:
 			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case BAD_USERID:
 			return c.JSON(http.StatusUnauthorized, "invalid username/password")
