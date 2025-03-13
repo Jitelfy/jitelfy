@@ -34,7 +34,7 @@ export const FriendActivity = (user: User | null) => {
 
     if (user == null) {
         return (
-            <div className="flex flex-col w-1/4 bg-background-secondary p-6 overflow-auto rounded-l-lg">
+            <div className="flex flex-col w-1/4 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
                 <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
                 <p className="text-text-secondary text-center h-full content-center">No recent friend activity...</p>
             </div>
@@ -55,11 +55,13 @@ export const FriendActivity = (user: User | null) => {
               <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
                   {/* Friend's profile picture and username */}
                   <div className="flex flex-row items-center text-text-main">
-                      <img
-                          className="size-11 rounded-full mr-3"
-                          src={IconArray[friend.icon]}
-                          alt={friend.displayname}
-                      ></img>
+                      <Link to={"/profile/" + friend.username}>
+                          <img
+                              className="size-11 rounded-full mr-3"
+                              src={IconArray[friend.icon]}
+                              alt={friend.displayname}
+                          ></img>
+                      </Link>
                       <Link to={"/profile/" + friend.username} className="flex flex-col w-full hover:underline hover:decoration-text-secondary">
                           <p className="text-text-main"><b>{friend.displayname}</b></p>
                           <p className="text-text-secondary text-sm">@{friend.username}</p>
@@ -85,9 +87,18 @@ export const Quicklinks = (user: User | null) => {
 
     return (
     <div className="static h-full w-1/5 bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start rounded-r-lg z-20">
-          <Link to="/feed" className="text-text-main w-full text-left">
-      <h1 className="text-text-main text-2xl mb-6">Jitelfy</h1>
-          </Link>
+        <Link to="/feed" className="flex flex-row text-text-main w-full fill-text-main text-left mb-6">
+            <svg width="35px" height="35px" zoomAndPan="magnify" viewBox="0 0 375 374.999991" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
+                <clipPath id="9a89c6d9f9"><path d="M 160.128906 287.359375 L 172.449219 287.359375 L 172.449219 375 L 160.128906 375 Z M 160.128906 287.359375 " clipRule="nonzero"/></clipPath>
+                <clipPath id="3af7a577e9"><path d="M 184.714844 296.414062 L 197.03125 296.414062 L 197.03125 375 L 184.714844 375 Z M 184.714844 296.414062 " clipRule="nonzero"/></clipPath>
+                <clipPath id="e1e28eb17e"><path d="M 209.78125 306.164062 L 222.097656 306.164062 L 222.097656 375 L 209.78125 375 Z M 209.78125 306.164062 " clipRule="nonzero"/></clipPath></defs>
+                <path fill="#ffffff" d="M 230.796875 37.949219 C 214.023438 37.949219 199.125 48.4375 192.894531 64.5625 L 186.746094 79.03125 L 177.425781 74.949219 C 180.105469 68.800781 177.304688 61.636719 171.160156 58.945312 C 165.007812 56.261719 157.839844 59.0625 155.148438 65.214844 L 150.28125 76.347656 C 147.59375 82.5 150.398438 89.667969 156.546875 92.363281 C 162.699219 95.054688 169.855469 92.246094 172.546875 86.09375 L 181.996094 90.226562 L 162.992188 134.976562 L 153.070312 130.632812 C 155.746094 124.484375 152.949219 117.320312 146.800781 114.628906 C 140.652344 111.945312 133.480469 114.746094 130.789062 120.898438 L 125.921875 132.03125 C 123.234375 138.183594 126.039062 145.339844 132.1875 148.035156 C 138.339844 150.726562 145.5 147.921875 148.191406 141.765625 L 158.234375 146.15625 L 139.214844 190.921875 L 128.699219 186.316406 C 131.386719 180.164062 128.582031 173.007812 122.433594 170.3125 C 116.28125 167.628906 109.125 170.429688 106.429688 176.582031 L 101.550781 187.714844 C 98.867188 193.867188 101.667969 201.023438 107.820312 203.71875 C 113.96875 206.410156 121.144531 203.601562 123.832031 197.449219 L 134.46875 202.101562 L 115.453125 246.867188 L 104.339844 242 C 107.027344 235.847656 104.222656 228.679688 98.074219 225.984375 C 91.921875 223.300781 84.765625 226.101562 82.074219 232.253906 L 77.195312 243.386719 C 74.507812 249.539062 77.3125 256.707031 83.460938 259.402344 C 89.613281 262.09375 96.78125 259.289062 99.476562 253.132812 L 110.703125 258.046875 L 94.691406 295.746094 L 147.074219 332.191406 L 147.074219 278.011719 C 140.359375 278.011719 134.917969 272.574219 134.917969 265.859375 C 134.917969 259.140625 140.359375 253.703125 147.074219 253.703125 C 153.789062 253.703125 159.230469 259.140625 159.230469 265.859375 L 159.230469 335.75 L 171.386719 335.75 L 171.386719 223.316406 C 164.667969 223.316406 159.230469 217.875 159.230469 211.160156 C 159.230469 204.445312 164.667969 199.003906 171.386719 199.003906 C 177.542969 199.003906 182.578125 203.601562 183.375 209.546875 L 183.539062 209.546875 L 183.539062 335.75 L 195.695312 335.75 L 195.695312 168.617188 C 188.980469 168.617188 183.539062 163.175781 183.539062 156.460938 C 183.539062 149.746094 188.980469 144.304688 195.695312 144.304688 C 202.410156 144.304688 207.851562 149.746094 207.851562 156.460938 L 207.851562 335.75 L 220.007812 335.75 L 220.007812 113.917969 C 213.289062 113.917969 207.851562 108.476562 207.851562 101.761719 C 207.851562 95.046875 213.289062 89.609375 220.007812 89.609375 C 226.722656 89.609375 232.160156 95.046875 232.160156 101.761719 C 232.160156 102.765625 232.007812 103.730469 231.78125 104.660156 L 232.160156 104.660156 L 232.160156 323.726562 C 240.992188 301.589844 260.894531 279.742188 276.09375 271.996094 L 277.742188 271.152344 L 277.742188 269.289062 C 277.742188 235.832031 271.707031 213.878906 265.871094 192.640625 C 259.933594 171.042969 253.800781 148.722656 253.609375 113.503906 C 264.789062 105.960938 271.664062 92.910156 271.664062 79.042969 C 271.664062 56.398438 253.96875 37.972656 231.601562 37.972656 L 231.554688 37.972656 L 231.472656 41.023438 Z M 230.796875 37.949219 " fillOpacity="1" fillRule="nonzero"/>
+                <g clipPath="url(#9a89c6d9f9)"><path fill="#ffffff" d="M 160.128906 287.359375 L 172.449219 287.359375 L 172.449219 399.847656 L 160.128906 399.847656 Z M 160.128906 287.359375 " fillOpacity="1" fillRule="nonzero"/></g>
+                <g clipPath="url(#3af7a577e9)"><path fill="#ffffff" d="M 184.714844 296.414062 L 197.03125 296.414062 L 197.03125 408.902344 L 184.714844 408.902344 Z M 184.714844 296.414062 " fillOpacity="1" fillRule="nonzero"/></g>
+                <g clipPath="url(#e1e28eb17e)"><path fill="#ffffff" d="M 209.78125 306.164062 L 222.097656 306.164062 L 222.097656 418.652344 L 209.78125 418.652344 Z M 209.78125 306.164062 " fillOpacity="1" fillRule="nonzero"/></g>
+            </svg>
+            <h1 className="text-text-main text-2xl ml-1 mt-1">Jitelfy</h1>
+        </Link>
       <ul className="items-start w-full">
         <Link to="/feed" className="text-text-main text-left">
           <li className="duration-100 ease-in hover:bg-background-tertiary pr-20 pl-3 pt-5 pb-5 rounded-lg border-2 border-background-secondary">

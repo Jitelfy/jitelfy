@@ -1,8 +1,8 @@
 import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
-import {getUser, getUserActivity, RestoreUser} from "../api";
-import {PackagedPost, PackagedUserAlert, User, UserAlerts} from "../types";
+import { getUserActivity, RestoreUser} from "../api";
+import { PackagedUserAlert, User} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
@@ -60,15 +60,17 @@ const ActivityPage = () => {
         </div>
 
         {/* Alerts */}
-          <div className="mt-40">
+          <div className="mt-20">
             {userAlerts && userAlerts.length > 0 ? (
                     userAlerts.map((alert) => (
                         <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
-                          <img
-                              className="size-14 rounded-full mr-3"
-                              src={IconArray[alert.user.icon]}
-                              alt="User icon"
-                          />
+                          <Link to={"/profile/" + alert.user.username} className="mr-3">
+                            <img
+                                className="size-14 rounded-full mr-3"
+                                src={IconArray[alert.user.icon]}
+                                alt="User icon"
+                            />
+                          </Link>
                           <div className="flex flex-col text-white gap-2 w-full text-center content-center">
                             <div className="flex flex-row">
                               <Link to={"/profile/" + alert.user.username}
@@ -88,7 +90,7 @@ const ActivityPage = () => {
                     ))
                 ) :
                 (
-                    <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
+                    <p className="text-background-tertiary text-center mt-40">Nothing to see here yet...</p>
                 )
             }
           </div>

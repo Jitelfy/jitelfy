@@ -67,7 +67,7 @@ const ExplorePage = () => {
             }
             const fetched = await API.getPosts();
             fetched.sort(
-                (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+                (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
             );
             fetchedPosts = fetched;
             const filtered = flairFilter
@@ -76,6 +76,7 @@ const ExplorePage = () => {
             setPosts(filtered);
         };
         fetchPostsData();
+
     }, [user, flairFilter]);
 
     return (
@@ -91,15 +92,15 @@ const ExplorePage = () => {
 
                 <div className="flex-1 bg-background-main relative overflow-auto mt-20 hide-scrollbar">
                     {flairFilter && (
-                        <div className="mx-10 my-4">
+                        <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
                             <p className="text-white">
                                 Filtering posts by hashtag: <strong>#{flairFilter}</strong>
                             </p>
                             <button
-                                className="mt-2 px-5 py-2 text-text-main bg-accent-blue hover:accent-blue-light transition-colors ease-in duration-75 rounded-md"
+                                className="mt-2 px-4 py-1 bg-accent-blue text-text-main rounded-md hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"
                                 onClick={() => setSearchParams({})}
                             >
-                                Clear Filter
+                                <p>Clear Filter</p>
                             </button>
                         </div>
                     )}
