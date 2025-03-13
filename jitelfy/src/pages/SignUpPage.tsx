@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from "../UserContext";
 import { useContext } from "react";
@@ -12,10 +12,10 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
+  const handleSignUp = async () => {
     // Basic validation
+    setError("");
+
     if (!displayName || !username || !password) {
       setError("Please fill in all fields.");
       return;
@@ -50,14 +50,20 @@ const SignUpPage = () => {
     navigate("/login");
   };
 
+  useEffect(() => {
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleSignUp();
+    });
+  })
+
   return (
     <div className="h-screen bg-background-main flex flex-col items-center justify-center">
       {/* Logo */}
       <h1 className="text-4xl text-text-main mb-6">Jitelfy</h1>
       
       {/* Signup Form */}
-      <form 
-        onSubmit={handleSignUp} 
+      <form
+        onSubmit={handleSignUp}
         className="bg-background-secondary p-8 rounded-lg shadow-lg w-96"
       >
         {error && <p className="text-accent-red text-sm mb-4">{error}</p>}

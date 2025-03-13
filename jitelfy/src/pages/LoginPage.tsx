@@ -10,10 +10,14 @@ const LoginPage = () => {
   const [ error, setError ] = useState<string>("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const username = (document.getElementById("username") as HTMLInputElement).value;
-    const password = (document.getElementById("password") as HTMLInputElement).value;
+  const handleLogin = async () => {
+    const usernameHTML = document.getElementById("username") as HTMLInputElement;
+    const passwordHTML = document.getElementById("password") as HTMLInputElement;
+
+    const username = (usernameHTML && usernameHTML.value) || "";
+    const password = (passwordHTML && passwordHTML.value) || "";
+
+    setError("");
 
     if (!username || !password) {
       setError("You must enter both a username and password.");
@@ -39,7 +43,6 @@ const LoginPage = () => {
     navigate("/feed");
   };
 
-
   useEffect(() => {
     const restore = async () => {
       const loggedInUser: User = await RestoreUser();
@@ -49,6 +52,12 @@ const LoginPage = () => {
       }
 
     };
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        handleLogin();
+      }
+    });
 
     restore();
   });
