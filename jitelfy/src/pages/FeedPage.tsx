@@ -4,8 +4,7 @@ import * as POST from "../components/Posts";
 import { UserContext, IconArray } from "../UserContext";
 import * as API from "../api";
 import { PackagedPost } from "../types";
-import { useSearchParams} from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import {Link, useSearchParams} from "react-router-dom";
 
 let fetchedPosts: Array<PackagedPost>;
 
@@ -96,12 +95,6 @@ const FeedPage = () => {
     setSearchParams({ flair });
   };
 
-  const postQuery = useQuery({
-      queryKey: ['posts'],
-      queryFn: API.getPosts,
-      staleTime: 1000 * 60,
-  })
-
   useEffect(() => {
     const fetchPostsData = async () => {
       if (user === null) {
@@ -110,20 +103,21 @@ const FeedPage = () => {
           setUser(userjson);
         }
       }
-      if (postQuery.isSuccess) {
-      const fetched = postQuery.data;
+      const fetched = await API.getPosts();
       fetched.sort(
-          (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+          (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
       fetchedPosts = fetched;
       const filtered = flairFilter
           ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
           : fetchedPosts;
       setPosts(filtered);
-      }
     };
     fetchPostsData();
-  }, [user, flairFilter, postQuery]);
+
+    console.log(posts);
+
+  }, [user, flairFilter]);
 
   return (
       <div className="h-screen bg-background-main flex">
@@ -144,11 +138,13 @@ const FeedPage = () => {
                     <div className="flex flex-row mb-1">
                       {/* Updated: Use the logged-in user's icon */}
                       {user && (
-                          <img
-                              className="size-16 rounded-full mr-3"
-                              src={IconArray[user.icon]}
-                              alt={user.displayname}
-                          />
+                          <Link to={"/profile/" + user.username}>
+                            <img
+                                className="size-16 rounded-full mr-3"
+                                src={IconArray[user.icon]}
+                                alt={user.displayname}
+                            />
+                          </Link>
                       )}
                       <div className="flex flex-col w-full items-center justify-end gap-3 fill-white">
                         <textarea id="posttext" rows={3} className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue" placeholder="What's on your mind?">

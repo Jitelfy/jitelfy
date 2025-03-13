@@ -71,7 +71,19 @@ const ProfilePage = () => {
     };
 
     const renderTextWithHashtags = (text: string) => {
-        return text;
+        return text.split(" ").map((word, index) => {
+            if (word.startsWith("#") && word.length > 1) {
+                return (
+                    <span
+                        key={index}
+                        className="cursor-pointer text-accent-blue hover:underline"
+                    >
+            {word}{" "}
+          </span>
+                );
+            }
+            return <span key={index}>{word} </span>;
+        });
     };
     
     useEffect(() => {
@@ -96,6 +108,8 @@ const ProfilePage = () => {
                         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
                     );
                     setPosts(fetched);
+
+                    console.log(userData);
 
                     // TODO: Get this user's followers & following
                 }
@@ -150,7 +164,7 @@ const ProfilePage = () => {
                             {posts && (
                                 <p className="text-text-main text-sm ml-2">
                                     {posts.length}
-                                    {posts.length > 1 && " posts" || posts.length <= 1 && " post"}
+                                    {posts.length == 1 && " post" || " posts"}
                                 </p>
                             )}
                     </div>
@@ -261,7 +275,7 @@ const ProfilePage = () => {
                 </div>
 
                 {
-                    POST.mapProfilePosts(posts, user, showPosts, showComments, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                    POST.mapProfilePosts(posts, userData, user, showPosts, showComments, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
                 }
 
             </div>

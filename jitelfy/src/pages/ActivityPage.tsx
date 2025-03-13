@@ -1,8 +1,8 @@
 import { useContext, useState, useEffect } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import {IconArray, UserContext} from "../UserContext";
-import {getUser, getUserActivity, RestoreUser} from "../api";
-import {PackagedPost, PackagedUserAlert, User, UserAlerts} from "../types";
+import { getUserActivity, RestoreUser} from "../api";
+import { PackagedUserAlert, User} from "../types";
 import {Link} from "react-router-dom";
 
 const ActivityPage = () => {
