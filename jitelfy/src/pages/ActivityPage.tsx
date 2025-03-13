@@ -64,11 +64,13 @@ const ActivityPage = () => {
             {userAlerts && userAlerts.length > 0 ? (
                     userAlerts.map((alert) => (
                         <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
-                          <img
-                              className="size-14 rounded-full mr-3"
-                              src={IconArray[alert.user.icon]}
-                              alt="User icon"
-                          />
+                          <Link to={"/profile/" + alert.user.username} className="mr-3">
+                            <img
+                                className="size-14 rounded-full mr-3"
+                                src={IconArray[alert.user.icon]}
+                                alt="User icon"
+                            />
+                          </Link>
                           <div className="flex flex-col text-white gap-2 w-full text-center content-center">
                             <div className="flex flex-row">
                               <Link to={"/profile/" + alert.user.username}
