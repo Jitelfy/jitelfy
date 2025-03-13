@@ -115,8 +115,6 @@ const FeedPage = () => {
     };
     fetchPostsData();
 
-    console.log(posts);
-
   }, [user, flairFilter]);
 
   return (
@@ -140,7 +138,7 @@ const FeedPage = () => {
                       {user && (
                           <Link to={"/profile/" + user.username}>
                             <img
-                                className="size-16 rounded-full mr-3"
+                                className="size-16 rounded-full mr-5"
                                 src={IconArray[user.icon]}
                                 alt={user.displayname}
                             />
@@ -191,15 +189,15 @@ const FeedPage = () => {
             )}
 
             {flairFilter && (
-                <div className="mx-10 my-4">
+                <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
                   <p className="text-white">
                     Filtering posts by hashtag: <strong>#{flairFilter}</strong>
                   </p>
                   <button
-                      className="mt-2 px-4 py-1 bg-accent-blue-light rounded"
+                      className="mt-2 px-4 py-1 bg-accent-blue text-text-main rounded-md hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"
                       onClick={() => setSearchParams({})}
                   >
-                    Clear Filter
+                    <p>Clear Filter</p>
                   </button>
                 </div>
             )}

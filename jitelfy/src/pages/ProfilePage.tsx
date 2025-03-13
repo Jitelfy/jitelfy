@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
-import { useParams} from "react-router-dom";
+import {useParams, useSearchParams} from "react-router-dom";
 import { getUser, RestoreUser, followUser, unfollowUser } from "../api"
 import {PackagedPost, User} from "../types";
 import * as API from "../api";
@@ -16,6 +16,9 @@ const ProfilePage = () => {
 
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const flairFilter = searchParams.get("flair") || "";
 
     const [followers, setFollowers] = useState<Array<User>>([]);
     const [following, setFollowing] = useState<Array<User>>([]);
@@ -73,10 +76,12 @@ const ProfilePage = () => {
     const renderTextWithHashtags = (text: string) => {
         return text.split(" ").map((word, index) => {
             if (word.startsWith("#") && word.length > 1) {
+                const cleanWord = word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
                 return (
                     <span
                         key={index}
                         className="cursor-pointer text-accent-blue hover:underline"
+                        onClick={() => handleFlairClick(cleanWord.replace(/^#/, ""))}
                     >
             {word}{" "}
           </span>
@@ -84,6 +89,10 @@ const ProfilePage = () => {
             }
             return <span key={index}>{word} </span>;
         });
+    };
+
+    const handleFlairClick = (flair: string) => {
+        setSearchParams({ flair });
     };
     
     useEffect(() => {
@@ -107,7 +116,10 @@ const ProfilePage = () => {
                     fetched.sort(
                         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
                     );
-                    setPosts(fetched);
+                    const filtered = flairFilter
+                        ? fetched.filter(p => p.post.text.includes(`#${flairFilter}`))
+                        : fetched;
+                    setPosts(filtered);
 
                     console.log(userData);
 
@@ -122,7 +134,7 @@ const ProfilePage = () => {
         }
         fetchUser();
 
-    }, [user, username]); // Run when username changes
+    }, [user, username, flairFilter]); // Run when username changes
 
     if (user == null || userData == null) {
         return (
@@ -273,6 +285,20 @@ const ProfilePage = () => {
                         </p>
                     </button>
                 </div>
+
+                {flairFilter && (
+                    <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
+                        <p className="text-white">
+                            Filtering posts by hashtag: <strong>#{flairFilter}</strong>
+                        </p>
+                        <button
+                            className="mt-2 px-4 py-1 bg-accent-blue text-text-main rounded-md hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"
+                            onClick={() => setSearchParams({})}
+                        >
+                            <p>Clear Filter</p>
+                        </button>
+                    </div>
+                )}
 
                 {
                     POST.mapProfilePosts(posts, userData, user, showPosts, showComments, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)

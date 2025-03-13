@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import {BASE_URL, getUser} from '../api';
-import {PackagedPost, User} from '../types';
+import { BASE_URL, getUser} from '../api';
+import { User} from '../types';
 import { IconArray } from "../UserContext";
 import {useEffect, useState} from "react";
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 
 
 export const FriendActivity = (user: User | null) => {
@@ -76,11 +76,13 @@ export const FriendActivity = (user: User | null) => {
               <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
                   {/* Friend's profile picture and username */}
                   <div className="flex flex-row items-center text-text-main">
-                      <img
-                          className="size-11 rounded-full mr-3"
-                          src={IconArray[friend.icon]}
-                          alt={friend.displayname}
-                      ></img>
+                      <Link to={"/profile/" + friend.username}>
+                          <img
+                              className="size-11 rounded-full mr-3"
+                              src={IconArray[friend.icon]}
+                              alt={friend.displayname}
+                          ></img>
+                      </Link>
                       <Link to={"/profile/" + friend.username} className="flex flex-col w-full hover:underline hover:decoration-text-secondary">
                           <p className="text-text-main"><b>{friend.displayname}</b></p>
                           <p className="text-text-secondary text-sm">@{friend.username}</p>
