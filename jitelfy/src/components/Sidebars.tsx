@@ -4,33 +4,54 @@ import {BASE_URL, getUser} from '../api';
 import {PackagedPost, User} from '../types';
 import { IconArray } from "../UserContext";
 import {useEffect, useState} from "react";
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 export const FriendActivity = (user: User | null) => {
     const [friends, setFriends] = useState<User[]>([]);
+    const queryClient = useQueryClient();
 
-    const getFriends = async(): Promise<void> => {
-        const arr = new Array<User>();
+    const getFriends = async (): Promise<Array<User>> => {
+            const arr = new Array<User>();
         if (user != null) {
-            let userInfo = await getUser(user.id);
-
-            if (userInfo) {
-                for (const f of userInfo.following) {
-                    if (userInfo.followers.includes(f)) {
+                for (const f of user.following) {
+                    if (user.followers.includes(f)) {
                         let friend = await getUser(f);
                         if (friend != null && friend.song != "") {
                             arr.push(friend);
                         }
-                    }
                 }
-                setFriends(arr);
             }
         }
+        return arr;
     }
 
+    const query = useQueries({
+        queries: (user ? user.following : []).map((id) => ({
+            queryKey: ['following', id],
+            queryFn: () => getUser(id),
+            staleTime: 5 * 1000 * 60,
+        })),
+        combine: (results) => {
+            return {
+                data: results.map((result) => result.data),
+                pending: results.some((result) => result.isPending),
+            }
+        }
+    })
+
     useEffect(() => {
-        getFriends()
-    },[user]);
+        if (!query.pending && user) {
+            const arr = new Array<User>();
+            for (const f of query.data) {
+                if (f != null && f.song != "" && user.followers.includes(f.id)) {
+                            arr.push(f);
+                        }
+                }
+                setFriends(arr);
+        }
+
+    }, [query, user]);
 
     if (user == null) {
         return (
@@ -39,7 +60,7 @@ export const FriendActivity = (user: User | null) => {
                 <p className="text-text-secondary text-center h-full content-center">No recent friend activity...</p>
             </div>
         )
-    }
+    } else {
 
     return (
       <div className="flex flex-col w-1/4 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
@@ -80,6 +101,7 @@ export const FriendActivity = (user: User | null) => {
           })}
       </div>
     )}
+}
 
 export const Quicklinks = (user: User | null) => {
 
