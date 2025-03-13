@@ -311,16 +311,37 @@ func purgePost(post Post) error {
 	alert_filter := bson.D{{Key: "alerts", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "postid", Value: post.Id}}}}}}
 	alert_update := bson.M{"$pull": bson.M{"alerts": bson.D{{Key: "postid", Value: post.Id}}}}
 
+	ch := make(chan int)
+
 	go func() {
-		BookmarkColl.UpdateMany(context.TODO(), post_filter, update)
+		_, err := BookmarkColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
 	}()
 	go func() {
-		RepostColl.UpdateMany(context.TODO(), post_filter, update)
+		_, err := RepostColl.UpdateMany(context.TODO(), post_filter, update)
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
 	}()
 	go func() {
-		result, _ := AlertColl.UpdateOne(context.TODO(), alert_filter, alert_update)
-		fmt.Println(result)
+		_, err := AlertColl.UpdateOne(context.TODO(), alert_filter, alert_update)
+
+		if err != nil {
+			ch <- -1
+		} else {
+			ch <- 0
+		}
 	}()
+
+	if <-ch == -1 {
+		return errors.New("failed to purge post")
+	}
 
 	return nil
 }
@@ -360,15 +381,14 @@ func DeletePost(c echo.Context) error {
 			if err != nil || update_result.MatchedCount == 0 {
 				ch <- -1
 			} else {
-			ch <- 0
-		}
+				ch <- 0
+			}
 		}
 	}()
 
 	go func() {
 		err = purgePost(post)
 		if err != nil {
-				fmt.Println("bruh 0")
 			ch <- -1
 		} else {
 			ch <- 0
@@ -381,7 +401,6 @@ func DeletePost(c echo.Context) error {
 		var child_posts []Post
 		child_result, err = PostColl.Find(context.TODO(), filter)
 		child_result.All(context.TODO(), &child_posts)
-		fmt.Println(child_posts)
 		for _, currpost := range child_posts {
 			go func(currpost Post) {
 				if err = purgePost(currpost); err != nil {
@@ -393,15 +412,20 @@ func DeletePost(c echo.Context) error {
 		}
 		for range child_posts {
 			if <-ch == -1 {
-				fmt.Println("bruh")
-				// idk man i dont care
+				return c.JSON(http.StatusInternalServerError, "failed to purge post")
 			}
 		}
 		_, err = PostColl.DeleteMany(context.TODO(), filter)
 		if err != nil {
-				fmt.Println("bruh 2")
-			// man
+			return c.JSON(http.StatusInternalServerError, "failed to delete comments")
 		}
+	}
+
+	if <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
+	}
+		if post.ParentId != primitive.NilObjectID && <-ch == -1 {
+		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
 
 	return c.JSON(http.StatusOK, result)
