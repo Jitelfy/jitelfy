@@ -60,7 +60,7 @@ const ActivityPage = () => {
         </div>
 
         {/* Alerts */}
-          <div className="mt-40">
+          <div className="mt-20">
             {userAlerts && userAlerts.length > 0 ? (
                     userAlerts.map((alert) => (
                         <div className="flex flex-row content-center bg-background-secondary p-4 rounded my-4">
@@ -88,7 +88,7 @@ const ActivityPage = () => {
                     ))
                 ) :
                 (
-                    <p className="text-background-tertiary text-center mt-28">Nothing to see here yet...</p>
+                    <p className="text-background-tertiary text-center mt-40">Nothing to see here yet...</p>
                 )
             }
           </div>
