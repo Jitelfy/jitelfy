@@ -305,6 +305,7 @@ func Logout(c echo.Context) error {
 	c.SetCookie(&http.Cookie{
 		Name:     "Authorization",
 		Value:    "",
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now(),
 		Path:     "/",
 		HttpOnly: true,
