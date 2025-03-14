@@ -7,7 +7,6 @@ import (
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2/clientcredentials"
-	"os"
 	"server/web_api"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -27,8 +26,8 @@ func main() {
 
 	// spotify
 	authConfig := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		ClientID:     "7f5165967f284534862eeee3a57f49f6",
+		ClientSecret: "702a0f6d19b54fbe875176cc48554e88",
 		TokenURL:     spotifyauth.TokenURL,
 	}
 	accessToken, err := authConfig.Token(context.Background())
@@ -82,6 +81,9 @@ func main() {
 	router.POST("/posts/repost/:id", web_api.MakeRepost)
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
+
+	router.GET("/sauth", web_api.SpotifyHandler)
+	router.GET("/callback", web_api.SpotifyCallbackHandler)
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
