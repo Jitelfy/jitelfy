@@ -241,8 +241,11 @@ export const mapProfilePosts = (posts: Array<PackagedPost>, profileUser: User, u
 export const mapBookmarks = (bookmarkedPosts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setBookmarkedPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any,  filter:(post: PackagedPost) => boolean) => {
     return (
         bookmarkedPosts.filter(filter).map((post) => (
-            post.post.parentid == "000000000000000000000000" ? ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
-                : ChildPost(null, post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
+            post.post.parentid == "000000000000000000000000" ? (
+                post.post.childids !== -1 ? ParentPost(post.post, post.user, user, bookmarkedPosts, openComments, renderTextWithHashtags, setUser, setBookmarkedPosts, setOpenComments)
+                : <p className="text-text-secondary text-sm mb-4 mt-2">This post has been deleted.</p>)
+                : ( post.post.childids !== -1 ? ChildPost(null, post.post, post.user, user, bookmarkedPosts, renderTextWithHashtags, setUser, setBookmarkedPosts)
+                : <p className="text-text-secondary text-sm mb-4 mt-2">This comment has been deleted.</p> )
         ))
     )
 };
