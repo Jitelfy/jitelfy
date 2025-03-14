@@ -1,6 +1,7 @@
 package web_api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -95,8 +96,61 @@ func SpotifyCallbackHandler(c echo.Context) error {
 }
 
 func RefreshSpotifyToken(c echo.Context) error {
-	refreshToken, err := c.Cookie("spotify_refresh_token")
+	refreshTokenCookie, err := c.Cookie("spotify_refresh_token")
+	if err != nil || refreshTokenCookie == nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	refreshToken := refreshTokenCookie.Value
+
+	data := url.Values{}
+	data.Set("grant_type", "refresh_token")
+	data.Set("refresh_token", refreshToken)
+
+	req, err := http.NewRequest("POST", tokenURL, bytes.NewBufferString(data.Encode()))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(clientID, clientSecret)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(resp.Body)
+
+	var tokenResp struct {
+		AccessToken  string `json:"access_token"`
+		TokenType    string `json:"token_type"`
+		ExpiresIn    int    `json:"expires_in"`
+		RefreshToken string `json:"refresh_token"`
+		Scope        string `json:"scope"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	spotifyTokenCookie := &http.Cookie{
+		Name:     "spotify_access_token",
+		Value:    tokenResp.AccessToken,
+		Expires:  time.Now().Add(time.Hour * 72),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+	c.SetCookie(spotifyTokenCookie)
+	spotifyRefreshCookie := &http.Cookie{
+		Name:     "spotify_refresh_token",
+		Value:    tokenResp.RefreshToken,
+		Expires:  time.Now().Add(time.Hour * 72),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	}
+	c.SetCookie(spotifyRefreshCookie)
+	return c.JSON(http.StatusOK, tokenResp)
 }
