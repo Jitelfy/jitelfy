@@ -93,3 +93,10 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	c.SetCookie(spotifyRefreshCookie)
 	return c.JSON(http.StatusOK, tokenResp)
 }
+
+func RefreshSpotifyToken(c echo.Context) error {
+	refreshToken, err := c.Cookie("spotify_refresh_token")
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+}
