@@ -92,6 +92,7 @@ const LoginPage = () => {
 
         {/* Login Button */}
         <button
+            type="button"
             onClick={handleLogin}
             className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light transition-colors ease-in duration-75"
         >

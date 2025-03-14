@@ -1,16 +1,36 @@
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import { Link, useNavigate } from 'react-router-dom';
-import { UserContext } from "../UserContext";
-import { useContext } from "react";
 import { BASE_URL } from "../api";
+import {UserContext} from "../UserContext";
+import {User} from "../types";
 
 const SignUpPage = () => {
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+
+  const handleLogin = async () => {
+    const loginData = { username, password };
+
+    const response = await fetch(`${BASE_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(loginData),
+      credentials: "include",
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      setError(text.replace("\"", "").replace("\"", ""));
+      return;
+    }
+
+    const loggedInUser: User = JSON.parse(await response.text());
+    setUser(loggedInUser);
+  }
 
   const handleSignUp = async () => {
     // Basic validation
@@ -25,7 +45,7 @@ const SignUpPage = () => {
       return;
     }
   
-    // signup data
+    // Signup data
     const signUpData = {
       displayname: displayName,
       username: username,
@@ -47,7 +67,8 @@ const SignUpPage = () => {
       return;
     }
 
-    navigate("/login");
+    handleLogin();
+    navigate("/feed");
   };
 
   useEffect(() => {
@@ -106,7 +127,7 @@ const SignUpPage = () => {
 
         {/* Sign-Up Button */}
         <button
-          type="submit"
+          type="button"
           className="w-full p-3 mb-4 bg-accent-blue text-text-main rounded-lg hover:bg-accent-blue-light transition-colors ease-in duration-75"
         >
           <p>Create Account</p>
