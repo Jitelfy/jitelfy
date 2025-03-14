@@ -72,6 +72,7 @@ func SpotifyCallbackHandler(c echo.Context) error {
 		}
 	}(resp.Body)
 
+	// parse response and set cookies
 	var tokenResp TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -94,6 +95,7 @@ func SpotifyCallbackHandler(c echo.Context) error {
 		Secure:   true,
 	}
 	c.SetCookie(spotifyRefreshCookie)
+	// also returning this
 	return c.JSON(http.StatusOK, tokenResp)
 }
 
@@ -155,5 +157,6 @@ func RefreshSpotifyToken(c echo.Context) error {
 		Secure:   true,
 	}
 	c.SetCookie(spotifyRefreshCookie)
+	// also returning this
 	return c.JSON(http.StatusOK, tokenResp)
 }
