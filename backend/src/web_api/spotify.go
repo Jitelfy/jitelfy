@@ -98,12 +98,14 @@ func SpotifyCallbackHandler(c echo.Context) error {
 }
 
 func RefreshSpotifyToken(c echo.Context) error {
+	// grab token from cookie
 	refreshTokenCookie, err := c.Cookie("spotify_refresh_token")
 	if err != nil || refreshTokenCookie == nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	refreshToken := refreshTokenCookie.Value
 
+	// prep the request
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
@@ -115,6 +117,7 @@ func RefreshSpotifyToken(c echo.Context) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.SetBasicAuth(clientID, clientSecret)
 
+	// send the request, receive the response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -126,10 +129,13 @@ func RefreshSpotifyToken(c echo.Context) error {
 		}
 	}(resp.Body)
 
+	// parse response
 	var tokenResp TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
+
+	// reset the cookies
 	spotifyTokenCookie := &http.Cookie{
 		Name:     "spotify_access_token",
 		Value:    tokenResp.AccessToken,
@@ -139,6 +145,7 @@ func RefreshSpotifyToken(c echo.Context) error {
 		Secure:   true,
 	}
 	c.SetCookie(spotifyTokenCookie)
+	// idk if we need to reset the refresh cookie but why not man
 	spotifyRefreshCookie := &http.Cookie{
 		Name:     "spotify_refresh_token",
 		Value:    tokenResp.RefreshToken,
