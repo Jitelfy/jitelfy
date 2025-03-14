@@ -28,5 +28,11 @@ func SpotifyHandler(c echo.Context) error {
 }
 
 func SpotifyCallbackHandler(c echo.Context) error {
-	return nil
+	code := c.QueryParam("code")
+	if code == "" {
+		return c.String(http.StatusBadRequest, "No code provided")
+	}
+
+	// token exchange data
+	data := url.Values{}
 }
