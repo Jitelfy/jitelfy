@@ -20,6 +20,14 @@ const (
 	tokenURL     = "https://accounts.spotify.com/api/token"
 )
 
+type TokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope        string `json:"scope"`
+}
+
 func SpotifyHandler(c echo.Context) error {
 	scope := "user-read-private user-read-email playlist-modify-private user-read-playback-position user-top-read user-read-recently-played"
 	authEndpoint := fmt.Sprintf(
@@ -64,13 +72,7 @@ func SpotifyCallbackHandler(c echo.Context) error {
 		}
 	}(resp.Body)
 
-	var tokenResp struct {
-		AccessToken  string `json:"access_token"`
-		TokenType    string `json:"token_type"`
-		ExpiresIn    int    `json:"expires_in"`
-		RefreshToken string `json:"refresh_token"`
-		Scope        string `json:"scope"`
-	}
+	var tokenResp TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
@@ -124,13 +126,7 @@ func RefreshSpotifyToken(c echo.Context) error {
 		}
 	}(resp.Body)
 
-	var tokenResp struct {
-		AccessToken  string `json:"access_token"`
-		TokenType    string `json:"token_type"`
-		ExpiresIn    int    `json:"expires_in"`
-		RefreshToken string `json:"refresh_token"`
-		Scope        string `json:"scope"`
-	}
+	var tokenResp TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
