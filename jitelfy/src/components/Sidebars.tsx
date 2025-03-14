@@ -42,7 +42,7 @@ export const FriendActivity = (user: User | null) => {
     }
 
     return (
-      <div className="flex flex-col w-1/4 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
+      <div className="flex flex-col w-1/4 min-w-64 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
           <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
 
           {/* Friend activity */}
@@ -86,7 +86,7 @@ export const FriendActivity = (user: User | null) => {
 export const Quicklinks = (user: User | null) => {
 
     return (
-    <div className="static h-full w-1/5 bg-background-secondary px-6 pt-6 flex flex-col items-start justify-start rounded-r-lg z-20">
+    <div className=" h-full w-1/5 min-w-64 bg-background-secondary overflow-y-auto hide-scrollbar px-6 pt-6 flex flex-col items-start justify-start rounded-r-lg z-20">
         <Link to="/feed" className="flex flex-row text-text-main w-full fill-text-main text-left mb-6">
             <svg width="35px" height="35px" zoomAndPan="magnify" viewBox="0 0 375 374.999991" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
                 <clipPath id="9a89c6d9f9"><path d="M 160.128906 287.359375 L 172.449219 287.359375 L 172.449219 375 L 160.128906 375 Z M 160.128906 287.359375 " clipRule="nonzero"/></clipPath>

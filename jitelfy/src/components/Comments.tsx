@@ -88,7 +88,8 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
       ]);
 
       {/* Mock add comment number to post so we don't have to reload */}
-      parentPost.childids++;
+      const commentText = document.getElementById("commentNum" + parentPost.id);
+      if (commentText && commentText.textContent) commentText.textContent = (parseInt(commentText.textContent) + 1).toString(10);
 
       setNewCommentText("");
       setNewCommentSong("");

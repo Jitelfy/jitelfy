@@ -82,16 +82,56 @@ func MakeUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	if req.Username == "" {
-		return c.JSON(http.StatusBadRequest, "username is required")
-	}
-	if req.Password == "" {
-		return c.JSON(http.StatusBadRequest, "password is required")
+	valid_user := make(chan int)
+	hash_complete := make(chan int)
+
+	go func() {
+		filter := bson.D{{Key: "username", Value: req.Username}}
+		result := UserColl.FindOne(context.TODO(), filter)
+		if result.Err() != mongo.ErrNoDocuments {
+			valid_user <- -1
+		} else {
+			valid_user <- 0
+		}
+	}()
+
+	var encryptedPass string
+	var err error
+
+	go func() {
+		encryptedPass, err = HashPassword(req.Password)
+		if err != nil {
+			hash_complete <- -1
+		} else {
+			hash_complete <- 0
+		}
+	}()
+
+
+	if len(req.DisplayName) > 40 {
+		return c.JSON(http.StatusBadRequest, "Display name must be under 41 characters.")
 	}
 
-	encryptedPass, err := HashPassword(req.Password)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "password hashing failed")
+	if req.Username == "" {
+		return c.JSON(http.StatusBadRequest, "Username is required.")
+	}
+	if len(req.Username) > 20 || len(req.Username) < 3 {
+		return c.JSON(http.StatusBadRequest, "Username must be between 3 and 20 characters.")
+	}
+
+	if req.Password == "" {
+		return c.JSON(http.StatusBadRequest, "Password is required.")
+	}
+	if len(req.Password) < 8 {
+		return c.JSON(http.StatusBadRequest, "Password must be at least 8 characters.")
+	}
+
+	if <-valid_user == -1 {
+		return c.JSON(http.StatusForbidden, "User with this username already exists.")
+	}
+
+	if <-hash_complete == -1 { //  we should not tell them the reason it failed emily
+		return c.JSON(http.StatusInternalServerError, "Failed to create account.") 
 	}
 
 	user := User{
@@ -121,22 +161,21 @@ func MakeUser(c echo.Context) error {
 		UserId: user.Id,
 		PostIds: []primitive.ObjectID{},
 	}
-
 	_, err = UserColl.InsertOne(context.TODO(), user)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create user")
+		return c.JSON(http.StatusInternalServerError, "Failed to create user.")
 	}
 	_, err = AlertColl.InsertOne(context.TODO(), userAlerts)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create alert")
+		return c.JSON(http.StatusInternalServerError, "Failed to create alerts.")
 	}
 	_, err = RepostColl.InsertOne(context.TODO(), repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
+		return c.JSON(http.StatusInternalServerError, "Failed to create repost documents.")
 	}
 	_, err = BookmarkColl.InsertOne(context.TODO(), bookmark)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "failed to create repost document")
+		return c.JSON(http.StatusInternalServerError, "Failed to create bookmark documents.")
 	}
 
 	user.Password = ""
@@ -266,21 +305,21 @@ func Login(c echo.Context) error {
 	for i := 0; i < 5; i++ {
 		switch errCode:= <- ch; errCode {
 		case INVALID_USERNAME:
-			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+			return c.JSON(http.StatusUnauthorized, "Invalid username.")
 		case INVALID_PASSWORD:
-			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+			return c.JSON(http.StatusUnauthorized, "Invalid password.")
 		case BAD_PW:
-			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+			return c.JSON(http.StatusUnauthorized, "Invalid password.")
 		case BAD_USERID:
-			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+			return c.JSON(http.StatusUnauthorized, "Invalid username.")
 		case NO_TOKEN: // if token validation failed it should probably be considered the same way
-			return c.JSON(http.StatusUnauthorized, "invalid username/password")
+			return c.JSON(http.StatusUnauthorized, "Token validation failed.")
 		case NO_BOOKMARKS:
-			return c.JSON(http.StatusInternalServerError, "could not get bookmarks")
+			return c.JSON(http.StatusInternalServerError, "Internal server error (NO_BOOKMARKS)")
 		case NO_ALERTS:
-			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+			return c.JSON(http.StatusInternalServerError, "Internal server error (NO_ALERTS)")
 		case NO_REPOSTS:
-			return c.JSON(http.StatusInternalServerError, "could not get alerts")
+			return c.JSON(http.StatusInternalServerError, "Internal server error (NO_REPOSTS)")
 		case 0:
 		}
 	}
