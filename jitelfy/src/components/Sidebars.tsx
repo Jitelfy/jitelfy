@@ -232,6 +232,7 @@ const ProfileButton = (user: User | null) => {
                     <div className="flex justify-start items-start justify-items-start pr-5 flex-row truncate">
                         {/* Profile picture */}
                         <img
+                            id = "userIcon"
                             className="size-14 rounded-full mb-2 mr-3"
                             src={IconArray[user?.icon]}
                             alt={user?.displayname}
@@ -239,7 +240,7 @@ const ProfileButton = (user: User | null) => {
 
                         {/* Username, display name */}
                         <div className="justify-start">
-                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname}</p>
+                            <p id="userDisplayname" className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname}</p>
                             <p className="text-text-secondary overflow-ellipsis">@{user?.username}</p>
                         </div>
 
