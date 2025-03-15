@@ -95,6 +95,21 @@ const FeedPage = () => {
     setSearchParams({ flair });
   };
 
+  function charCounterPost(inputField: HTMLElement | null) {
+    if (!inputField) return;
+
+    const maxLength = inputField.getAttribute("maxLength");
+    const currentText = (document.getElementById('posttext') as HTMLInputElement).value;
+
+    if (!currentText || !maxLength) return;
+    let currentLength = currentText.length;
+
+    const charCount = document.getElementById("charCountPost");
+    if (!charCount) return;
+
+    charCount.innerText = currentLength + "/" + parseInt(maxLength);
+  }
+
   useEffect(() => {
     const fetchPostsData = async () => {
       if (user === null) {
@@ -151,6 +166,7 @@ const FeedPage = () => {
                             className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                             placeholder="What's on your mind?"
                             maxLength={280}
+                            onInput={() => charCounterPost(document.getElementById("posttext"))}
                         >
                         </textarea>
                         <input
@@ -184,11 +200,19 @@ const FeedPage = () => {
                         </svg>
                       </div>
 
-                      <button onClick={handleSubmitPost}>
-                        <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
-                          Post
-                        </p>
-                      </button>
+                      <div className="flex flex-row gap-3 items-center">
+                        {/*<svg width="40px" height="40px">
+                          <circle id="progressBar" r="16" cx="18" cy="19" className="fill-text-main"/>
+                          <circle id="progress" r="16" cx="18" cy="19" className="fill-accent-blue opacity-0"/>
+                          <circle  r="14" cx="18" cy="19" className="fill-background-secondary"/>
+                        </svg>*/}
+                        <p id="charCountPost" className="text-text-secondary text-sm text-center">0/280</p>
+                        <button onClick={handleSubmitPost}>
+                          <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
+                            Post
+                          </p>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
