@@ -116,6 +116,7 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
                 placeholder="What's on your mind?"
                 className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                 rows={3}
+                maxLength={280}
               ></textarea>
               <input
                 type="url"

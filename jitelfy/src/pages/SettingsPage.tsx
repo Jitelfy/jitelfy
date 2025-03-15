@@ -257,6 +257,7 @@ const SettingsPage = () => {
                                 onChange={(e) => setNewDisplayName(e.target.value)}
                                 placeholder={user?.displayname || "What should others call you?"}
                                 className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                                maxLength={40}
                             />
 
                             <button className="w-1/4"
@@ -290,6 +291,7 @@ const SettingsPage = () => {
                             value={newBio}
                             onChange={(e) => setNewBio(e.target.value)}
                             rows={3}
+                            maxLength={160}
                             className="resize-none whitespace-pre-wrap bg-background-main w-full mt-2 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                         >
                         </textarea>
