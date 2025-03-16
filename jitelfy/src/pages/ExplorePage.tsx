@@ -12,6 +12,7 @@ let fetchedPosts: Array<PackagedPost>;
 const ExplorePage = () => {
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const { user, setUser } = useContext(UserContext);
+    const [searchInput, setSearchInput] = useState("");
 
     // Setup search parameters for filtering
     const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +43,35 @@ const ExplorePage = () => {
         setSearchParams({ flair });
     };
 
+    const handleSearch = (e : React.ChangeEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        setSearchInput(e.target.value);
+    };
+
+    const filterPosts = (posts: Array<PackagedPost>, flairFilter: string, input: string) => {
+        let filteredPosts = posts;
+
+        // moved flairs here
+        if (flairFilter) {
+            filteredPosts = filteredPosts.filter(p => p.post.text.includes(`#${flairFilter}`));
+        }
+        if (input) {
+            // username
+            if (input.startsWith("@")) {
+                const usernameSearch = input.slice(1).toLowerCase();
+                filteredPosts = filteredPosts.filter(p => p.user.username.toLowerCase().includes(usernameSearch));
+            } else {
+                // text and displayname
+                filteredPosts = filteredPosts.filter(p => 
+                    p.post.text.toLowerCase().includes(input.toLowerCase()) ||
+                    p.user.displayname.toLowerCase().includes(input.toLowerCase())
+                );
+            }
+        }
+
+        return filteredPosts;
+    }
+
     if (user == null) {
         return (
             <div className="h-screen bg-background-main flex">
@@ -70,14 +100,12 @@ const ExplorePage = () => {
                 (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
             );
             fetchedPosts = fetched;
-            const filtered = flairFilter
-                ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
-                : fetchedPosts;
+            const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
             setPosts(filtered);
         };
         fetchPostsData();
 
-    }, [user, flairFilter]);
+    }, [user, flairFilter, searchInput]);
 
     return (
         <div className="h-screen bg-background-main flex">
@@ -88,9 +116,17 @@ const ExplorePage = () => {
             <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
                 <div className="fixed z-20 bg-background-main opacity-95 w-full">
                     <h1 className="text-white text-2xl top-0 my-6">Explore</h1>
+                    <div className="flex items-center my-4">
+                        <input
+                            type="text"
+                            placeholder="Search Posts"
+                            onChange={handleSearch}
+                            value={searchInput} 
+                            className="flex-1 px-4 py-2 bg-background-secondary text-text-main rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue"/>
+                    </div>
                 </div>
 
-                <div className="flex-1 bg-background-main relative overflow-auto mt-20 hide-scrollbar">
+                <div className="flex-1 bg-background-main relative overflow-auto mt-20 hide-scrollbar pt-16">
                     {flairFilter && (
                         <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
                             <p className="text-white">
