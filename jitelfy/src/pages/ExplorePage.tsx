@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
 import { UserContext} from "../UserContext";
-import {PackagedPost} from "../types";
+import {PackagedPost, User} from "../types";
 import * as API from "../api";
 import * as POST from "../components/Posts"
 import {useSearchParams} from "react-router-dom";
@@ -10,8 +10,8 @@ let fetchedPosts: Array<PackagedPost>;
 
 
 const ExplorePage = () => {
-    const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const { user, setUser } = useContext(UserContext);
+    const [posts, setPosts] = useState<Array<PackagedPost>>([]);
 
     // Search input (search bar)
     const [userSearchInput, setUserSearchInput] = useState("");
@@ -74,6 +74,31 @@ const ExplorePage = () => {
         return filteredPosts;
     }
 
+    useEffect(() => {
+        const restore = async () => {
+            const loggedInUser: User = await API.RestoreUser();
+            if (loggedInUser.id != null) {
+                setUser(loggedInUser);
+            }
+        };
+
+        const fetchPostsData = async () => {
+            const fetched = await API.getPosts();
+            fetched.sort(
+                (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+            );
+            fetchedPosts = fetched;
+            const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
+            setPosts(filtered);
+        };
+
+        if (user == null) {
+            restore();
+        }
+        fetchPostsData();
+
+    }, [user, flairFilter, searchInput]);
+
     if (user == null) {
         return (
             <div className="h-screen bg-background-main flex">
@@ -88,26 +113,6 @@ const ExplorePage = () => {
             </div>
         );
     }
-
-    useEffect(() => {
-        const fetchPostsData = async () => {
-            if (user === null) {
-                const userjson = await API.RestoreUser();
-                if (userjson.id != null) {
-                    setUser(userjson);
-                }
-            }
-            const fetched = await API.getPosts();
-            fetched.sort(
-                (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
-            );
-            fetchedPosts = fetched;
-            const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
-            setPosts(filtered);
-        };
-        fetchPostsData();
-
-    }, [user, flairFilter, searchInput]);
 
     return (
         <div className="h-screen bg-background-main flex">
