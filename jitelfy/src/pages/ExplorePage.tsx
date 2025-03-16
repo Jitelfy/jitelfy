@@ -12,6 +12,8 @@ let fetchedPosts: Array<PackagedPost>;
 const ExplorePage = () => {
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const { user, setUser } = useContext(UserContext);
+
+    const [userSearchInput, setUserSearchInput] = useState("");
     const [searchInput, setSearchInput] = useState("");
 
     // Setup search parameters for filtering
@@ -41,11 +43,6 @@ const ExplorePage = () => {
 
     const handleFlairClick = (flair: string) => {
         setSearchParams({ flair });
-    };
-
-    const handleSearch = (e : React.ChangeEvent<HTMLInputElement>) => {
-        e.preventDefault();
-        setSearchInput(e.target.value);
     };
 
     const filterPosts = (posts: Array<PackagedPost>, flairFilter: string, input: string) => {
@@ -116,17 +113,37 @@ const ExplorePage = () => {
             <div className="flex-1 flex-col px-20 relative grid grid-auto-flow auto-rows-auto">
                 <div className="fixed z-20 bg-background-main opacity-95 w-full">
                     <h1 className="text-white text-2xl top-0 my-6">Explore</h1>
-                    <div className="flex items-center my-4">
-                        <input
-                            type="text"
-                            placeholder="Search Posts"
-                            onChange={handleSearch}
-                            value={searchInput} 
-                            className="flex-1 px-4 py-2 bg-background-secondary text-text-main rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue"/>
-                    </div>
                 </div>
 
-                <div className="flex-1 bg-background-main relative overflow-auto mt-20 hide-scrollbar pt-16">
+                <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar pt-16">
+                    <div className="flex flex-row bg-background-secondary fill-text-main items-center gap-4 rounded-md my-4 p-4">
+                        <svg width="25px" height="25px" viewBox="0 0 24 24">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M11 5C7.68629 5 5 7.68629 5 11C5 14.3137 7.68629 17 11 17C14.3137 17 17 14.3137 17 11C17 7.68629 14.3137 5 11 5ZM3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11C19 12.8487 18.3729 14.551 17.3199 15.9056L20.7071 19.2929C21.0976 19.6834 21.0976 20.3166 20.7071 20.7071C20.3166 21.0976 19.6834 21.0976 19.2929 20.7071L15.9056 17.3199C14.551 18.3729 12.8487 19 11 19C6.58172 19 3 15.4183 3 11Z"/>
+                        </svg>
+
+                        <input
+                            type="text"
+                            placeholder="Search posts.."
+                            value={userSearchInput}
+                            onChange={(e) => setUserSearchInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    setSearchInput(userSearchInput);
+                                }
+                            }}
+                            className="flex-1 px-4 py-2 bg-background-tertiary text-text-main rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue"/>
+
+                        <button onClick={() => {
+                            setSearchInput(userSearchInput);
+                        }}>
+                            <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
+                                Search
+                            </p>
+                        </button>
+                    </div>
+
+
+
                     {flairFilter && (
                         <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
                             <p className="text-white">
