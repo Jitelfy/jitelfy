@@ -56,10 +56,20 @@ const ExplorePage = () => {
             filteredPosts = filteredPosts.filter(p => p.post.text.includes(`#${flairFilter}`));
         }
         if (input) {
-            filteredPosts = filteredPosts.filter(p => p.post.text.toLowerCase().includes(input.toLowerCase()));
+            // username
+            if (input.startsWith("@")) {
+                const usernameSearch = input.slice(1).toLowerCase();
+                filteredPosts = filteredPosts.filter(p => p.user.username.toLowerCase().includes(usernameSearch));
+            } else {
+                // text and displayname
+                filteredPosts = filteredPosts.filter(p => 
+                    p.post.text.toLowerCase().includes(input.toLowerCase()) ||
+                    p.user.displayname.toLowerCase().includes(input.toLowerCase())
+                );
+            }
         }
 
-        return filteredPosts
+        return filteredPosts;
     }
 
     if (user == null) {
