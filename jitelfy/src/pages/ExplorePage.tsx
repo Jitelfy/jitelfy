@@ -13,10 +13,15 @@ const ExplorePage = () => {
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
     const { user, setUser } = useContext(UserContext);
 
+    // Search input (search bar)
     const [userSearchInput, setUserSearchInput] = useState("");
     const [searchInput, setSearchInput] = useState("");
 
-    // Setup search parameters for filtering
+    // Are we searching for posts or users?
+    const [searchPosts, setSearchPosts] = useState(true);
+    const [searchUsers, setSearchUsers] = useState(false);
+
+    // Filter params (if hashtag clicked)
     const [searchParams, setSearchParams] = useSearchParams();
 
     const flairFilter = searchParams.get("flair") || "";
@@ -116,33 +121,54 @@ const ExplorePage = () => {
                 </div>
 
                 <div className="flex-1 bg-background-main relative overflow-auto hide-scrollbar pt-16">
-                    <div className="flex flex-row bg-background-secondary fill-text-main items-center gap-4 rounded-md my-4 p-4">
-                        <svg width="25px" height="25px" viewBox="0 0 24 24">
+                    <div className="flex flex-row w-full items-center gap-4 bg-background-secondary fill-text-main rounded-t-md mt-4 px-4 pt-4 pb-6">
+                            <svg width="25px" height="25px" viewBox="0 0 24 24">
                             <path fillRule="evenodd" clipRule="evenodd" d="M11 5C7.68629 5 5 7.68629 5 11C5 14.3137 7.68629 17 11 17C14.3137 17 17 14.3137 17 11C17 7.68629 14.3137 5 11 5ZM3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11C19 12.8487 18.3729 14.551 17.3199 15.9056L20.7071 19.2929C21.0976 19.6834 21.0976 20.3166 20.7071 20.7071C20.3166 21.0976 19.6834 21.0976 19.2929 20.7071L15.9056 17.3199C14.551 18.3729 12.8487 19 11 19C6.58172 19 3 15.4183 3 11Z"/>
-                        </svg>
+                            </svg>
 
-                        <input
-                            type="text"
-                            placeholder="Search posts.."
-                            value={userSearchInput}
-                            onChange={(e) => setUserSearchInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    setSearchInput(userSearchInput);
-                                }
-                            }}
-                            className="flex-1 px-4 py-2 bg-background-tertiary text-text-main rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue"/>
+                            <input
+                                type="text"
+                                placeholder="Search posts.."
+                                value={userSearchInput}
+                                onChange={(e) => setUserSearchInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        setSearchInput(userSearchInput);
+                                    }
+                                }}
+                                className="flex-1 px-4 py-2 bg-background-tertiary text-text-main rounded-md focus:outline-none focus:ring-2 focus:ring-accent-blue"/>
 
-                        <button onClick={() => {
-                            setSearchInput(userSearchInput);
-                        }}>
-                            <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
-                                Search
+                            <button onClick={() => {
+                                setSearchInput(userSearchInput);
+                            }}>
+                                <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
+                                    Search
+                                </p>
+                            </button>
+                    </div>
+
+                    <div className="flex flex-row w-full justify-evenly mb-6">
+                        <button className="w-full"
+                            onClick={() => {
+                                setSearchPosts(true);
+                                setSearchUsers(false);
+                            }}>
+                            <p className={!searchPosts ? "text-text-main bg-background-tertiary px-6 py-2 rounded-bl-xl hover:bg-background-fourth transition-colors":
+                                "text-text-main bg-accent-blue px-6 py-2 rounded-bl-xl"}>
+                                Posts
+                            </p>
+                        </button>
+                        <button className="w-full"
+                                onClick={() => {
+                                    setSearchPosts(false);
+                                    setSearchUsers(true);
+                                }}>
+                            <p className={!searchUsers ? "text-text-main bg-background-tertiary px-6 py-2 rounded-br-xl hover:bg-background-fourth transition-colors":
+                                                        "text-text-main bg-accent-blue px-6 py-2 rounded-br-xl"}>
+                                Users
                             </p>
                         </button>
                     </div>
-
-
 
                     {flairFilter && (
                         <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
