@@ -198,22 +198,22 @@ const SettingsPage = () => {
             const loggedInUser: User = await API.getUser(user.id);
             if (loggedInUser.id != null) {
                 setUserData(loggedInUser);
+
+                const SelectedIcon = (loggedInUser && loggedInUser.icon) || 0;
+                const SelectedBanner = (loggedInUser && loggedInUser.banner) || 0;
+
+                handleBannerClick(SelectedBanner.toString(10));
+                handleIconClick(IconArray[SelectedIcon]);
             }
         };
+
+        NewIcon = -1;
+        NewBanner = -1;
 
         if (user == null) {
             restore();
         }
         getUserData();
-
-        NewIcon = -1;
-        NewBanner = -1;
-
-        const SelectedIcon = (userData && userData.icon) || 0;
-        const SelectedBanner = (userData && userData.banner) || 0;
-
-        handleBannerClick(SelectedBanner.toString(10));
-        handleIconClick(IconArray[SelectedIcon]);
   }, [user]);
 
     if (user == null) {

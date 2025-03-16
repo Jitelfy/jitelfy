@@ -250,74 +250,38 @@ export const mapBookmarks = (bookmarkedPosts: Array<PackagedPost>, user: User | 
     )
 };
 
-export const PostBase = (post: Post, postUser: User, editMode: boolean, renderTextWithHashtags: (text: string) => any) => {
+export const PostBase = (post: Post, postUser: User, renderTextWithHashtags: (text: string) => any) => {
     return (
         <div>
-            {!editMode ? (
+            <div className="flex items-center">
                 <div>
-                    <div className="flex items-center">
-                        <div>
-                            <Link to={"/profile/" + postUser.username}>
-                                <img
-                                    className="size-16 rounded-full mb-2 mr-3"
-                                    src={IconArray[postUser.icon]}
-                                    alt={postUser.displayname}
-                                />
-                            </Link>
-                        </div>
-                        <div>
-                            {/* Display name, @username, timestamp posted */}
-                            <Link to={"/profile/" + postUser.username}
-                                  className="hover:underline hover:decoration-background-tertiary">
-                                <p className="text-text-main font-bold">
-                                    {postUser.displayname}
-                                </p>
-                                <p className="text-text-secondary font-normal">
-                                    @{postUser.username}
-                                </p>
-                            </Link>
-                            <p className="text-text-secondary text-sm">
-                                {new Date(post.time).toLocaleString()}
-                            </p>
-                        </div>
-                    </div>
-                    <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
-                        {renderTextWithHashtags(post.text)}
+                    <Link to={"/profile/" + postUser.username}>
+                        <img
+                            className="size-16 rounded-full mb-2 mr-3"
+                            src={IconArray[postUser.icon]}
+                            alt={postUser.displayname}
+                        />
+                    </Link>
+                </div>
+                <div>
+                    {/* Display name, @username, timestamp posted */}
+                    <Link to={"/profile/" + postUser.username}
+                          className="hover:underline hover:decoration-background-tertiary">
+                        <p className="text-text-main font-bold">
+                            {postUser.displayname}
+                        </p>
+                        <p className="text-text-secondary font-normal">
+                            @{postUser.username}
+                        </p>
+                    </Link>
+                    <p className="text-text-secondary text-sm">
+                        {new Date(post.time).toLocaleString()}
                     </p>
                 </div>
-            ) : (
-                <div>
-                    <div className="flex items-center">
-                        <div>
-                            <Link to={"/profile/" + postUser.username}>
-                                <img
-                                    className="size-16 rounded-full mb-2 mr-3"
-                                    src={IconArray[postUser.icon]}
-                                    alt={postUser.displayname}
-                                />
-                            </Link>
-                        </div>
-                        <div>
-                            {/* Display name, @username, timestamp posted */}
-                            <Link to={"/profile/" + postUser.username}
-                                  className="hover:underline hover:decoration-background-tertiary">
-                                <p className="text-text-main font-bold">
-                                    {postUser.displayname}
-                                </p>
-                                <p className="text-text-secondary font-normal">
-                                    @{postUser.username}
-                                </p>
-                            </Link>
-                            <p className="text-text-secondary text-sm">
-                                {new Date(post.time).toLocaleString()}
-                            </p>
-                        </div>
-                    </div>
-                    <textarea>
-                        rows={3}
-                    </textarea>
-                </div>
-            )}
+            </div>
+            <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
+                {renderTextWithHashtags(post.text)}
+            </p>
 
             {post.song && (
                 <div className="mt-2">
@@ -334,11 +298,10 @@ export const PostBase = (post: Post, postUser: User, editMode: boolean, renderTe
     )
 }
 
-export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, editMode: boolean, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
+export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
     return (
         <div>
-
-            {PostBase(post, postUser, editMode, renderTextWithHashtags)}
+            {PostBase(post, postUser, renderTextWithHashtags)}
 
             <div className="flex flex-row align-baseline mt-5 justify-between">
                 <div className="flex flex-row gap-20 ml-4">
@@ -524,7 +487,7 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
                 </div>
                     )}
 
-            {ParentPostBase(post, postUser, loggedInUser, posts, openComments, editMode, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
+            {ParentPostBase(post, postUser, loggedInUser, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
 
             {/* Comments */}
             {openComments && openComments.has(post.id) && (
@@ -609,7 +572,7 @@ export const ParentRepost = (post: Post, postUser: User, profileUser: User, logg
                 </div>
             )}
 
-            {ParentPostBase(post, postUser, loggedInUser, posts, openComments, editMode, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
+            {ParentPostBase(post, postUser, loggedInUser, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
 
             {/* Comments */}
             {openComments && openComments.has(post.id) && (
@@ -681,7 +644,7 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
                 </div>
             )}
 
-            {PostBase(post, postUser, editMode, renderTextWithHashtags)}
+            {PostBase(post, postUser, renderTextWithHashtags)}
 
             <div className="flex flex-row align-baseline mt-5 justify-end">
                 <div className="flex flex-row gap-20 ml-4 mr-10">
