@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/labstack/gommon/log"
+	"github.com/zmb3/spotify/v2"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2/clientcredentials"
 	"server/web_api"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -19,6 +23,22 @@ func main() {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI("mongodb+srv://jitelfy:JitelfyForever33@jitelfycluster.hgw9u.mongodb.net/" +
 		"?retryWrites=true&w=majority&appName=JitelfyCluster").SetServerAPIOptions(serverAPI)
+
+	// spotify
+	authConfig := &clientcredentials.Config{
+		ClientID:     "7f5165967f284534862eeee3a57f49f6",
+		ClientSecret: "702a0f6d19b54fbe875176cc48554e88",
+		TokenURL:     spotifyauth.TokenURL,
+	}
+	accessToken, err := authConfig.Token(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpClient := spotifyauth.New().Client(context.Background(), accessToken)
+	spotifyClient := spotify.New(httpClient)
+	if spotifyClient == nil {
+		log.Fatal("spotify client is nil")
+	}
 
 	// create a client, connect to server
 	client, err := mongo.Connect(context.TODO(), opts)
@@ -63,6 +83,9 @@ func main() {
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 
+	router.GET("/sauth", web_api.SpotifyHandler)
+	router.GET("/callback", web_api.SpotifyCallbackHandler)
+
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
 	router.GET("/users/alerts", web_api.GetUserAlerts)
@@ -84,7 +107,7 @@ func main() {
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:*"}, // placeholder for local vite
+		AllowOrigins:     []string{"http://localhost:*"}, // placeholder for local vite
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization"},
 		AllowCredentials: true,
 	}))
