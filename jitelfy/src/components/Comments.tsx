@@ -56,16 +56,15 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
   function charCounterComment(inputField: HTMLElement | null) {
     if (!inputField) return;
 
-    const maxLength = inputField.getAttribute("maxLength");
     const currentText = (document.getElementById("commentText" + parentId) as HTMLInputElement).value;
 
-    if (!currentText || !maxLength) return;
+    if (!currentText) return;
     let currentLength = currentText.length;
 
     const charCount = document.getElementById("charCountComment" + parentId);
     if (!charCount) return;
 
-    charCount.innerText = currentLength + "/" + parseInt(maxLength);
+    charCount.innerText = currentLength + "/280";
   }
 
   useEffect(() => {
@@ -108,6 +107,11 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
       setNewCommentText("");
       setNewCommentSong("");
+
+      const charCount = document.getElementById("charCountComment" + parentId);
+      if (!charCount) return;
+
+      charCount.innerText = "0/280";
     }
   };
 

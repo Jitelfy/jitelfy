@@ -89,6 +89,11 @@ const FeedPage = () => {
     setNewPostSong("");
 
     (document.getElementById("posttext") as HTMLInputElement).value = "";
+
+    const charCount = document.getElementById("charCountPost");
+    if (!charCount) return;
+
+    charCount.innerText = "0/280";
   };
 
   const handleFlairClick = (flair: string) => {
@@ -98,16 +103,15 @@ const FeedPage = () => {
   function charCounterPost(inputField: HTMLElement | null) {
     if (!inputField) return;
 
-    const maxLength = inputField.getAttribute("maxLength");
     const currentText = (document.getElementById('posttext') as HTMLInputElement).value;
 
-    if (!currentText || !maxLength) return;
+    if (!currentText) return;
     let currentLength = currentText.length;
 
     const charCount = document.getElementById("charCountPost");
     if (!charCount) return;
 
-    charCount.innerText = currentLength + "/" + parseInt(maxLength);
+    charCount.innerText = currentLength + "/280";
   }
 
   useEffect(() => {

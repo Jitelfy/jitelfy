@@ -57,7 +57,7 @@ export const FriendActivity = (user: User | null) => {
                   <div className="flex flex-row items-center text-text-main">
                       <Link to={"/profile/" + friend.username}>
                           <img
-                              className="size-11 rounded-full mr-3"
+                              className="size-11 rounded-full mr-5"
                               src={IconArray[friend.icon]}
                               alt={friend.displayname}
                           ></img>
