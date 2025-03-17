@@ -141,7 +141,6 @@ const handleChangeIcon = async (icon: number, user: User) => {
 
     if (icon != user?.icon) {
         let response = await requestCustomizeIcon(icon, user);
-        if (response) window.location.reload();
     }
 };
 
@@ -158,7 +157,6 @@ const handleChangeDisplayName = async (newName: string, user: User) => {
 
     if (newName.length > 0 && newName.length <= 40 && newName != user?.displayname) {
         let response = await requestCustomizeDisplayName(newName, user);
-        if (response) window.location.reload();
     }
 };
 
@@ -200,22 +198,22 @@ const SettingsPage = () => {
             const loggedInUser: User = await API.getUser(user.id);
             if (loggedInUser.id != null) {
                 setUserData(loggedInUser);
+
+                const SelectedIcon = (loggedInUser && loggedInUser.icon) || 0;
+                const SelectedBanner = (loggedInUser && loggedInUser.banner) || 0;
+
+                handleBannerClick(SelectedBanner.toString(10));
+                handleIconClick(IconArray[SelectedIcon]);
             }
         };
+
+        NewIcon = -1;
+        NewBanner = -1;
 
         if (user == null) {
             restore();
         }
         getUserData();
-
-        NewIcon = -1;
-        NewBanner = -1;
-
-        const SelectedIcon = (userData && userData.icon) || 0;
-        const SelectedBanner = (userData && userData.banner) || 0;
-
-        handleBannerClick(SelectedBanner.toString(10));
-        handleIconClick(IconArray[SelectedIcon]);
   }, [user]);
 
     if (user == null) {
@@ -247,7 +245,10 @@ const SettingsPage = () => {
                 <div className="mt-20">
                     {/* Display name changer */}
                     <div className="flex flex-col items-start bg-background-secondary p-4 rounded-md my-10 gap-3">
-                        <h2 className="text-text-main text-lg">Display name</h2>
+                        <div className="flex flex-row items-baseline w-full justify-between">
+                            <h2 className="text-text-main text-lg">Display name</h2>
+                            <p id="showDisplaynameSaved" className="invisible text-accent-green text-sm mr-10">Saved!</p>
+                        </div>
 
                         <div className="flex flex-row w-full mt-2 gap-4">
                             <input
@@ -256,6 +257,7 @@ const SettingsPage = () => {
                                 onChange={(e) => setNewDisplayName(e.target.value)}
                                 placeholder={user?.displayname || "What should others call you?"}
                                 className="w-full p-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                                maxLength={40}
                             />
 
                             <button className="w-1/4"
@@ -263,6 +265,12 @@ const SettingsPage = () => {
                                         handleChangeDisplayName(newDisplayName, user);
                                         const label = document.getElementById("showDisplaynameSaved");
                                         if (label) label.style.visibility = "visible";
+
+                                        const userDN = document.getElementById("userDisplayname");
+                                        if (userDN) userDN.textContent = newDisplayName;
+
+                                        user.displayname = newDisplayName;
+                                        setUser(user);
                                     }}>
                                 <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                                     Save
@@ -283,6 +291,7 @@ const SettingsPage = () => {
                             value={newBio}
                             onChange={(e) => setNewBio(e.target.value)}
                             rows={3}
+                            maxLength={160}
                             className="resize-none whitespace-pre-wrap bg-background-main w-full mt-2 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                         >
                         </textarea>
@@ -304,7 +313,10 @@ const SettingsPage = () => {
                     {/* Profile picture selector */}
                     <div className="flex flex-col items-start bg-background-secondary p-4 rounded-md gap-3">
 
-                        <h2 className="text-text-main text-lg">Profile picture</h2>
+                        <div className="flex flex-row items-baseline w-full justify-between">
+                            <h2 className="text-text-main text-lg">Profile icon</h2>
+                            <p id="showIconSaved" className="invisible text-accent-green text-sm mr-10">Saved!</p>
+                        </div>
 
                         {/* Container for default icons */}
                         <div id="iconContainer"
@@ -327,7 +339,17 @@ const SettingsPage = () => {
                         <hr className="border-1 border-background-tertiary w-full my-3"></hr>
 
                         <button className="w-1/4 self-end"
-                                onClick={() => handleChangeIcon(NewIcon, user)}>
+                                onClick={() => {
+                                    handleChangeIcon(NewIcon, user);
+                                    const label = document.getElementById("showIconSaved");
+                                    if (label) label.style.visibility = "visible"
+
+                                    const userIcon = document.getElementById("userIcon");
+                                    if (userIcon) userIcon.setAttribute("src", IconArray[NewIcon]);
+
+                                    user.icon = NewIcon;
+                                    setUser(user);
+                                }}>
                             <p className="text-text-main bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors">
                                 Save
                             </p>

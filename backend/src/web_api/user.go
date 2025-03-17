@@ -109,7 +109,7 @@ func MakeUser(c echo.Context) error {
 
 
 	if len(req.DisplayName) > 40 {
-		return c.JSON(http.StatusBadRequest, "Display name must be under 41 characters.")
+		return c.JSON(http.StatusBadRequest, "Display name must be under 40 characters.")
 	}
 
 	if req.Username == "" {

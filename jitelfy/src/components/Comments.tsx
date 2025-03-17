@@ -53,6 +53,20 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     setComments(data);
   };
 
+  function charCounterComment(inputField: HTMLElement | null) {
+    if (!inputField) return;
+
+    const currentText = (document.getElementById("commentText" + parentId) as HTMLInputElement).value;
+
+    if (!currentText) return;
+    let currentLength = currentText.length;
+
+    const charCount = document.getElementById("charCountComment" + parentId);
+    if (!charCount) return;
+
+    charCount.innerText = currentLength + "/280";
+  }
+
   useEffect(() => {
     fetchComments();
   }, [parentId]);
@@ -93,6 +107,11 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
       setNewCommentText("");
       setNewCommentSong("");
+
+      const charCount = document.getElementById("charCountComment" + parentId);
+      if (!charCount) return;
+
+      charCount.innerText = "0/280";
     }
   };
 
@@ -111,12 +130,18 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
             />
             <div className="flex flex-col w-full items-center justify-end gap-3">
               <textarea
+                id={"commentText" + parentId}
                 value={newCommentText}
-                onChange={(e) => setNewCommentText(e.target.value)}
+                onChange={(e) => {
+                  setNewCommentText(e.target.value);
+                  charCounterComment(document.getElementById("commentText" + parentId))
+                }}
                 placeholder="What's on your mind?"
                 className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                 rows={3}
+                maxLength={280}
               ></textarea>
+
               <input
                 type="url"
                 value={newCommentSong}
@@ -129,7 +154,9 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
           <hr className="border-1 mt-4 border-background-tertiary"></hr>
 
-          <div className="flex justify-end mt-3">
+          <div className="flex items-center justify-end gap-3 mt-3">
+            <p id={"charCountComment" + parentId}
+               className="text-text-secondary text-sm text-center">0/280</p>
             <button
               onClick={handleSubmitComment}
               className="bg-accent-blue-light text-text-main px-6 py-2 rounded-xl hover:bg-accent-blue"

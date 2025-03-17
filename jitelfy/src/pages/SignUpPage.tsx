@@ -153,6 +153,7 @@ const SignUpPage = () => {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="w-full p-3 mb-4 mt-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={40}
                   />
 
                   {/* Username Input */}
@@ -162,6 +163,7 @@ const SignUpPage = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={20}
                   />
 
                   {/* Password Input */}
@@ -323,6 +325,7 @@ const SignUpPage = () => {
                         onChange={(e) => setNewBio(e.target.value)}
                         rows={10}
                         className="resize-none whitespace-pre-wrap bg-background-main w-full mt-2 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                        maxLength={160}
                     >
                     </textarea>
 

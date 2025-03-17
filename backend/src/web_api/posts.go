@@ -154,6 +154,10 @@ func CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "top level posts must have song")
 	}
 
+	if len(post.Text) > 280 {
+		return c.JSON(http.StatusBadRequest, "post text too long")
+	}
+
 	if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
 		return c.JSON(http.StatusBadRequest, "invalid song link")
 	}
@@ -206,13 +210,17 @@ func CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	// Conver song url to an embed
+	// Convert song url to an embed
 	if post.Song != "" {
 		if strings.Contains(post.Song, "https://open.spotify.com/track/") {
 			post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 		} else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
 			return c.JSON(http.StatusBadRequest, "invalid song link")
 		}
+	}
+
+	if len(post.Text) > 280 {
+		return c.JSON(http.StatusBadRequest, "post text too long")
 	}
 
 	// Get the user ID from the token
