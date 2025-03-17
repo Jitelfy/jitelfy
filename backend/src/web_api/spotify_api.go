@@ -174,9 +174,15 @@ func addTracksToPlaylist(accessToken string, playlistID string, trackURIs []stri
 }
 
 func HandleCreatePlaylist(c echo.Context) error {
-	accessTokenCookie, err := c.Cookie("spotify_access_token")
+	userStringID, _ := UserIdFromCookie(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "bad cookie")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	var result = UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userObjectID}})
+	var user User
+	if err := result.Decode(&user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	type ReqBody struct {
@@ -192,7 +198,7 @@ func HandleCreatePlaylist(c echo.Context) error {
 	}
 
 	// create playlist
-	playlist, err := createPlaylist(accessTokenCookie.Value, req.Name, req.Description, req.Public)
+	playlist, err := createPlaylist(user.SpotifyToken, req.Name, req.Description, req.Public)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create playlist")
 	}
@@ -207,7 +213,7 @@ func HandleCreatePlaylist(c echo.Context) error {
 	for _, comment := range postPackage.Comments {
 		songs = append(songs, trackURLToURI(comment.Postjson.Song))
 	}
-	err = addTracksToPlaylist(accessTokenCookie.Value, playlist["id"].(string), songs)
+	err = addTracksToPlaylist(user.SpotifyToken, playlist["id"].(string), songs)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
 	}

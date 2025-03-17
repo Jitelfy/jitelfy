@@ -19,28 +19,30 @@ import (
 var UserColl *mongo.Collection
 
 type BaseUser struct {
-	Id          primitive.ObjectID   `json:"id" bson:"_id"`
-	DisplayName string               `json:"displayname" bson:"displayname"`
-	Username    string               `json:"username" bson:"username"`
-	Icon        int                  `json:"icon" bson:"icon"`
+	Id          primitive.ObjectID `json:"id" bson:"_id"`
+	DisplayName string             `json:"displayname" bson:"displayname"`
+	Username    string             `json:"username" bson:"username"`
+	Icon        int                `json:"icon" bson:"icon"`
 }
 
 type User struct {
-	BaseUser `bson:"inline"`
-	Banner      int                  `json:"banner" bson:"banner"`
-	Bio         string               `json:"bio" bson:"bio"`
-	Song        string               `json:"song" bson:"song"`
-	Followers   []primitive.ObjectID `json:"followers" bson:"followers"`
-	Following   []primitive.ObjectID `json:"following" bson:"following"`
-	Token       string               `json:"token" bson:"token"`
-	Password    string               `json:"-" bson:"password"`
+	BaseUser       `bson:"inline"`
+	Banner         int                  `json:"banner" bson:"banner"`
+	Bio            string               `json:"bio" bson:"bio"`
+	Song           string               `json:"song" bson:"song"`
+	Followers      []primitive.ObjectID `json:"followers" bson:"followers"`
+	Following      []primitive.ObjectID `json:"following" bson:"following"`
+	Token          string               `json:"token" bson:"token"`
+	SpotifyToken   string               `json:"spotify_token" bson:"spotify_token"`
+	SpotifyRefresh string               `json:"spotify_refresh" bson:"spotify_refresh"`
+	Password       string               `json:"-" bson:"password"`
 }
 
 type LoggedInUser struct {
-	User `bson:"inline"`
+	User      `bson:"inline"`
 	Bookmarks []primitive.ObjectID `json:"bookmarks"`
-	Reposts []primitive.ObjectID `json:"reposts"`
-	Alerts []Alert `json:"alerts"`
+	Reposts   []primitive.ObjectID `json:"reposts"`
+	Alerts    []Alert              `json:"alerts"`
 }
 
 func GetUser(c echo.Context) error {
@@ -107,7 +109,6 @@ func MakeUser(c echo.Context) error {
 		}
 	}()
 
-
 	if len(req.DisplayName) > 40 {
 		return c.JSON(http.StatusBadRequest, "Display name must be under 40 characters.")
 	}
@@ -131,7 +132,7 @@ func MakeUser(c echo.Context) error {
 	}
 
 	if <-hash_complete == -1 { //  we should not tell them the reason it failed emily
-		return c.JSON(http.StatusInternalServerError, "Failed to create account.") 
+		return c.JSON(http.StatusInternalServerError, "Failed to create account.")
 	}
 
 	user := User{
@@ -140,9 +141,9 @@ func MakeUser(c echo.Context) error {
 			DisplayName: req.DisplayName,
 			Username:    req.Username,
 		},
-		Followers:   []primitive.ObjectID{},
-		Following:   []primitive.ObjectID{},
-		Password:    encryptedPass,
+		Followers: []primitive.ObjectID{},
+		Following: []primitive.ObjectID{},
+		Password:  encryptedPass,
 	}
 	userAlerts := UserAlerts{
 		Id:     primitive.NewObjectID(),
@@ -151,14 +152,14 @@ func MakeUser(c echo.Context) error {
 	}
 
 	repost := PostGroup{
-		Id: primitive.NewObjectID(),
-		UserId: user.Id,
+		Id:      primitive.NewObjectID(),
+		UserId:  user.Id,
 		PostIds: []primitive.ObjectID{},
 	}
 
 	bookmark := PostGroup{
-		Id: primitive.NewObjectID(),
-		UserId: user.Id,
+		Id:      primitive.NewObjectID(),
+		UserId:  user.Id,
 		PostIds: []primitive.ObjectID{},
 	}
 	_, err = UserColl.InsertOne(context.TODO(), user)
@@ -195,7 +196,6 @@ const (
 	TOKEN_SUCCESS
 )
 
-
 func Login(c echo.Context) error {
 	req := struct {
 		Username string `json:"username"`
@@ -212,10 +212,9 @@ func Login(c echo.Context) error {
 	var userid_ch = make(chan int)
 	var pw_ch = make(chan int)
 
-
 	go func() {
 		pw := <-pw_ch
-		if (pw == -1) {
+		if pw == -1 {
 			ch <- BAD_PW
 			return
 		}
@@ -227,10 +226,9 @@ func Login(c echo.Context) error {
 		ch <- 0
 	}()
 
-
 	go func() {
 		userid := <-userid_ch
-		if (userid == -1) {
+		if userid == -1 {
 			ch <- BAD_USERID
 			return
 		}
@@ -246,7 +244,7 @@ func Login(c echo.Context) error {
 
 	go func() {
 		userid := <-userid_ch
-		if (userid == -1) {
+		if userid == -1 {
 			ch <- BAD_USERID
 			return
 		}
@@ -263,7 +261,7 @@ func Login(c echo.Context) error {
 	// should i get alerts too?
 	go func() {
 		userid := <-userid_ch
-		if (userid == -1) {
+		if userid == -1 {
 			ch <- BAD_USERID
 			return
 		}
@@ -301,9 +299,8 @@ func Login(c echo.Context) error {
 		ch <- TOKEN_SUCCESS
 	}()
 
-
 	for i := 0; i < 5; i++ {
-		switch errCode:= <- ch; errCode {
+		switch errCode := <-ch; errCode {
 		case INVALID_USERNAME:
 			return c.JSON(http.StatusUnauthorized, "Invalid username.")
 		case INVALID_PASSWORD:
@@ -410,13 +407,12 @@ func RestoreUserFromCookie(c echo.Context) error {
 		ch <- 0
 	}()
 
-
 	for i := 0; i < 4; i++ {
-		switch errCode:= <- ch; errCode {
+		switch errCode := <-ch; errCode {
 		case INVALID_USERNAME:
 		case INVALID_PASSWORD:
 		case BAD_USERID:
-			case NO_TOKEN: // if token validation failed it should probably be considered the same way
+		case NO_TOKEN: // if token validation failed it should probably be considered the same way
 			return c.JSON(http.StatusUnauthorized, "invalid username/password")
 		case NO_BOOKMARKS:
 			return c.JSON(http.StatusInternalServerError, "could not get bookmarks")
@@ -502,9 +498,9 @@ func FollowUser(c echo.Context) error {
 			options.FindOneAndUpdate().SetReturnDocument(options.After),
 		).Decode(&follow)
 		if err != nil {
-			ch<--1
+			ch <- -1
 		}
-		ch<-0
+		ch <- 0
 	}()
 
 	go func() {
@@ -516,9 +512,9 @@ func FollowUser(c echo.Context) error {
 		}
 		_, err = AlertColl.UpdateOne(context.TODO(), bson.M{"userid": followObjectID}, bson.M{"$addToSet": bson.M{"alerts": alert}})
 		if err != nil {
-			ch<--1
+			ch <- -1
 		}
-		ch<-0
+		ch <- 0
 	}()
 
 	if <-ch == -1 {
