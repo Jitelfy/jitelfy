@@ -15,7 +15,7 @@ import (
 const (
 	clientID     = "7f5165967f284534862eeee3a57f49f6"
 	clientSecret = "702a0f6d19b54fbe875176cc48554e88"
-	redirectURI  = "http://localhost:8080/callback"
+	redirectURI  = "http://localhost:8080/spotify/callback"
 	authURL      = "https://accounts.spotify.com/authorize"
 	tokenURL     = "https://accounts.spotify.com/api/token"
 )
