@@ -24,58 +24,49 @@ func trackURLToURI(url string) string {
 }
 
 func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
-	var post_filter, comment_filter bson.D
+	var postFilter, commentFilter bson.D
 
 	if objID, err := primitive.ObjectIDFromHex(id); err != nil {
 		return CompleteSinglePost{}, err
 	} else {
-		post_filter = bson.D{{Key: "_id", Value: objID}}
-		comment_filter = bson.D{{Key: "parentid", Value: objID}}
+		postFilter = bson.D{{Key: "_id", Value: objID}}
+		commentFilter = bson.D{{Key: "parentid", Value: objID}}
 	}
 
-	var main_post PostUserPackage
+	var mainPost PostUserPackage
 	var err error
 
-	valid_parent := make(chan int, 1)
+	validParent := make(chan int, 1)
 
 	go func() {
-		err := PostColl.FindOne(context.TODO(), post_filter).Decode(&main_post.Postjson)
+		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost.Postjson)
 		if err != nil {
-			valid_parent <- -1
+			validParent <- -1
 			return
 		}
-		user_filter := bson.D{{Key: "_id", Value: main_post.Postjson.UserId}}
-
-		err = UserColl.FindOne(context.TODO(), user_filter).Decode(&main_post.Userjson)
-		if err != nil {
-			valid_parent <- -1
-			return
-		}
-
-		valid_parent <- 0
 	}()
 
 	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), comment_filter)
+	cursor, err = PostColl.Find(context.TODO(), commentFilter)
 	if err != nil {
 		return CompleteSinglePost{}, err
 	}
-	var comment_results []Post
-	err = cursor.All(context.TODO(), &comment_results)
+	var commentResults []Post
+	err = cursor.All(context.TODO(), &commentResults)
 	if err != nil {
 		return CompleteSinglePost{}, err
 	}
 
-	var packagedresults = make([]PostUserPackage, len(comment_results))
+	var packagedresults = make([]PostUserPackage, len(commentResults))
 
-	var ch = make(chan *PostUserPackage, len(comment_results))
+	var ch = make(chan *PostUserPackage, len(commentResults))
 
-	for _, currpost := range comment_results {
+	for _, currpost := range commentResults {
 		go func(post Post) {
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			var result = UserColl.FindOne(context.TODO(), userfilter)
 			var user BaseUser
-			if user_err := result.Decode(&user); user_err != nil {
+			if userErr := result.Decode(&user); userErr != nil {
 				ch <- nil
 			}
 			ch <- &PostUserPackage{
@@ -85,11 +76,11 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 		}(currpost)
 	}
 
-	if <-valid_parent == -1 {
+	if <-validParent == -1 {
 		return CompleteSinglePost{}, err
 	}
 
-	for idx := range comment_results {
+	for idx := range commentResults {
 		var packagedpost = <-ch
 		// for now just ignore invalid comments
 		if packagedpost != nil {
@@ -98,7 +89,7 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	}
 
 	result := CompleteSinglePost{
-		Post:     main_post,
+		Post:     mainPost,
 		Comments: packagedresults,
 	}
 
@@ -207,13 +198,13 @@ func handleCreatePlaylist(c echo.Context) error {
 	}
 
 	// add songs to it
-	post, err := GetSinglePostBackend(req.PostID)
+	postPackage, err := GetSinglePostBackend(req.PostID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
 	}
 	var songs []string
-	songs = append(songs, trackURLToURI(post.Post.Postjson.Song))
-	for _, comment := range post.Comments {
+	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
+	for _, comment := range postPackage.Comments {
 		songs = append(songs, trackURLToURI(comment.Postjson.Song))
 	}
 
