@@ -3,6 +3,7 @@ package web_api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
@@ -55,6 +56,44 @@ func createPlaylist(accessToken string, playlistName string, playlistDescription
 	}
 
 	return result, nil
+}
+
+func addTracksToPlaylist(accessToken, playlistID string, trackURIs []string) error {
+	body := map[string]interface{}{
+		"uris": trackURIs,
+	}
+
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", playlistID)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to add tracks: %s", body)
+	}
+	return nil
 }
 
 func handleCreatePlaylist(c echo.Context) error {
