@@ -173,7 +173,7 @@ func addTracksToPlaylist(accessToken string, playlistID string, trackURIs []stri
 	return nil
 }
 
-func handleCreatePlaylist(c echo.Context) error {
+func HandleCreatePlaylist(c echo.Context) error {
 	accessTokenCookie, err := c.Cookie("spotify_access_token")
 	if err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "bad cookie")
@@ -212,5 +212,6 @@ func handleCreatePlaylist(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
 	}
 
+	// return final playlist
 	return c.JSON(http.StatusOK, playlist)
 }
