@@ -88,11 +88,11 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"userid": userObjectID}, bson.M{"$set": bson.M{"SpotifyToken": tokenResp.AccessToken}})
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"SpotifyToken": tokenResp.AccessToken}})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"userid": userObjectID}, bson.M{"$set": bson.M{"SpotifyRefresh": tokenResp.RefreshToken}})
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"SpotifyRefresh": tokenResp.RefreshToken}})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
