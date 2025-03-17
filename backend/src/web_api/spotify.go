@@ -31,21 +31,26 @@ type TokenResponse struct {
 
 func SpotifyHandler(c echo.Context) error {
 	scope := "user-read-private user-read-email playlist-modify-private user-read-playback-position user-top-read user-read-recently-played"
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "cookie fail")
+	}
+	state := userStringID
 	authEndpoint := fmt.Sprintf(
-		"%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&state=xyz123",
-
+		"%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&state=%s",
 		authURL,
 		clientID,
 		url.QueryEscape(redirectURI),
-		url.QueryEscape(scope))
+		url.QueryEscape(scope),
+		url.QueryEscape(state))
 	return c.Redirect(http.StatusTemporaryRedirect, authEndpoint)
 }
 
 func SpotifyCallbackHandler(c echo.Context) error {
-	userStringID, _ := UserIdFromCookie(c)
-	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	state := c.QueryParam("state")
+	userObjectID, err := primitive.ObjectIDFromHex(state)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return c.JSON(http.StatusInternalServerError, "cookie fail callback")
 	}
 	code := c.QueryParam("code")
 	if code == "" {

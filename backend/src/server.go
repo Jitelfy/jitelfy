@@ -83,9 +83,9 @@ func main() {
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 
-	router.GET("spotify/sauth", web_api.SpotifyHandler)
-	router.GET("spotify/callback", web_api.SpotifyCallbackHandler)
-	router.POST("spotify/tp", web_api.HandleCreatePlaylist)
+	router.GET("/spotify/sauth", web_api.SpotifyHandler)
+	router.GET("/spotify/callback/:id", web_api.SpotifyCallbackHandler)
+	router.POST("/spotify/tp", web_api.HandleCreatePlaylist)
 
 	router.GET("/users/:id", web_api.GetUser)
 	router.GET("/users/bookmarks", web_api.GetBookmarks)
