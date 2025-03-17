@@ -3,6 +3,7 @@ package web_api
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"strings"
@@ -54,4 +55,29 @@ func createPlaylist(accessToken string, playlistName string, playlistDescription
 	}
 
 	return result, nil
+}
+
+func handleCreatePlaylist(c echo.Context) error {
+	accessTokenCookie, err := c.Cookie("spotify_access_token")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "bad cookie")
+	}
+
+	type ReqBody struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Public      bool   `json:"public"`
+	}
+
+	var req ReqBody
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to parse body")
+	}
+
+	playlist, err := createPlaylist(accessTokenCookie.Value, req.Name, req.Description, req.Public)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to create playlist"})
+	}
+
+	return c.JSON(http.StatusOK, playlist)
 }
