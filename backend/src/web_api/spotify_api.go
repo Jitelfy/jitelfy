@@ -135,7 +135,7 @@ func createPlaylist(accessToken string, playlistName string, playlistDescription
 	return result, nil
 }
 
-func addTracksToPlaylist(accessToken, playlistID string, trackURIs []string) error {
+func addTracksToPlaylist(accessToken string, playlistID string, trackURIs []string) error {
 	body := map[string]interface{}{
 		"uris": trackURIs,
 	}
@@ -206,6 +206,10 @@ func handleCreatePlaylist(c echo.Context) error {
 	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
 	for _, comment := range postPackage.Comments {
 		songs = append(songs, trackURLToURI(comment.Postjson.Song))
+	}
+	err = addTracksToPlaylist(accessTokenCookie.Value, playlist["id"].(string), songs)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
 	}
 
 	return c.JSON(http.StatusOK, playlist)
