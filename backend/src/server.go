@@ -84,7 +84,7 @@ func main() {
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 
 	router.GET("/spotify/sauth", web_api.SpotifyHandler)
-	router.GET("/spotify/callback/:id", web_api.SpotifyCallbackHandler)
+	router.GET("/spotify/callback", web_api.SpotifyCallbackHandler)
 	router.POST("/spotify/tp", web_api.HandleCreatePlaylist)
 
 	router.GET("/users/:id", web_api.GetUser)
