@@ -34,15 +34,19 @@ type Post struct {
 }
 
 type PostGroup struct {
-	Id       primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
-	PostIds  []primitive.ObjectID `json:"postids" bson:"postids"`
+	Id      primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId  primitive.ObjectID   `json:"userid" bson:"userid"`
+	PostIds []primitive.ObjectID `json:"postids" bson:"postids"`
 }
 
-
 type PostUserPackage struct {
-	Postjson Post `json:"post"`
+	Postjson Post     `json:"post"`
 	Userjson BaseUser `json:"user"`
+}
+
+type CompleteSinglePost struct {
+	Post     PostUserPackage   `json:"post"`
+	Comments []PostUserPackage `json:"comments"`
 }
 
 /* I think this will be faster with many many posts but right now
@@ -312,7 +316,6 @@ func GetComments(c echo.Context) error {
 	return c.JSON(http.StatusOK, packagedresults)
 }
 
-
 func purgePost(post Post) error {
 	post_filter := bson.D{{Key: "postids", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: post.Id}}}}}}
 	update := bson.M{"$pull": bson.M{"postids": post.Id}}
@@ -432,7 +435,7 @@ func DeletePost(c echo.Context) error {
 	if <-ch == -1 {
 		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
-		if post.ParentId != primitive.NilObjectID && <-ch == -1 {
+	if post.ParentId != primitive.NilObjectID && <-ch == -1 {
 		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
 
@@ -542,7 +545,7 @@ func BookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post bookmarked",
+		"message":                  "post bookmarked",
 		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
@@ -570,7 +573,7 @@ func UnbookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post unbookmarked",
+		"message":                  "post unbookmarked",
 		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
@@ -653,7 +656,7 @@ func MakeRepost(c echo.Context) error {
 		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not repost post: " + err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not repost post: "+err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -687,7 +690,7 @@ func DeleteRepost(c echo.Context) error {
 		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not unrepost post: " + err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post: "+err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
