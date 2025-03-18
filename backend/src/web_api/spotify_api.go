@@ -211,6 +211,7 @@ func HandleCreatePlaylist(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
 	}
+	fmt.Println(postPackage)
 	var songs []string
 	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
 	for _, comment := range postPackage.Comments {
