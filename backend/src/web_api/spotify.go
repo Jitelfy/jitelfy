@@ -100,3 +100,63 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	// also returning this
 	return c.JSON(http.StatusOK, tokenResp)
 }
+
+func SpotifyRefreshHandler(c echo.Context) error {
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "cookie fail")
+	}
+
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "invalid user id")
+	}
+
+	var user User
+	err = UserColl.FindOne(context.TODO(), bson.M{"_id": userObjectID}).Decode(&user)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "could not find user")
+	}
+
+	if user.SpotifyRefresh == "" {
+		return c.String(http.StatusBadRequest, "no refresh token stored")
+	}
+
+	// build token refresh request
+	data := url.Values{}
+	data.Set("grant_type", "refresh_token")
+	data.Set("refresh_token", user.SpotifyRefresh)
+
+	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(clientID, clientSecret)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(resp.Body)
+
+	var tokenResp TokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
+	}
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_token": tokenResp.AccessToken}})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "failed to update token in DB")
+	}
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_refresh": tokenResp.RefreshToken}})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "failed to update token in DB")
+	}
+
+	return c.JSON(http.StatusOK, tokenResp)
+}
