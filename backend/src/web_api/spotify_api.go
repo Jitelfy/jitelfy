@@ -23,6 +23,7 @@ func trackURLToURI(url string) string {
 	return "spotify:track:" + id
 }
 
+// man wtf
 func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	var postFilter, commentFilter bson.D
 
