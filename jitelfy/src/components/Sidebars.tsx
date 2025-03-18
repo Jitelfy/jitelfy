@@ -4,7 +4,7 @@ import {BASE_URL, getUser} from '../api';
 import {PackagedPost, User} from '../types';
 import { IconArray } from "../UserContext";
 import {useEffect, useState} from "react";
-
+import { SongOfTheDay } from './SOTD';
 
 export const FriendActivity = (user: User | null) => {
     const [friends, setFriends] = useState<User[]>([]);
@@ -44,7 +44,6 @@ export const FriendActivity = (user: User | null) => {
     return (
       <div className="flex flex-col w-1/4 min-w-64 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
           <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
-
           {/* Friend activity */}
           { friends.length == 0 && (
               <p className="text-text-secondary text-center h-full content-center">No recent friend activity...</p>
@@ -80,6 +79,7 @@ export const FriendActivity = (user: User | null) => {
               </div>
               )
           })}
+          <SongOfTheDay />
       </div>
     )}
 
