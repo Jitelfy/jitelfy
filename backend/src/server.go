@@ -82,6 +82,7 @@ func main() {
 	router.POST("/posts/repost/:id", web_api.MakeRepost)
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
+	router.GET("/sotd", web_api.GetSongOfTheDay)
 
 	router.GET("/sauth", web_api.SpotifyHandler)
 	router.GET("/callback", web_api.SpotifyCallbackHandler)
@@ -104,6 +105,7 @@ func main() {
 	router.POST("/logout", web_api.Logout)
 
 	router.GET("/users/restore", web_api.RestoreUserFromCookie)
+	router.GET("/sotd", web_api.GetSongOfTheDay)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
