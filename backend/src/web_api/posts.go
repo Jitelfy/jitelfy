@@ -21,6 +21,7 @@ import (
 var PostColl *mongo.Collection
 var RepostColl *mongo.Collection
 var BookmarkColl *mongo.Collection
+var SOTDColl *mongo.Collection
 
 type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
@@ -790,3 +791,10 @@ func GetAllPostsFromUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, packagedresults)
 }
+
+/* Struct to store the SOTD */
+type SongOfTheDay struct {
+	Song        string    `json:"song" bson:"song"`
+	LastUpdated time.Time `json:"lastUpdated" bson:"lastUpdated"`
+}
+
