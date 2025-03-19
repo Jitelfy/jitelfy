@@ -198,9 +198,10 @@ func HandleCreatePlaylist(c echo.Context) error {
 	}
 	var songs []string
 	for _, post := range postTree {
-		songs = append(songs, trackURLToURI(post.Song))
+		if post.Song != "" {
+			songs = append(songs, trackURLToURI(post.Song))
+		}
 	}
-	fmt.Println(songs)
 	err = addTracksToPlaylist(user.SpotifyToken, playlist["id"].(string), songs)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
