@@ -23,77 +23,65 @@ func trackURLToURI(url string) string {
 	return "spotify:track:" + id
 }
 
-func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
+// man wtf
+func GetSinglePostBackend(id string) ([]Post, error) {
 	var postFilter, commentFilter bson.D
 
+	// conver obj id
 	if objID, err := primitive.ObjectIDFromHex(id); err != nil {
-		return CompleteSinglePost{}, err
+		return []Post{}, err
 	} else {
+		// make db find filters
 		postFilter = bson.D{{Key: "_id", Value: objID}}
 		commentFilter = bson.D{{Key: "parentid", Value: objID}}
 	}
 
-	var mainPost PostUserPackage
+	var mainPost Post
 	var err error
 
+	// channel len 1
 	validParent := make(chan int, 1)
 
+	// find the post given by the function parameter id
 	go func() {
-		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost.Postjson)
+		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost)
 		if err != nil {
 			validParent <- -1
 			return
 		}
+		validParent <- 0
 	}()
-
-	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), commentFilter)
-	if err != nil {
-		return CompleteSinglePost{}, err
+	// mongo cursor
+	type PostResult struct {
+		Data  []Post
+		Error error
 	}
-	var commentResults []Post
-	err = cursor.All(context.TODO(), &commentResults)
-	if err != nil {
-		return CompleteSinglePost{}, err
-	}
-
-	var packagedresults = make([]PostUserPackage, len(commentResults))
-
-	var ch = make(chan *PostUserPackage, len(commentResults))
-
-	for _, currpost := range commentResults {
-		go func(post Post) {
-			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
-			var result = UserColl.FindOne(context.TODO(), userfilter)
-			var user BaseUser
-			if userErr := result.Decode(&user); userErr != nil {
-				ch <- nil
-			}
-			ch <- &PostUserPackage{
-				Postjson: post,
-				Userjson: user,
-			}
-		}(currpost)
-	}
-
-	if <-validParent == -1 {
-		return CompleteSinglePost{}, err
-	}
-
-	for idx := range commentResults {
-		var packagedpost = <-ch
-		// for now just ignore invalid comments
-		if packagedpost != nil {
-			packagedresults[idx] = *packagedpost
+	ch := make(chan PostResult)
+	go func() {
+		var cursor *mongo.Cursor
+		cursor, err = PostColl.Find(context.TODO(), commentFilter)
+		if err != nil {
+			ch <- PostResult{nil, err}
+			return
 		}
+		var commentResults []Post
+		// store all in array
+		err = cursor.All(context.TODO(), &commentResults)
+		if err != nil {
+			ch <- PostResult{nil, err}
+			return
+		}
+		ch <- PostResult{commentResults, nil}
+	}()
+	res := <-ch
+	if res.Error != nil {
+		return []Post{}, res.Error
 	}
-
-	result := CompleteSinglePost{
-		Post:     mainPost,
-		Comments: packagedresults,
+	if <-validParent == -1 {
+		return []Post{}, err
 	}
-
-	return result, nil
+	res.Data = append(res.Data, mainPost)
+	return res.Data, nil
 }
 
 func createPlaylist(accessToken string, playlistName string, playlistDescription string, isPublic bool) (map[string]interface{}, error) {
@@ -204,15 +192,15 @@ func HandleCreatePlaylist(c echo.Context) error {
 	}
 
 	// add songs to it
-	postPackage, err := GetSinglePostBackend(req.PostID)
+	postTree, err := GetSinglePostBackend(req.PostID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
 	}
 	var songs []string
-	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
-	for _, comment := range postPackage.Comments {
-		songs = append(songs, trackURLToURI(comment.Postjson.Song))
+	for _, post := range postTree {
+		songs = append(songs, trackURLToURI(post.Song))
 	}
+	fmt.Println(songs)
 	err = addTracksToPlaylist(user.SpotifyToken, playlist["id"].(string), songs)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
