@@ -96,14 +96,6 @@ const FeedPage = () => {
     charCount.innerText = "0/280";
   };
 
-  const requestGetSpotify = async() => {
-    const getSpotify = await fetch(`${API.BASE_URL}/spotify/sauth`, {
-      method: "GET",
-      credentials: "include",
-    });
-    console.log(getSpotify);
-  };
-
   const handleFlairClick = (flair: string) => {
     setSearchParams({ flair });
   };
@@ -154,11 +146,6 @@ const FeedPage = () => {
           <div className="fixed z-20 bg-background-main opacity-95 w-full">
             <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
-
-          <button className="mt-20 bg-accent-blue text-text-main p-4 rounded-md"
-                  onClick={requestGetSpotify}>
-            <p>GET YOUR STUPID SPOTIFY COOKIE HERE</p>
-          </button>
 
           <div className="flex-1 bg-background-main relative mt-20 overflow-auto hide-scrollbar">
             {/* Post header */}
