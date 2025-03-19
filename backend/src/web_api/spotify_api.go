@@ -27,9 +27,11 @@ func trackURLToURI(url string) string {
 func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	var postFilter, commentFilter bson.D
 
+	// conver obj id
 	if objID, err := primitive.ObjectIDFromHex(id); err != nil {
 		return CompleteSinglePost{}, err
 	} else {
+		// make db find filters
 		postFilter = bson.D{{Key: "_id", Value: objID}}
 		commentFilter = bson.D{{Key: "parentid", Value: objID}}
 	}
@@ -37,33 +39,44 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	var mainPost PostUserPackage
 	var err error
 
+	// channel len 1
 	validParent := make(chan int, 1)
 
+	// find the post given by the function parameter id
 	go func() {
+		fmt.Println("in the first go routine")
+		// decode as a json into mainPost var
 		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost.Postjson)
 		if err != nil {
+			// make valid parent 0 if fail
 			validParent <- -1
 			return
 		}
 	}()
 
+	// mongo cursor
 	var cursor *mongo.Cursor
 	cursor, err = PostColl.Find(context.TODO(), commentFilter)
 	if err != nil {
 		return CompleteSinglePost{}, err
 	}
 	var commentResults []Post
+	// store all in array
 	err = cursor.All(context.TODO(), &commentResults)
 	if err != nil {
 		return CompleteSinglePost{}, err
 	}
 
+	// make slice of size of number of comments
 	var packagedresults = make([]PostUserPackage, len(commentResults))
 
+	// make channel of post user package
 	var ch = make(chan *PostUserPackage, len(commentResults))
 
+	// loop over commentResults
 	for _, currpost := range commentResults {
 		go func(post Post) {
+			fmt.Println("in the second go routine")
 			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
 			var result = UserColl.FindOne(context.TODO(), userfilter)
 			var user BaseUser
@@ -94,6 +107,7 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 		Comments: packagedresults,
 	}
 
+	fmt.Println("return")
 	return result, nil
 }
 

@@ -153,9 +153,11 @@ func SpotifyRefreshHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "failed to update token in DB")
 	}
-	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_refresh": tokenResp.RefreshToken}})
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "failed to update token in DB")
+	if tokenResp.RefreshToken != "" {
+		_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_refresh": tokenResp.RefreshToken}})
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "failed to update token in DB")
+		}
 	}
 
 	return c.JSON(http.StatusOK, tokenResp)
