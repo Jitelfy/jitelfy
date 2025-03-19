@@ -191,13 +191,11 @@ func addTracksToPlaylist(accessToken string, playlistID string, trackURIs []stri
 }
 
 func HandleCreatePlaylist(c echo.Context) error {
-	fmt.Println("Handle Create Playlist")
 	userStringID, _ := UserIdFromCookie(c)
 	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	fmt.Println(userObjectID)
 	var result = UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userObjectID}})
 	var user User
 	if err := result.Decode(&user); err != nil {
@@ -221,20 +219,17 @@ func HandleCreatePlaylist(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to create playlist")
 	}
-	fmt.Println(playlist)
 
 	// add songs to it
 	postPackage, err := GetSinglePostBackend(req.PostID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
 	}
-	fmt.Println(postPackage)
 	var songs []string
 	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
 	for _, comment := range postPackage.Comments {
 		songs = append(songs, trackURLToURI(comment.Postjson.Song))
 	}
-	fmt.Println(songs)
 	err = addTracksToPlaylist(user.SpotifyToken, playlist["id"].(string), songs)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
