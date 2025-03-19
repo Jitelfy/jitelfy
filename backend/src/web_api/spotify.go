@@ -30,7 +30,7 @@ type TokenResponse struct {
 }
 
 func SpotifyHandler(c echo.Context) error {
-	scope := "user-read-private user-read-email playlist-modify-private user-read-playback-position user-top-read user-read-recently-played"
+	scope := "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-read-private user-read-playback-position user-top-read user-read-recently-played"
 	userStringID, err := UserIdFromCookie(c)
 	if err != nil {
 		return c.String(http.StatusUnauthorized, "cookie fail")
