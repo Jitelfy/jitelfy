@@ -44,14 +44,19 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 
 	// find the post given by the function parameter id
 	go func() {
-		fmt.Println("in the first go routine")
-		// decode as a json into mainPost var
 		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost.Postjson)
 		if err != nil {
-			// make valid parent 0 if fail
 			validParent <- -1
 			return
 		}
+		userFilter := bson.D{{Key: "_id", Value: mainPost.Postjson.UserId}}
+
+		err = UserColl.FindOne(context.TODO(), userFilter).Decode(&mainPost.Userjson)
+		if err != nil {
+			validParent <- -1
+			return
+		}
+		validParent <- 0
 	}()
 
 	// mongo cursor
@@ -68,17 +73,16 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	}
 
 	// make slice of size of number of comments
-	var packagedresults = make([]PostUserPackage, len(commentResults))
+	var packagedResults = make([]PostUserPackage, len(commentResults))
 
 	// make channel of post user package
 	var ch = make(chan *PostUserPackage, len(commentResults))
 
 	// loop over commentResults
-	for _, currpost := range commentResults {
+	for _, currPost := range commentResults {
 		go func(post Post) {
-			fmt.Println("in the second go routine")
-			var userfilter = bson.D{{Key: "_id", Value: post.UserId}}
-			var result = UserColl.FindOne(context.TODO(), userfilter)
+			var userFilter = bson.D{{Key: "_id", Value: post.UserId}}
+			var result = UserColl.FindOne(context.TODO(), userFilter)
 			var user BaseUser
 			if userErr := result.Decode(&user); userErr != nil {
 				ch <- nil
@@ -87,7 +91,7 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 				Postjson: post,
 				Userjson: user,
 			}
-		}(currpost)
+		}(currPost)
 	}
 
 	if <-validParent == -1 {
@@ -95,19 +99,17 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 	}
 
 	for idx := range commentResults {
-		var packagedpost = <-ch
+		var packagedPost = <-ch
 		// for now just ignore invalid comments
-		if packagedpost != nil {
-			packagedresults[idx] = *packagedpost
+		if packagedPost != nil {
+			packagedResults[idx] = *packagedPost
 		}
 	}
 
 	result := CompleteSinglePost{
 		Post:     mainPost,
-		Comments: packagedresults,
+		Comments: packagedResults,
 	}
-
-	fmt.Println("return")
 	return result, nil
 }
 
