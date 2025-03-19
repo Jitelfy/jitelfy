@@ -24,19 +24,19 @@ func trackURLToURI(url string) string {
 }
 
 // man wtf
-func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
+func GetSinglePostBackend(id string) ([]Post, error) {
 	var postFilter, commentFilter bson.D
 
 	// conver obj id
 	if objID, err := primitive.ObjectIDFromHex(id); err != nil {
-		return CompleteSinglePost{}, err
+		return []Post{}, err
 	} else {
 		// make db find filters
 		postFilter = bson.D{{Key: "_id", Value: objID}}
 		commentFilter = bson.D{{Key: "parentid", Value: objID}}
 	}
 
-	var mainPost PostUserPackage
+	var mainPost Post
 	var err error
 
 	// channel len 1
@@ -44,73 +44,44 @@ func GetSinglePostBackend(id string) (CompleteSinglePost, error) {
 
 	// find the post given by the function parameter id
 	go func() {
-		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost.Postjson)
-		if err != nil {
-			validParent <- -1
-			return
-		}
-		userFilter := bson.D{{Key: "_id", Value: mainPost.Postjson.UserId}}
-
-		err = UserColl.FindOne(context.TODO(), userFilter).Decode(&mainPost.Userjson)
+		err := PostColl.FindOne(context.TODO(), postFilter).Decode(&mainPost)
 		if err != nil {
 			validParent <- -1
 			return
 		}
 		validParent <- 0
 	}()
-
 	// mongo cursor
-	var cursor *mongo.Cursor
-	cursor, err = PostColl.Find(context.TODO(), commentFilter)
-	if err != nil {
-		return CompleteSinglePost{}, err
+	type PostResult struct {
+		Data  []Post
+		Error error
 	}
-	var commentResults []Post
-	// store all in array
-	err = cursor.All(context.TODO(), &commentResults)
-	if err != nil {
-		return CompleteSinglePost{}, err
-	}
-
-	// make slice of size of number of comments
-	var packagedResults = make([]PostUserPackage, len(commentResults))
-
-	// make channel of post user package
-	var ch = make(chan *PostUserPackage, len(commentResults))
-
-	// loop over commentResults
-	for _, currPost := range commentResults {
-		go func(post Post) {
-			var userFilter = bson.D{{Key: "_id", Value: post.UserId}}
-			var result = UserColl.FindOne(context.TODO(), userFilter)
-			var user BaseUser
-			if userErr := result.Decode(&user); userErr != nil {
-				ch <- nil
-			}
-			ch <- &PostUserPackage{
-				Postjson: post,
-				Userjson: user,
-			}
-		}(currPost)
-	}
-
-	if <-validParent == -1 {
-		return CompleteSinglePost{}, err
-	}
-
-	for idx := range commentResults {
-		var packagedPost = <-ch
-		// for now just ignore invalid comments
-		if packagedPost != nil {
-			packagedResults[idx] = *packagedPost
+	ch := make(chan PostResult)
+	go func() {
+		var cursor *mongo.Cursor
+		cursor, err = PostColl.Find(context.TODO(), commentFilter)
+		if err != nil {
+			ch <- PostResult{nil, err}
+			return
 		}
+		var commentResults []Post
+		// store all in array
+		err = cursor.All(context.TODO(), &commentResults)
+		if err != nil {
+			ch <- PostResult{nil, err}
+			return
+		}
+		ch <- PostResult{commentResults, nil}
+	}()
+	res := <-ch
+	if res.Error != nil {
+		return []Post{}, res.Error
 	}
-
-	result := CompleteSinglePost{
-		Post:     mainPost,
-		Comments: packagedResults,
+	if <-validParent == -1 {
+		return []Post{}, err
 	}
-	return result, nil
+	res.Data = append(res.Data, mainPost)
+	return res.Data, nil
 }
 
 func createPlaylist(accessToken string, playlistName string, playlistDescription string, isPublic bool) (map[string]interface{}, error) {
@@ -221,15 +192,15 @@ func HandleCreatePlaylist(c echo.Context) error {
 	}
 
 	// add songs to it
-	postPackage, err := GetSinglePostBackend(req.PostID)
+	postTree, err := GetSinglePostBackend(req.PostID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
 	}
 	var songs []string
-	songs = append(songs, trackURLToURI(postPackage.Post.Postjson.Song))
-	for _, comment := range postPackage.Comments {
-		songs = append(songs, trackURLToURI(comment.Postjson.Song))
+	for _, post := range postTree {
+		songs = append(songs, trackURLToURI(post.Song))
 	}
+	fmt.Println(songs)
 	err = addTracksToPlaylist(user.SpotifyToken, playlist["id"].(string), songs)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to add tracks to playlist")
