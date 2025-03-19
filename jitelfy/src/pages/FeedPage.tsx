@@ -155,11 +155,6 @@ const FeedPage = () => {
             <h1 className="text-text-main text-2xl top-0 my-6">Feed</h1>
           </div>
 
-          <button className="mt-20 bg-accent-blue text-text-main p-4 rounded-md"
-                  onClick={requestGetSpotify}>
-            <p>GET YOUR STUPID SPOTIFY COOKIE HERE</p>
-          </button>
-
           <div className="flex-1 bg-background-main relative mt-20 overflow-auto hide-scrollbar">
             {/* Post header */}
             {!flairFilter && user && (
