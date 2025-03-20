@@ -155,11 +155,12 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
           <div className="flex items-center justify-end gap-3 mt-3">
             <p id={"charCountComment" + parentId}
                className="text-text-secondary text-sm text-center">0/280</p>
-            <button
-              onClick={handleSubmitComment}
-              className="bg-accent-blue-light text-text-main px-6 py-2 rounded-xl hover:bg-accent-blue"
-            >
-              Post
+
+            <button className="bg-accent-blue px-6 py-2 rounded-xl hover:bg-accent-blue-light transition-colors ease-in duration-75"
+                    onClick={handleSubmitComment}>
+              <p className="text-text-main">
+                Post
+              </p>
             </button>
           </div>
         </div>

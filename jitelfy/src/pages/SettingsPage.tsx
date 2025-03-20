@@ -423,6 +423,20 @@ const SettingsPage = () => {
                         </div>
                     </div>
 
+                    {/* Link with Spotify button */}
+                    <div className="flex flex-col items-start bg-background-secondary p-4 rounded-md my-10 gap-3">
+                        <div className="flex flex-row items-baseline w-full justify-between">
+                            <h2 className="text-text-main text-lg">Link with spotify</h2>
+                        </div>
+
+                        <button className="bg-accent-blue-light px-6 py-2 w-full rounded-xl hover:bg-accent-blue transition-colors"
+                            onClick={API.linkWithSpotify}>
+                            <p className="text-text-main">
+                                Link
+                            </p>
+                        </button>
+                    </div>
+
                 </div>
 
             </div>
