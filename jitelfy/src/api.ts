@@ -32,6 +32,32 @@ export async function RestoreUser(): Promise<User> {
   return JSON.parse(response);
 }
 
+export async function linkWithSpotify(): Promise<void> {
+  const response = await fetch(`${BASE_URL}/spotify/sauth`, {
+    method: "GET",
+    credentials: "include"
+  });
+
+  return response.json();
+}
+
+export async function requestThreadPlaylist(parentId: string, title: string, desc: string, pub: boolean): Promise<string> {
+  const tpData = {
+    id: parentId,
+    name: title,
+    description: desc,
+    public: pub
+  }
+
+  const response = await fetch(`${BASE_URL}/spotify/tp`, {
+    method: "POST",
+    body: JSON.stringify(tpData),
+    credentials: "include"
+  });
+
+  return response.json();
+}
+
 export async function followUser(userId: string): Promise<any> {
   const response = await fetch(`${BASE_URL}/users/follow/${userId}`, {
     method: "POST",
