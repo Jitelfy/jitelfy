@@ -18,7 +18,7 @@ export const SongOfTheDay = () => {
   }, []);
 
   return (
-    <div className="my-4">
+    <div className="my-4 justify-self-end">
       <h1 className="text-text-main text-2xl mb-4">Song of the Day</h1>
       {songUrl ? (
         <iframe
