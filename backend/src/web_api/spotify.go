@@ -1,21 +1,22 @@
 package web_api
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 const (
 	clientID     = "7f5165967f284534862eeee3a57f49f6"
 	clientSecret = "702a0f6d19b54fbe875176cc48554e88"
-	redirectURI  = "http://localhost:8080/callback"
+	redirectURI  = "http://localhost:8080/spotify/callback"
 	authURL      = "https://accounts.spotify.com/authorize"
 	tokenURL     = "https://accounts.spotify.com/api/token"
 )
@@ -29,18 +30,28 @@ type TokenResponse struct {
 }
 
 func SpotifyHandler(c echo.Context) error {
-	scope := "user-read-private user-read-email playlist-modify-private user-read-playback-position user-top-read user-read-recently-played"
+	scope := "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-read-private user-read-playback-position user-top-read user-read-recently-played"
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "cookie fail")
+	}
+	state := userStringID
 	authEndpoint := fmt.Sprintf(
-		"%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&state=xyz123",
-
+		"%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&state=%s",
 		authURL,
 		clientID,
 		url.QueryEscape(redirectURI),
-		url.QueryEscape(scope))
+		url.QueryEscape(scope),
+		url.QueryEscape(state))
 	return c.Redirect(http.StatusTemporaryRedirect, authEndpoint)
 }
 
 func SpotifyCallbackHandler(c echo.Context) error {
+	state := c.QueryParam("state")
+	userObjectID, err := primitive.ObjectIDFromHex(state)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "cookie fail callback")
+	}
 	code := c.QueryParam("code")
 	if code == "" {
 		return c.String(http.StatusBadRequest, "No code provided")
@@ -77,49 +88,52 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	spotifyTokenCookie := &http.Cookie{
-		Name:     "spotify_access_token",
-		Value:    tokenResp.AccessToken,
-		Expires:  time.Now().Add(time.Hour * 72),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_token": tokenResp.AccessToken}})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	c.SetCookie(spotifyTokenCookie)
-	spotifyRefreshCookie := &http.Cookie{
-		Name:     "spotify_refresh_token",
-		Value:    tokenResp.RefreshToken,
-		Expires:  time.Now().Add(time.Hour * 72),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_refresh": tokenResp.RefreshToken}})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, err.Error())
 	}
-	c.SetCookie(spotifyRefreshCookie)
+
 	// also returning this
 	return c.JSON(http.StatusOK, tokenResp)
 }
 
-func RefreshSpotifyToken(c echo.Context) error {
-	// grab token from cookie
-	refreshTokenCookie, err := c.Cookie("spotify_refresh_token")
-	if err != nil || refreshTokenCookie == nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+func SpotifyRefreshHandler(c echo.Context) error {
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "cookie fail")
 	}
-	refreshToken := refreshTokenCookie.Value
 
-	// prep the request
+	userObjectID, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "invalid user id")
+	}
+
+	var user User
+	err = UserColl.FindOne(context.TODO(), bson.M{"_id": userObjectID}).Decode(&user)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "could not find user")
+	}
+
+	if user.SpotifyRefresh == "" {
+		return c.String(http.StatusBadRequest, "no refresh token stored")
+	}
+
+	// build token refresh request
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
-	data.Set("refresh_token", refreshToken)
+	data.Set("refresh_token", user.SpotifyRefresh)
 
-	req, err := http.NewRequest("POST", tokenURL, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.SetBasicAuth(clientID, clientSecret)
 
-	// send the request, receive the response
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -131,32 +145,20 @@ func RefreshSpotifyToken(c echo.Context) error {
 		}
 	}(resp.Body)
 
-	// parse response
 	var tokenResp TokenResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
+	_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_token": tokenResp.AccessToken}})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "failed to update token in DB")
+	}
+	if tokenResp.RefreshToken != "" {
+		_, err = UserColl.UpdateOne(context.TODO(), bson.M{"_id": userObjectID}, bson.M{"$set": bson.M{"spotify_refresh": tokenResp.RefreshToken}})
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "failed to update token in DB")
+		}
+	}
 
-	// reset the cookies
-	spotifyTokenCookie := &http.Cookie{
-		Name:     "spotify_access_token",
-		Value:    tokenResp.AccessToken,
-		Expires:  time.Now().Add(time.Hour * 72),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-	}
-	c.SetCookie(spotifyTokenCookie)
-	// idk if we need to reset the refresh cookie but why not man
-	spotifyRefreshCookie := &http.Cookie{
-		Name:     "spotify_refresh_token",
-		Value:    tokenResp.RefreshToken,
-		Expires:  time.Now().Add(time.Hour * 72),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-	}
-	c.SetCookie(spotifyRefreshCookie)
-	// also returning this
 	return c.JSON(http.StatusOK, tokenResp)
 }
