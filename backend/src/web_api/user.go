@@ -74,7 +74,7 @@ func GetUser(c echo.Context) error {
 }
 
 func GetUsers(c echo.Context) error {
-	filter := bson.D{{Key: "_id", Value: primitive.ObjectID{}}}
+	filter := bson.D{}
 	var cursor, err = UserColl.Find(context.TODO(), filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
