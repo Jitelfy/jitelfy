@@ -393,7 +393,7 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
 
                     {/* Bookmark (already bookmarked) */}
                     { loggedInUser && loggedInUser.bookmarks.indexOf(post.id) !== -1 ? (
-                            <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
+                            <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light cursor-pointer"
                                  onClick={() => { API.handleUnBookmark(post.id, loggedInUser, setUser);}}
                                  title="Unbookmark">
                                 <svg className="fill-accent-blue" width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
@@ -412,7 +412,7 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
                                 </svg>
                             </div>
                         ) :
-                        <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
+                        <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light cursor-pointer"
                              onClick={() => { API.handleBookmark(post.id, loggedInUser, setUser);}}
                              title="Bookmark">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
