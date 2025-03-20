@@ -277,7 +277,7 @@ export const PostBase = (post: Post, postUser: User, renderTextWithHashtags: (te
                     <Link to={"/profile/" + postUser.username}
                           className="hover:underline hover:decoration-background-tertiary">
                         <p className="text-text-main font-bold">
-                            {postUser.displayname}
+                            {postUser.displayname || postUser.username}
                         </p>
                         <p className="text-text-secondary font-normal">
                             @{postUser.username}

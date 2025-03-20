@@ -155,7 +155,7 @@ const handleChangeBanner = async (banner: number, user: User) => {
 const handleChangeDisplayName = async (newName: string, user: User) => {
     if (!user) return; // Ensure user exists
 
-    if (newName.length > 0 && newName.length <= 40 && newName != user?.displayname) {
+    if (newName.length >= 0 && newName.length <= 40 && newName != user?.displayname) {
         let response = await requestCustomizeDisplayName(newName, user);
     }
 };
@@ -267,7 +267,10 @@ const SettingsPage = () => {
                                         if (label) label.style.visibility = "visible";
 
                                         const userDN = document.getElementById("userDisplayname");
-                                        if (userDN) userDN.textContent = newDisplayName;
+                                        if (userDN) {
+                                            userDN.textContent = newDisplayName;
+                                            if (userDN.textContent === "") userDN.textContent = user?.username;
+                                        }
 
                                         user.displayname = newDisplayName;
                                         setUser(user);
@@ -429,9 +432,9 @@ const SettingsPage = () => {
                             <h2 className="text-text-main text-lg">Link with spotify</h2>
                         </div>
 
-                        <button className="bg-accent-green px-6 py-2 w-full rounded-xl hover:bg-accent-green-light transition-colors"
+                        <button className="bg-accent-green px-6 py-2 w-full rounded-xl hover:bg-accent-green-light text-text-main hover:text-text-tertiary transition-colors"
                             onClick={API.linkWithSpotify}>
-                            <p className="text-text-main">
+                            <p>
                                 Link
                             </p>
                         </button>

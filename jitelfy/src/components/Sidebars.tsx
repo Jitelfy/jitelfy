@@ -250,7 +250,7 @@ const ProfileButton = (user: User | null) => {
 
                         {/* Username, display name */}
                         <div className="justify-start">
-                            <p id="userDisplayname" className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname}</p>
+                            <p id="userDisplayname" className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname || user.username}</p>
                             <p className="text-text-secondary overflow-ellipsis">@{user?.username}</p>
                         </div>
 
