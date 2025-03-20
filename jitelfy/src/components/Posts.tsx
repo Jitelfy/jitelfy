@@ -7,8 +7,11 @@ import * as API from "../api";
 
 export const handleThreadPlaylist = async(parentId: string, user: User | null) => {
     if (!user) return;
-    console.log("Thread playlist with post: " + parentId);
 
+    const title = "Jitelfy Thread Playlist";
+    const desc = "A thread playlist made with Jitelfy.";
+
+    const response = await API.requestThreadPlaylist(parentId, user, title, desc, true);
 };
 
 export const handleLike = async (postId: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {

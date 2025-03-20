@@ -41,7 +41,7 @@ export async function linkWithSpotify(): Promise<void> {
   return response.json();
 }
 
-export async function requestThreadPlaylist(parentId: string, title: string, desc: string, pub: boolean): Promise<string> {
+export async function requestThreadPlaylist(parentId: string, user: User, title: string, desc: string, pub: boolean): Promise<string> {
   const tpData = {
     id: parentId,
     name: title,
@@ -51,6 +51,7 @@ export async function requestThreadPlaylist(parentId: string, title: string, des
 
   const response = await fetch(`${BASE_URL}/spotify/tp`, {
     method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + user.token },
     body: JSON.stringify(tpData),
     credentials: "include"
   });

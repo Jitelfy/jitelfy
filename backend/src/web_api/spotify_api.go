@@ -117,6 +117,7 @@ func createPlaylist(accessToken string, playlistName string, playlistDescription
 
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	    fmt.Println("New decoder failed")
 		return nil, err
 	}
 
@@ -182,19 +183,19 @@ func HandleCreatePlaylist(c echo.Context) error {
 
 	var req ReqBody
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to parse body")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// create playlist
 	playlist, err := createPlaylist(user.SpotifyToken, req.Name, req.Description, req.Public)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to create playlist")
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	// add songs to it
 	postTree, err := GetSinglePostBackend(req.PostID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get post")
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	var songs []string
 	for _, post := range postTree {
