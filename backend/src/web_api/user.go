@@ -73,6 +73,7 @@ func GetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// hello gang
 func GetUsers(c echo.Context) error {
 	filter := bson.D{}
 	var cursor, err = UserColl.Find(context.TODO(), filter)
