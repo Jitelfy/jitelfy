@@ -363,14 +363,14 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
         >
             {PostBase(post, posts, loggedInUser, postUser, renderTextWithHashtags, setPosts, parentPost)}
 
-            <div className="flex flex-row align-baseline mt-5 justify-end gap-10">
+            <div className="flex flex-row align-baseline mt-5 gap-10 w-full justify-end">
 
                     {/* Like (already liked) */}
                     {loggedInUser != null && post.likeIds.indexOf(loggedInUser.id) !== -1 ? (
-                        <div className="flex flex-row gap-2 cursor-pointer fill-accent-red text-accent-red"
+                        <div className="flex flex-row gap-2 w-1/12 cursor-pointer fill-accent-red text-accent-red"
                              onClick={() => {API.handleUnlike(post.id, loggedInUser, posts, setPosts);}}
                              title="Unlike">
-                            <svg width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
+                            <svg width="20px" height="20px" viewBox="0 0 810 809.999993" version="1.0"><defs>
                                 <clipPath id="6c326d0963"><path d="M 92 177.246094 L 729 177.246094 L 729 713.253906 L 92 713.253906 Z M 92 177.246094 " clipRule="nonzero"/></clipPath>
                                 <clipPath id="54e3de31d4"><path d="M 116.566406 262.828125 C 66.722656 344.660156 101.289062 424.304688 147.066406 466.578125 L 414.730469 713.253906 L 676.746094 467.457031 C 719.320312 421.984375 735.175781 373.75 726.578125 320.039062 C 714.058594 245.742188 650.320312 188.097656 571.582031 179.863281 C 523.289062 174.945312 476.640625 187.996094 440.230469 217.0625 C 430.433594 224.878906 421.671875 233.621094 414.039062 243.125 C 404.984375 232.304688 394.363281 222.410156 382.351562 213.636719 C 340.484375 183.074219 287.1875 171.140625 235.996094 180.375 C 187.511719 189.371094 143.988281 219.414062 116.566406 262.828125 Z M 116.566406 262.828125 " clipRule="nonzero"/></clipPath></defs>
                                 <path d="M 262.617188 135 C 153.125 135 67.5 230.167969 67.5 342.761719 C 67.5 401.324219 76.871094 449.550781 111.808594 500.289062 C 145.140625 548.707031 200.574219 597.5625 286.582031 662.023438 L 405 742.5 L 523.410156 662.035156 C 609.421875 597.570312 664.859375 548.707031 698.191406 500.289062 C 733.128906 449.550781 742.5 401.324219 742.5 342.761719 C 742.5 230.167969 656.875 135 547.382812 135 C 492.441406 135 444.886719 157.382812 405 197.882812 C 365.113281 157.382812 317.554688 135 262.617188 135 Z M 262.617188 202.5 C 194.921875 202.5 135 262.761719 135 342.761719 C 135 361.289062 136.046875 377.578125 138.664062 392.597656 C 143.042969 417.757812 151.8125 439.363281 167.40625 462.015625 C 193.90625 500.503906 241.265625 543.710938 327.089844 608.03125 L 405 666.542969 L 482.910156 608.03125 C 568.734375 543.710938 616.097656 500.503906 642.597656 462.015625 C 667.496094 425.84375 675 392.328125 675 342.761719 C 675 262.761719 615.078125 202.5 547.382812 202.5 C 505.679688 202.5 467.441406 222.285156 432.113281 269.941406 C 425.746094 278.53125 415.6875 283.59375 405 283.59375 C 394.3125 283.59375 384.253906 278.53125 377.886719 269.941406 C 342.558594 222.285156 304.320312 202.5 262.617188 202.5 Z M 262.617188 202.5 " fillOpacity="1" fillRule="evenodd"/>
@@ -380,7 +380,7 @@ export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, l
                             <p className="text-sm">{post.likeIds.length}</p>
                         </div>
                     ) :
-                        <div className="flex flex-row gap-2 cursor-pointer text-text-secondary fill-text-secondary hover:fill-accent-red hover:text-accent-red duration-75 ease-in"
+                        <div className="flex flex-row gap-2 cursor-pointer w-1/12 text-text-secondary fill-text-secondary hover:fill-accent-red hover:text-accent-red duration-75 ease-in"
                              onClick={() => {API.handleLike(post.id, loggedInUser, posts, setPosts);}}
                              title="Like">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
