@@ -48,7 +48,7 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     const data = await res.json();
     data.sort(
       (a: PackagedPost, b: PackagedPost) =>
-        new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+        new Date(a.post.time).getTime() - new Date(b.post.time).getTime()
     );
     setComments(data);
   };
@@ -75,8 +75,6 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     e.preventDefault();
     if (!user) return;
 
-    if (!newCommentText) return;
-
     const commentData = {
       userid: user.id,
       text: newCommentText,
@@ -97,8 +95,8 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     if (res.ok) {
       const newComment = await res.json();
       setComments((prev) => [
-        { post: newComment, user: user },
         ...prev,
+        { post: newComment, user: user },
       ]);
 
       {/* Mock add comment number to post so we don't have to reload */}
