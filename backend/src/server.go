@@ -67,6 +67,7 @@ func main() {
 	web_api.UserColl = db.Collection("users")
 	web_api.RepostColl = db.Collection("reposts")
 	web_api.BookmarkColl = db.Collection("bookmarks")
+	web_api.SOTDColl = db.Collection("sotd")
 
 	router := echo.New()
 	router.Debug = true
@@ -82,6 +83,7 @@ func main() {
 	router.POST("/posts/repost/:id", web_api.MakeRepost)
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
+	router.GET("/sotd", web_api.GetSongOfTheDay)
 
 	router.GET("/spotify/sauth", web_api.SpotifyHandler)
 	router.GET("/spotify/refresh", web_api.SpotifyRefreshHandler)
@@ -106,6 +108,7 @@ func main() {
 	router.POST("/logout", web_api.Logout)
 
 	router.GET("/users/restore", web_api.RestoreUserFromCookie)
+	router.GET("/sotd", web_api.GetSongOfTheDay)
 
 	router.Use(middleware.RequestLoggerWithConfig(web_api.Log))
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{

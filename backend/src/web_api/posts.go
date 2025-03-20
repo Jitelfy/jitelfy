@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"math/rand"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -20,6 +21,7 @@ import (
 var PostColl *mongo.Collection
 var RepostColl *mongo.Collection
 var BookmarkColl *mongo.Collection
+var SOTDColl *mongo.Collection
 
 type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
@@ -791,4 +793,48 @@ func GetAllPostsFromUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
+}
+
+/* Struct to store the SOTD */
+type SongOfTheDay struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Song        string             `bson:"song" json:"song"`
+	LastUpdated time.Time          `bson:"lastUpdated" json:"lastUpdated"`
+}
+
+func GetSongOfTheDay(c echo.Context) error {
+
+	var SOTD SongOfTheDay
+
+	// This is just to initialise the time
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// If a song exists for today then just return it instantly
+	//If the stored song's lastupdated is more than 24 hours, it fetches a new song
+	if err := SOTDColl.FindOne(context.TODO(), bson.M{"lastUpdated": bson.M{"$gte": todayStart}}).Decode(&SOTD); err == nil {
+		return c.JSON(http.StatusOK, SOTD)
+	}
+
+	// If not, then get all the posts that exist
+	cursor, err := PostColl.Find(context.TODO(), bson.M{"song": bson.M{"$ne": ""}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to fetch songs")
+	}
+	var posts []Post
+	if err = cursor.All(context.TODO(), &posts); err != nil || len(posts) == 0 {
+		return c.JSON(http.StatusInternalServerError, "no songs available")
+	}
+
+	// Pick one song at random as today's SOTD
+	SOTD = SongOfTheDay{
+		Song:        posts[rand.Intn(len(posts))].Song,
+		LastUpdated: now,
+	}
+	if _, err := SOTDColl.InsertOne(context.TODO(), SOTD); err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to store song of the day")
+	}
+
+	// Return that randomly cohsen song
+	return c.JSON(http.StatusOK, SOTD)
 }

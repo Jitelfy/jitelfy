@@ -60,3 +60,8 @@ export async function requestDeletePost(id: string): Promise<any> {
   });
   return response.ok;
 }
+
+export async function getSongOfTheDay(): Promise<{ song: string; lastUpdated: string }> {
+  const response = await getContent("/sotd");
+  return JSON.parse(response);
+}
