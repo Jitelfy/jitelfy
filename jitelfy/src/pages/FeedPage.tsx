@@ -105,8 +105,9 @@ const FeedPage = () => {
 
     const currentText = (document.getElementById('posttext') as HTMLInputElement).value;
 
-    if (!currentText) return;
-    let currentLength = currentText.length;
+    let currentLength;
+    if (!currentText) currentLength = 0;
+    currentLength = currentText.length;
 
     const charCount = document.getElementById("charCountPost");
     if (!charCount) return;
@@ -170,7 +171,7 @@ const FeedPage = () => {
                             className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                             placeholder="What's on your mind?"
                             maxLength={280}
-                            onInput={() => charCounterPost(document.getElementById("posttext"))}
+                            onChange={() => charCounterPost(document.getElementById("posttext"))}
                         >
                         </textarea>
                         <input
