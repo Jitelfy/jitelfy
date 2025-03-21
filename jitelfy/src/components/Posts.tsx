@@ -6,16 +6,16 @@ import React from "react";
 import * as API from "../api";
 
 const formatDate = (date: Date) => {
-    let newDate = date.toLocaleString();
-    newDate = newDate.slice(0, 16) + newDate.slice(19);
+    let formatDate = date.toLocaleString();
+    let dateArr = date.toDateString().split(' ');
+
+    let newDate =  dateArr[1] + ' ' + dateArr[2] + ', ' + dateArr[3];
 
     /* Make time prettier */
-    if (newDate.slice(-4) === "p.m.") {
-        newDate = newDate.slice(0, -4);
-        newDate = newDate.concat("PM");
+    if (formatDate.slice(-4) === "p.m.") {
+        newDate = newDate.concat(" " + formatDate.slice(-13, -8) + " PM");
     } else {
-        newDate = newDate.slice(0, -4);
-        newDate = newDate.concat("AM");
+        newDate = newDate.concat(" " + formatDate.slice(-13, -8) + " AM");
     }
 
     return newDate;
