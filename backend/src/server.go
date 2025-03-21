@@ -114,6 +114,7 @@ func main() {
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:*"}, // placeholder for local vite
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization"},
+		ExposeHeaders:     []string{"Location"},
 		AllowCredentials: true,
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{
