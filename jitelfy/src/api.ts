@@ -1,37 +1,65 @@
+/*
+    For server POST, GET, etc. requests.
+ */
+
 import {PackagedPost, PackagedUserAlert, Post, User, UserAlerts} from './types';
 
 export const BASE_URL = "http://localhost:8080";
 
+/**
+ * Gets content (without a header)
+ * @param path the path to request from the server
+ */
 export async function getContent(path: string): Promise<string> {
   const content = await fetch(`${BASE_URL}${path}`, { credentials: "include" });
   return content.text();
 }
 
+/**
+ * Gets all top-level (parent) posts.
+ */
 export async function getPosts(): Promise<PackagedPost[]> {
   const response = await getContent("/posts/top");
   return JSON.parse(response);
 }
 
+/**
+ * Gets all posts from a user.
+ * @param userID the ID of the user to get posts from
+ */
 export async function getPostsByUser(userID: string): Promise<PackagedPost[]> {
   const response = await getContent("/posts/from?userid=" + userID);
   return JSON.parse(response);
 }
 
-export async function getUser(path: string): Promise<User> {
-  const response = await getContent("/users/" + path);
+/**
+ * Gets user data of a user.
+ * @param userID the ID of the user
+ */
+export async function getUser(userID: string): Promise<User> {
+  const response = await getContent("/users/" + userID);
   return JSON.parse(response);
 }
 
+/**
+ * Gets the current logged-in user's activity.
+ */
 export async function getUserActivity(): Promise<PackagedUserAlert[]> {
   const response = await getContent("/users/alerts");
   return JSON.parse(response);
 }
 
+/**
+ * Restores the user's context.
+ */
 export async function RestoreUser(): Promise<User> {
   const response = await getContent("/users/restore");
   return JSON.parse(response);
 }
 
+/**
+ * Attempts to link the logged-in user with Spotify.
+ */
 export async function linkWithSpotify(): Promise<void> {
   const response = await fetch(`${BASE_URL}/spotify/sauth`, {
     method: "GET",
@@ -45,8 +73,12 @@ export async function linkWithSpotify(): Promise<void> {
   return response.json();
 }
 
-export async function followUser(userId: string): Promise<any> {
-  const response = await fetch(`${BASE_URL}/users/follow/${userId}`, {
+/**
+ * Follows a given user.
+ * @param userID the ID of the user to follow
+ */
+export async function followUser(userID: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/users/follow/${userID}`, {
     method: "POST",
     credentials: "include",
   });
@@ -54,8 +86,12 @@ export async function followUser(userId: string): Promise<any> {
   return response.json();
 }
 
-export async function unfollowUser(userId: string): Promise<any> {
-  const response = await fetch(`${BASE_URL}/users/unfollow/${userId}`, {
+/**
+ * Unfollows a given user.
+ * @param userID the ID of the user to unfollow
+ */
+export async function unfollowUser(userID: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/users/unfollow/${userID}`, {
     method: "POST",
     credentials: "include",
   });
@@ -63,8 +99,12 @@ export async function unfollowUser(userId: string): Promise<any> {
   return response.json();
 }
 
-export async function requestDeletePost(id: string): Promise<any> {
-  const response = await fetch(`${BASE_URL}/posts?id=${id}`, {
+/**
+ * Attempts to delete a given post.
+ * @param postID the ID of the post to delete
+ */
+export async function requestDeletePost(postID: string): Promise<any> {
+  const response = await fetch(`${BASE_URL}/posts?id=${postID}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -74,14 +114,25 @@ export async function requestDeletePost(id: string): Promise<any> {
   return response.ok;
 }
 
+/**
+ * Gets the current Song of the Day (SOTD).
+ */
 export async function getSongOfTheDay(): Promise<{ song: string; lastUpdated: string }> {
   const response = await getContent("/sotd");
   return JSON.parse(response);
 }
 
-export async function requestThreadPlaylist(parentId: string, user: User, title: string, desc: string, pub: boolean): Promise<string> {
+/**
+ * Requests to create a Thread Playlist with the given top-level (parent) post.
+ * @param parentID the ID of the top-level post
+ * @param userID the logged-in user's ID
+ * @param title the title of the Thread Playlist
+ * @param desc the description of the Thread Playlist
+ * @param pub whether the playlist is public or not
+ */
+export async function requestThreadPlaylist(parentID: string, userID: User, title: string, desc: string, pub: boolean): Promise<string> {
   const tpData = {
-    id: parentId,
+    id: parentID,
     name: title,
     description: desc,
     public: pub
@@ -89,7 +140,7 @@ export async function requestThreadPlaylist(parentId: string, user: User, title:
 
   const response = await fetch(`${BASE_URL}/spotify/tp`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + user.token },
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + userID.token },
     body: JSON.stringify(tpData),
     credentials: "include"
   });
@@ -97,19 +148,31 @@ export async function requestThreadPlaylist(parentId: string, user: User, title:
   return response.json();
 }
 
-export const handleThreadPlaylist = async(parentId: string, user: User | null) => {
+/**
+ * Handles the thread playlist customization (before sending the request).
+ * @param parentID the ID of the top-level (parent) post
+ * @param user the currently logged-in user
+ */
+export const handleThreadPlaylist = async(parentID: string, user: User | null) => {
   if (!user) return;
 
   const title = "Jitelfy Thread Playlist";
   const desc = "A thread playlist made with Jitelfy.";
 
-  const response = await requestThreadPlaylist(parentId, user, title, desc, true);
+  const response = await requestThreadPlaylist(parentID, user, title, desc, true);
 };
 
-export const handleLike = async (postId: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
+/**
+ * Likes a post.
+ * @param postID the ID of the post to like
+ * @param user the currently logged-in user
+ * @param posts an array of posts
+ * @param setPosts a function to set the above array of posts
+ */
+export const handleLike = async (postID: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/like/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/like/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -120,7 +183,7 @@ export const handleLike = async (postId: string, user: User | null, posts: Array
 
     if (response.ok) {
       setPosts(posts.map((post) => {
-        if (post.post.id === postId) {
+        if (post.post.id === postID) {
           return {
             ...post,
             post: {
@@ -138,10 +201,17 @@ export const handleLike = async (postId: string, user: User | null, posts: Array
   }
 };
 
-export const handleUnlike = async (postId: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
+/**
+ * Unlikes a post.
+ * @param postID the ID of the post to like
+ * @param user the currently logged-in user
+ * @param posts an array of posts
+ * @param setPosts a function to set the above array of posts
+ */
+export const handleUnlike = async (postID: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/unlike/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/unlike/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -151,7 +221,7 @@ export const handleUnlike = async (postId: string, user: User | null, posts: Arr
     });
     if (response.ok) {
       setPosts(posts.map((post) => {
-        if (post.post.id === postId) {
+        if (post.post.id === postID) {
           return {
             ...post,
             post: {
@@ -169,14 +239,17 @@ export const handleUnlike = async (postId: string, user: User | null, posts: Arr
   }
 };
 
-export const handleRepost = async (
-    postId: string,
-    user: User | null,
-    setUser: (u: User) => any
-) => {
+
+/**
+ * Reposts a post.
+ * @param postID the ID of the post to like
+ * @param user the currently logged-in user
+ * @param setUser a function to set the logged-in user
+ */
+export const handleRepost = async (postID: string, user: User | null, setUser: (u: User) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/repost/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/repost/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -185,21 +258,23 @@ export const handleRepost = async (
       credentials: "include",
     });
     if (response.ok) {
-      setUser({ ...user, reposts: [...user.reposts, postId] });
+      setUser({ ...user, reposts: [...user.reposts, postID] });
     }
   } catch (error) {
     console.error("Error reposting:", error);
   }
 };
 
-export const handleUnRepost = async (
-    postId: string,
-    user: User | null,
-    setUser: (u: User) => any
-) => {
+/**
+ * Un-reposts a post.
+ * @param postID the ID of the post to like
+ * @param user the currently logged-in user
+ * @param setUser a function to set the logged-in user
+ */
+export const handleUnRepost = async (postID: string, user: User | null, setUser: (u: User) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/unrepost/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/unrepost/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -208,16 +283,24 @@ export const handleUnRepost = async (
       credentials: "include",
     });
     if (response.ok) {
-      setUser({ ...user, reposts: user.reposts.filter((id) => id !== postId) });
+      setUser({ ...user, reposts: user.reposts.filter((id) => id !== postID) });
     }
   } catch (error) {
-    console.error("Error unreposting:", error);
+    console.error("Error un-reposting:", error);
   }
 };
 
-export const handleDeletePost = async (id: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any, parentPost: Post | null) => {
+/**
+ * Handles a post delete request.
+ * @param postID the ID of the post to delete
+ * @param user the currently logged-in user
+ * @param posts an array of posts
+ * @param setPosts a function to set the above array of posts
+ * @param parentPost the parent post of the post to delete (or null)
+ */
+export const handleDeletePost = async (postID: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any, parentPost: Post | null) => {
   if (!user) return; // ensure user exists
-  const response = await requestDeletePost(id);
+  const response = await requestDeletePost(postID);
   if (!response) {
     console.error("Failed to delete post");
     return;
@@ -225,7 +308,7 @@ export const handleDeletePost = async (id: string, user: User | null, posts: Arr
 
   // Remove the deleted post from state without refetching/reloading
   setPosts(posts.map((post) => {
-    if (post.post.id === id) {
+    if (post.post.id === postID) {
       return {
         ...post,
         post: {
@@ -244,10 +327,16 @@ export const handleDeletePost = async (id: string, user: User | null, posts: Arr
   }
 };
 
-export const handleBookmark = async (postId: string, user: User | null, setUser: (u: User) => any) => {
+/**
+ * Bookmarks a post.
+ * @param postID the ID of the post to bookmark
+ * @param user the currently logged-in user
+ * @param setUser a function to set the currently logged-in user
+ */
+export const handleBookmark = async (postID: string, user: User | null, setUser: (u: User) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/bookmark/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/bookmark/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -257,7 +346,7 @@ export const handleBookmark = async (postId: string, user: User | null, setUser:
     });
 
     if (response.ok) {
-      const updatedUser = {...user, bookmarks: [...user.bookmarks, postId]};
+      const updatedUser = {...user, bookmarks: [...user.bookmarks, postID]};
       setUser(updatedUser);
     }
   }
@@ -266,10 +355,16 @@ export const handleBookmark = async (postId: string, user: User | null, setUser:
   }
 }
 
-export const handleUnBookmark = async (postId: string, user: User | null, setUser: (u: User) => any) => {
+/**
+ * Un-bookmarks a post.
+ * @param postID the ID of the post to bookmark
+ * @param user the currently logged-in user
+ * @param setUser a function to set the currently logged-in user
+ */
+export const handleUnBookmark = async (postID: string, user: User | null, setUser: (u: User) => any) => {
   if (!user) return;
   try {
-    const response = await fetch(`${BASE_URL}/posts/unbookmark/${postId}`, {
+    const response = await fetch(`${BASE_URL}/posts/unbookmark/${postID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -279,7 +374,7 @@ export const handleUnBookmark = async (postId: string, user: User | null, setUse
     });
 
     if (response.ok) {
-      const updatedUser = { ...user, bookmarks: user.bookmarks.filter((id: string) => id !== postId) };
+      const updatedUser = { ...user, bookmarks: user.bookmarks.filter((id: string) => id !== postID) };
       setUser(updatedUser);
     }
   }

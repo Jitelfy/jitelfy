@@ -1,3 +1,11 @@
+/*
+    For commonly used helper-functions across files.
+ */
+
+/**
+ * Formats a given date to a nicer looking string.
+ * @param date the date to format
+ */
 export const formatDate = (date: Date) => {
     let formatDate = date.toLocaleString();
     let dateArr = date.toDateString().split(' ');
