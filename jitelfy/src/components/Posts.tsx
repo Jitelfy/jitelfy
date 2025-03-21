@@ -4,22 +4,7 @@ import { Link } from "react-router-dom";
 import Comments from "./Comments";
 import React from "react";
 import * as API from "../api";
-
-const formatDate = (date: Date) => {
-    let formatDate = date.toLocaleString();
-    let dateArr = date.toDateString().split(' ');
-
-    let newDate =  dateArr[1] + ' ' + dateArr[2] + ', ' + dateArr[3];
-
-    /* Make time prettier */
-    if (formatDate.slice(-4) === "p.m.") {
-        newDate = newDate.concat(" " + formatDate.slice(-13, -8) + " PM");
-    } else {
-        newDate = newDate.concat(" " + formatDate.slice(-13, -8) + " AM");
-    }
-
-    return newDate;
-}
+import * as COMMON from "../common";
 
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
     const newSet = new Set(openComments);
@@ -148,7 +133,7 @@ export const PostBase = (post: Post, posts: Array<PackagedPost>, loggedInUser: U
                 <div>
                     <Link to={"/profile/" + postUser.username}>
                         <img
-                            className="size-16 rounded-full mb-2 mr-3"
+                            className="size-16 rounded-full mr-3"
                             src={IconArray[postUser.icon]}
                             alt={postUser.displayname}
                         />
@@ -166,11 +151,11 @@ export const PostBase = (post: Post, posts: Array<PackagedPost>, loggedInUser: U
                         </p>
                     </Link>
                     <p className="text-text-secondary text-sm">
-                        {formatDate(new Date(post.time)).toString()}
+                        {COMMON.formatDate(new Date(post.time))}
                     </p>
                 </div>
             </div>
-            <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
+            <p className="mt-4 text-text-main whitespace-pre-wrap break-words mb-2">
                 {renderTextWithHashtags(post.text)}
             </p>
 
