@@ -3,6 +3,7 @@
  */
 
 import {PackagedPost, PackagedUserAlert, Post, User, UserAlerts} from './types';
+import { redirect } from 'react-router-dom';
 
 export const BASE_URL = "http://localhost:8080";
 
@@ -61,16 +62,15 @@ export async function RestoreUser(): Promise<User> {
  * Attempts to link the logged-in user with Spotify.
  */
 export async function linkWithSpotify(): Promise<void> {
-  const response = await fetch(`${BASE_URL}/spotify/sauth`, {
+/*  const response = await fetch(`${BASE_URL}/spotify/sauth`, {
     method: "GET",
-    headers: { "SameSite": "None",
-              "Access-Control-Allow-Origin": "*",
-              "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-              "Access-Control-Allow-Credentials": "true"},
-    credentials: "include"
+    mode: "no-cors",
+    credentials: "include",
+    redirect: "follow",
   });
+  */
+  window.location.href = `${BASE_URL}/spotify/sauth`;
 
-  return response.json();
 }
 
 /**

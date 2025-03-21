@@ -98,7 +98,7 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	}
 
 	// also returning this
-	return c.JSON(http.StatusOK, tokenResp)
+	return c.Redirect(http.StatusPermanentRedirect, "localhost:5173/settings")
 }
 
 func SpotifyRefreshHandler(c echo.Context) error {
