@@ -73,6 +73,21 @@ func GetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// hello gang
+func GetUsers(c echo.Context) error {
+	filter := bson.D{}
+	var cursor, err = UserColl.Find(context.TODO(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	var users []User
+	err = cursor.All(context.TODO(), &users)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
 func MakeUser(c echo.Context) error {
 	req := struct {
 		DisplayName string `json:"displayname"`
