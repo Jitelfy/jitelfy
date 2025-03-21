@@ -253,6 +253,11 @@ const SignUpPage = () => {
                   <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                           onClick={() => {
                             API_CUSTOM.requestCustomizeIcon(NewIcon, user);
+
+                            /* Make icon show once logged in */
+                            user.icon = NewIcon;
+                            setUser(user);
+
                             setNewAccountCustomization(signupStage.BANNER);
                           }}>
                     <p className="">
