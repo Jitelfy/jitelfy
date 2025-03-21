@@ -58,8 +58,12 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
     const currentText = (document.getElementById("commentText" + parentId) as HTMLInputElement).value;
 
-    if (!currentText) return;
-    let currentLength = currentText.length;
+    let currentLength;
+    if (currentText) {
+         currentLength = currentText.length;
+    } else {
+        currentLength = 0;
+    }
 
     const charCount = document.getElementById("charCountComment" + parentId);
     if (!charCount) return;
