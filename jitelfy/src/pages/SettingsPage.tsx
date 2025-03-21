@@ -435,7 +435,9 @@ const SettingsPage = () => {
                         </div>
 
                         <button className="bg-accent-green px-6 py-2 w-full rounded-xl hover:bg-accent-green-light text-text-main hover:text-text-tertiary transition-colors"
-                            onClick={API.linkWithSpotify}>
+                            onClick={() => {
+                                API.linkWithSpotify();
+                            }}>
                             <p>
                                 Link
                             </p>
