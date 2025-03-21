@@ -4,96 +4,10 @@ import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import * as API from "../api";
-import {BASE_URL, getUser} from "../api";
+import * as API_CUSTOM from "../api-customization";
 
 let NewIcon = -1;
 let NewBanner = -1;
-
-export async function requestCustomizeDisplayName(newName: string, user: User): Promise<any> {
-    const nameData = {
-        displayname: newName
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/displayname`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(nameData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeBio(newBio: string, user: User): Promise<any> {
-    const bioData = {
-        bio: newBio
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/bio`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(bioData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeSong(newSong: string, user: User): Promise<any> {
-    const songData = {
-        song: newSong
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/favsong`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(songData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeBanner(newBanner: number, user: User): Promise<any> {
-    const bannerData = {
-        banner: newBanner
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/banner`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(bannerData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeIcon(newIcon: number, user: User): Promise<any> {
-    const iconData = {
-        icon: newIcon
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/icon`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(iconData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
 
 const handleIconClick = async (imgID: string) => {
     const img = document.getElementById(imgID);
@@ -140,7 +54,7 @@ const handleChangeIcon = async (icon: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (icon != user?.icon) {
-        let response = await requestCustomizeIcon(icon, user);
+        let response = await API_CUSTOM.requestCustomizeIcon(icon, user);
     }
 };
 
@@ -148,7 +62,7 @@ const handleChangeBanner = async (banner: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (banner != user?.banner) {
-        let response = await requestCustomizeBanner(banner, user);
+        let response = await API_CUSTOM.requestCustomizeBanner(banner, user);
     }
 };
 
@@ -156,7 +70,7 @@ const handleChangeDisplayName = async (newName: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newName.length >= 0 && newName.length <= 40 && newName != user?.displayname) {
-        let response = await requestCustomizeDisplayName(newName, user);
+        let response = await API_CUSTOM.requestCustomizeDisplayName(newName, user);
     }
 };
 
@@ -164,7 +78,7 @@ const handleChangeBio = async (newBio: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newBio != null && newBio.length <= 250 && newBio != user?.bio) {
-        let response = await requestCustomizeBio(newBio, user);
+        let response = await API_CUSTOM.requestCustomizeBio(newBio, user);
     }
 };
 
@@ -172,7 +86,7 @@ const handleChangeSong = async (newSong: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newSong != null && newSong != user?.song) {
-        let response = await requestCustomizeSong(newSong, user);
+        let response = await API_CUSTOM.requestCustomizeSong(newSong, user);
     }
 };
 
