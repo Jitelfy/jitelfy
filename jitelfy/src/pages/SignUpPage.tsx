@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BASE_URL } from "../api";
 import {BannerArray, IconArray, UserContext} from "../UserContext";
 import {User} from "../types";
-import {requestCustomizeBanner, requestCustomizeBio, requestCustomizeIcon} from "./SettingsPage";
+import * as API_CUSTOM from "../api-customization";
 
 let NewIcon = -1;
 let NewBanner = -1;
@@ -252,7 +252,12 @@ const SignUpPage = () => {
 
                   <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                           onClick={() => {
-                            requestCustomizeIcon(NewIcon, user);
+                            API_CUSTOM.requestCustomizeIcon(NewIcon, user);
+
+                            /* Make icon show once logged in */
+                            user.icon = NewIcon;
+                            setUser(user);
+
                             setNewAccountCustomization(signupStage.BANNER);
                           }}>
                     <p className="">
@@ -299,7 +304,7 @@ const SignUpPage = () => {
 
                       <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                               onClick={() => {
-                                requestCustomizeBanner(NewBanner, user);
+                                API_CUSTOM.requestCustomizeBanner(NewBanner, user);
                                 setNewAccountCustomization(signupStage.BIO);
                               }}>
                         <p className="">
@@ -341,7 +346,7 @@ const SignUpPage = () => {
 
                       <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                               onClick={() => {
-                                requestCustomizeBio(newBio, user);
+                                API_CUSTOM.requestCustomizeBio(newBio, user);
                                 setNewAccountCustomization(signupStage.FINISH);
                               }}>
                         <p className="">

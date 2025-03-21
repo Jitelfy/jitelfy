@@ -4,188 +4,7 @@ import { Link } from "react-router-dom";
 import Comments from "./Comments";
 import React from "react";
 import * as API from "../api";
-
-export const handleLike = async (postId: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/like/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-
-        if (response.ok) {
-            setPosts(posts.map((post) => {
-                if (post.post.id === postId) {
-                    return {
-                        ...post,
-                        post: {
-                            ...post.post,
-                            likeIds: [...post.post.likeIds, user.id],
-                        },
-                    };
-                }
-                return post;
-            }));
-        }
-    }
-    catch (error) {
-        console.error("Error liking post:", error);
-    }
-};
-
-export const handleUnlike = async (postId: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/unlike/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-        if (response.ok) {
-            setPosts(posts.map((post) => {
-                if (post.post.id === postId) {
-                    return {
-                        ...post,
-                        post: {
-                            ...post.post,
-                            likeIds: post.post.likeIds.filter((id) => id !== user.id),
-                        },
-                    };
-                }
-                return post;
-            }));
-        }
-    }
-    catch (error) {
-        console.error("Error unliking post:", error);
-    }
-};
-
-export const handleRepost = async (
-    postId: string,
-    user: User | null,
-    setUser: (u: User) => any
-) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/repost/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-        if (response.ok) {
-            setUser({ ...user, reposts: [...user.reposts, postId] });
-        }
-    } catch (error) {
-        console.error("Error reposting:", error);
-    }
-};
-
-export const handleUnRepost = async (
-    postId: string,
-    user: User | null,
-    setUser: (u: User) => any
-) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/unrepost/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-        if (response.ok) {
-            setUser({ ...user, reposts: user.reposts.filter((id) => id !== postId) });
-        }
-    } catch (error) {
-        console.error("Error unreposting:", error);
-    }
-};
-
-export const handleDeletePost = async (id: string, user: User | null, posts: Array<PackagedPost>, setPosts: (p: Array<PackagedPost>) => any, parentPost: Post | null) => {
-    if (!user) return; // ensure user exists
-    const response = await API.requestDeletePost(id);
-    if (!response) {
-        console.error("Failed to delete post");
-        return;
-    }
-
-    // Remove the deleted post from state without refetching/reloading
-    setPosts(posts.map((post) => {
-        if (post.post.id === id) {
-            return {
-                ...post,
-                post: {
-                    ...post.post,
-                    childids: -1,
-                },
-            };
-        }
-        return post;
-    }))
-
-    {/* Mock decrease the comment number so we don't have to reload */}
-    if (parentPost) {
-        const commentText = document.getElementById("commentNum" + parentPost.id);
-        if (commentText && commentText.textContent) commentText.textContent = (parseInt(commentText.textContent) - 1).toString(10);
-    }
-};
-
-export const handleBookmark = async (postId: string, user: User | null, setUser: (u: User) => any) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/bookmark/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-
-        if (response.ok) {
-            const updatedUser = {...user, bookmarks: [...user.bookmarks, postId]};
-            setUser(updatedUser);
-        }
-    }
-    catch (error) {
-        console.log("Error bookmarking post:", error);
-    }
-}
-
-export const handleUnBookmark = async (postId: string, user: User | null, setUser: (u: User) => any) => {
-    if (!user) return;
-    try {
-        const response = await fetch(`${API.BASE_URL}/posts/unbookmark/${postId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + user.token
-            },
-            credentials: "include",
-        });
-
-        if (response.ok) {
-            const updatedUser = { ...user, bookmarks: user.bookmarks.filter((id: string) => id !== postId) };
-            setUser(updatedUser);
-        }
-    }
-    catch (error) {
-        console.log("Error bookmarking post:", error);
-    }
-}
+import * as COMMON from "../common";
 
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
     const newSet = new Set(openComments);
@@ -250,14 +69,71 @@ export const mapBookmarks = (bookmarkedPosts: Array<PackagedPost>, user: User | 
     )
 };
 
-export const PostBase = (post: Post, postUser: User, renderTextWithHashtags: (text: string) => any) => {
+export const PostBase = (post: Post, posts: Array<PackagedPost>, loggedInUser: User | null, postUser: User, renderTextWithHashtags: (text: string) => any, setPosts: (posts: Array<PackagedPost>) => any, parentPost: Post | null) => {
+    let editMode = false;
+
+    function handlePopup() {
+        let popup = document.getElementById("editPopup" + post.id);
+        if (popup != null) {
+            if (popup.style.visibility == "hidden") {
+                popup.style.visibility = "visible";
+            } else {
+                popup.style.visibility = "hidden";
+            }
+        }
+        return;
+    }
+
     return (
         <div>
             <div className="flex items-center">
+                {/* Edit button (only for our own posts)*/}
+                {loggedInUser != null && postUser.id === loggedInUser.id && (
+                    <div>
+                        <div className="flex flex-col invisible top-4 right-4 z-20 text-text-main fill-text-main text-md rounded-xl absolute bg-background-tertiary"
+                             onMouseLeave={() => {
+                                 handlePopup();
+                                 editMode = false;
+                             }}
+                             id={"editPopup" + post.id}
+                        >
+                            <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pt-4 pb-2 rounded-t-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
+                                 onClick={() => {
+                                     editMode = true;
+                                     console.log("Edit mode");
+                                 }}>
+                                <svg width="20px" height="20px" viewBox="0 0 24 24">
+                                    <path fillRule="evenodd" clipRule="evenodd" d="M20.5337 3.3916C20.2236 3.08142 19.9559 2.81378 19.7193 2.60738C19.4702 2.39007 19.2019 2.1918 18.876 2.05679C18.1409 1.75231 17.3149 1.75231 16.5799 2.05679C16.2539 2.1918 15.9856 2.39007 15.7365 2.60738C15.4999 2.81378 15.2323 3.08141 14.9221 3.39159L8.93751 9.37615C8.52251 9.79078 8.20882 10.1042 7.97173 10.477C7.77111 10.7924 7.61569 11.1344 7.51002 11.4929C7.38514 11.9167 7.35534 12.3591 7.31592 12.9444L7.1842 14.8876C7.17485 15.0247 7.16396 15.1845 7.16666 15.3246C7.16974 15.4838 7.18962 15.7203 7.30999 15.9677C7.45687 16.2697 7.70083 16.5137 8.00282 16.6606C8.25029 16.7809 8.48679 16.8008 8.64598 16.8039C8.78602 16.8066 8.94585 16.7957 9.08298 16.7863L11.0261 16.6546C11.6114 16.6152 12.0539 16.5854 12.4776 16.4605C12.8362 16.3549 13.1782 16.1994 13.4936 15.9988C13.8664 15.7617 14.1798 15.448 14.5944 15.033L20.579 9.04845C20.8891 8.73829 21.1568 8.47067 21.3632 8.23405C21.5805 7.98491 21.7788 7.71662 21.9138 7.39069C22.2182 6.65561 22.2182 5.82968 21.9138 5.09459C21.7788 4.76867 21.5805 4.50038 21.3632 4.25124C21.1568 4.01464 20.8892 3.74704 20.579 3.43691L20.5337 3.3916ZM18.1106 3.90455C18.1522 3.92179 18.2324 3.96437 18.4046 4.11458C18.5836 4.27072 18.803 4.48928 19.1421 4.82843C19.4813 5.16758 19.6998 5.3869 19.856 5.56591C20.0062 5.73813 20.0488 5.81835 20.066 5.85996C20.1675 6.10499 20.1675 6.3803 20.066 6.62533C20.0488 6.66694 20.0062 6.74716 19.856 6.91938C19.7482 7.04288 19.6108 7.18558 19.4245 7.37359L16.597 4.54602C16.785 4.35976 16.9277 4.22231 17.0512 4.11458C17.2234 3.96437 17.3036 3.92179 17.3452 3.90455C17.5903 3.80306 17.8656 3.80306 18.1106 3.90455ZM15.1823 5.9598L18.0107 8.78823L13.2465 13.5525C12.7366 14.0624 12.5842 14.207 12.4202 14.3112C12.2625 14.4116 12.0915 14.4893 11.9122 14.5421C11.7258 14.597 11.5167 14.6168 10.7973 14.6655L9.19649 14.7741L9.30502 13.1732C9.3538 12.4538 9.37351 12.2447 9.42845 12.0583C9.48128 11.879 9.55899 11.708 9.6593 11.5503C9.76359 11.3863 9.90816 11.234 10.418 10.7241L15.1823 5.9598Z"/>
+                                    <path d="M11.0055 2C9.61949 1.99999 8.51721 1.99999 7.62839 2.0738C6.71811 2.14939 5.94253 2.30755 5.23415 2.67552C4.1383 3.24478 3.24477 4.1383 2.67552 5.23416C2.30755 5.94253 2.14939 6.71811 2.0738 7.6284C1.99999 8.51721 1.99999 9.61949 2 11.0055V12.9945C1.99999 14.3805 1.99999 15.4828 2.0738 16.3716C2.14939 17.2819 2.30755 18.0575 2.67552 18.7659C3.24477 19.8617 4.1383 20.7552 5.23415 21.3245C5.94253 21.6925 6.71811 21.8506 7.62839 21.9262C8.5172 22 9.61946 22 11.0054 22H13.0438C14.4068 22 15.4909 22 16.3654 21.9286C17.261 21.8554 18.0247 21.7023 18.7239 21.346C19.8529 20.7708 20.7708 19.8529 21.346 18.7239C21.7023 18.0247 21.8554 17.261 21.9286 16.3654C22 15.4909 22 14.4069 22 13.0439V13C22 12.4477 21.5523 12 21 12C20.4477 12 20 12.4477 20 13C20 14.4166 19.9992 15.419 19.9352 16.2026C19.8721 16.9745 19.7527 17.4457 19.564 17.816C19.1805 18.5686 18.5686 19.1805 17.816 19.564C17.4457 19.7527 16.9745 19.8721 16.2026 19.9352C15.419 19.9992 14.4166 20 13 20H11.05C9.60949 20 8.59025 19.9992 7.79391 19.9331C7.00955 19.8679 6.53142 19.7446 6.1561 19.5497C5.42553 19.1702 4.82985 18.5745 4.45035 17.8439C4.25538 17.4686 4.13208 16.9905 4.06694 16.2061C4.0008 15.4097 4 14.3905 4 12.95V11.05C4 9.60949 4.0008 8.59026 4.06694 7.79392C4.13208 7.00955 4.25538 6.53142 4.45035 6.15611C4.82985 5.42553 5.42553 4.82985 6.1561 4.45035C6.53142 4.25539 7.00955 4.13208 7.79391 4.06694C8.59025 4.00081 9.60949 4 11.05 4H12C12.5523 4 13 3.55229 13 3C13 2.44772 12.5523 2 12 2L11.0055 2Z"/>
+                                </svg>
+                                <p>Edit</p>
+                            </div>
+                            <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pb-4 pt-2 rounded-b-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
+                                 onClick={() => {
+                                     API.handleDeletePost(post.id, loggedInUser, posts, setPosts, parentPost)
+                                 }}>
+                                <svg width="20px" height="20px" viewBox="0 0 24 24">
+                                    <path fillRule="evenodd" clipRule="evenodd" d="M7.10002 5H3C2.44772 5 2 5.44772 2 6C2 6.55228 2.44772 7 3 7H4.06055L4.88474 20.1871C4.98356 21.7682 6.29471 23 7.8789 23H16.1211C17.7053 23 19.0164 21.7682 19.1153 20.1871L19.9395 7H21C21.5523 7 22 6.55228 22 6C22 5.44772 21.5523 5 21 5H19.0073C19.0018 4.99995 18.9963 4.99995 18.9908 5H16.9C16.4367 2.71776 14.419 1 12 1C9.58104 1 7.56329 2.71776 7.10002 5ZM9.17071 5H14.8293C14.4175 3.83481 13.3062 3 12 3C10.6938 3 9.58254 3.83481 9.17071 5ZM17.9355 7H6.06445L6.88085 20.0624C6.91379 20.5894 7.35084 21 7.8789 21H16.1211C16.6492 21 17.0862 20.5894 17.1192 20.0624L17.9355 7ZM14.279 10.0097C14.83 10.0483 15.2454 10.5261 15.2068 11.0771L14.7883 17.0624C14.7498 17.6134 14.2719 18.0288 13.721 17.9903C13.17 17.9517 12.7546 17.4739 12.7932 16.9229L13.2117 10.9376C13.2502 10.3866 13.7281 9.97122 14.279 10.0097ZM9.721 10.0098C10.2719 9.97125 10.7498 10.3866 10.7883 10.9376L11.2069 16.923C11.2454 17.4739 10.83 17.9518 10.2791 17.9903C9.72811 18.0288 9.25026 17.6134 9.21173 17.0625L8.79319 11.0771C8.75467 10.5262 9.17006 10.0483 9.721 10.0098Z"/>
+                                </svg>
+                                <p>Delete</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handlePopup}
+                            title="Edit"
+                            className="absolute right-6 top-4 fill-text-secondary cursor-pointer hover:fill-accent-blue transition-colors ease-in duration-75"
+                        >
+                            <svg width="23px" height="23px" viewBox="0 0 16 16">
+                                <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
                 <div>
                     <Link to={"/profile/" + postUser.username}>
                         <img
-                            className="size-16 rounded-full mb-2 mr-3"
+                            className="size-16 rounded-full mr-3"
                             src={IconArray[postUser.icon]}
                             alt={postUser.displayname}
                         />
@@ -268,18 +144,18 @@ export const PostBase = (post: Post, postUser: User, renderTextWithHashtags: (te
                     <Link to={"/profile/" + postUser.username}
                           className="hover:underline hover:decoration-background-tertiary">
                         <p className="text-text-main font-bold">
-                            {postUser.displayname}
+                            {postUser.displayname || postUser.username}
                         </p>
                         <p className="text-text-secondary font-normal">
                             @{postUser.username}
                         </p>
                     </Link>
                     <p className="text-text-secondary text-sm">
-                        {new Date(post.time).toLocaleString()}
+                        {COMMON.formatDate(new Date(post.time))}
                     </p>
                 </div>
             </div>
-            <p className="mt-2 text-text-main whitespace-pre-wrap break-words mb-2">
+            <p className="mt-4 text-text-main whitespace-pre-wrap break-words mb-2">
                 {renderTextWithHashtags(post.text)}
             </p>
 
@@ -301,7 +177,7 @@ export const PostBase = (post: Post, postUser: User, renderTextWithHashtags: (te
 export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
     return (
         <div>
-            {PostBase(post, postUser, renderTextWithHashtags)}
+            {PostBase(post, posts, loggedInUser, postUser, renderTextWithHashtags, setPosts, null)}
 
             <div className="flex flex-row align-baseline mt-5 justify-between">
                 <div className="flex flex-row gap-20 ml-4">
@@ -309,6 +185,7 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                     <button
                         onClick={() => toggleComments(post.id, openComments, setOpenComments)} // Toggle comments on after clicking the svg
                         className="text-text-secondary fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-2 items-center"
+                        title="Comments"
                     >
                         {!openComments.has(post.id)?
                             <div className="flex flex-row gap-2">
@@ -336,7 +213,8 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                     {/* Repost */}
                     {loggedInUser && loggedInUser.reposts.includes(post.id) ? (
                             <div className="flex flex-row gap-2 text-accent-green fill-accent-green cursor-pointer"
-                                 onClick={() => { handleUnRepost(post.id, loggedInUser, setUser); }}>
+                                 onClick={() => { API.handleUnRepost(post.id, loggedInUser, setUser); }}
+                                 title="Unrepost">
                                 <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path
                                         fillRule="evenodd"
@@ -344,10 +222,11 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                                         d="M16.2929 3.29289C16.6834 2.90237 17.3166 2.90237 17.7071 3.29289L20.7071 6.29289C21.0976 6.68342 21.0976 7.31658 20.7071 7.70711L17.7071 10.7071C17.3166 11.0976 16.6834 11.0976 16.2929 10.7071C15.9024 10.3166 15.9024 9.68342 16.2929 9.29289L17.5857 8.00006H7.85181C5.70703 8.00006 4 9.75511 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12C2 8.72205 4.53229 6.00006 7.85181 6.00006H17.5858L16.2929 4.70711C15.9024 4.31658 15.9024 3.68342 16.2929 3.29289ZM21 11C21.5523 11 22 11.4477 22 12C22 15.3283 19.2275 18.0001 15.9578 18.0001H6.41427L7.70711 19.2929C8.09763 19.6834 8.09763 20.3166 7.70711 20.7071C7.31658 21.0976 6.68342 21.0976 6.29289 20.7071L3.29289 17.7071C2.90237 17.3166 2.90237 16.6834 3.29289 16.2929L6.29289 13.2929C6.68342 12.9024 7.31658 12.9024 7.70711 13.2929C8.09763 13.6834 8.09763 14.3166 7.70711 14.7071L6.41415 16.0001H15.9578C18.1524 16.0001 20 14.1945 20 12C20 11.4477 20.4477 11 21 11Z"
                                     />
                                 </svg>
-                            </div>
-                        ) :
+                            </div>)
+                        :
                         <div className="flex flex-row gap-2 cursor-pointer text-text-secondary fill-text-secondary hover:text-accent-green hover:fill-accent-green duration-75 ease-in"
-                             onClick={() => { handleRepost(post.id, loggedInUser, setUser); }}>
+                             onClick={() => { API.handleRepost(post.id, loggedInUser, setUser); }}
+                             title="Repost">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     fillRule="evenodd"
@@ -362,7 +241,8 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                     {/* Like */}
                     {loggedInUser != null && post.likeIds.indexOf(loggedInUser.id) !== -1 ? (
                             <div className="flex flex-row gap-2 fill-accent-red text-accent-red cursor-pointer"
-                                 onClick={() => {handleUnlike(post.id, loggedInUser, posts, setPosts);}}>
+                                 onClick={() => { API.handleUnlike(post.id, loggedInUser, posts, setPosts);}}
+                                 title="Unlike">
                                 <svg width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
                                     <clipPath id="6c326d0963"><path d="M 92 177.246094 L 729 177.246094 L 729 713.253906 L 92 713.253906 Z M 92 177.246094 " clipRule="nonzero"/></clipPath>
                                     <clipPath id="54e3de31d4"><path d="M 116.566406 262.828125 C 66.722656 344.660156 101.289062 424.304688 147.066406 466.578125 L 414.730469 713.253906 L 676.746094 467.457031 C 719.320312 421.984375 735.175781 373.75 726.578125 320.039062 C 714.058594 245.742188 650.320312 188.097656 571.582031 179.863281 C 523.289062 174.945312 476.640625 187.996094 440.230469 217.0625 C 430.433594 224.878906 421.671875 233.621094 414.039062 243.125 C 404.984375 232.304688 394.363281 222.410156 382.351562 213.636719 C 340.484375 183.074219 287.1875 171.140625 235.996094 180.375 C 187.511719 189.371094 143.988281 219.414062 116.566406 262.828125 Z M 116.566406 262.828125 " clipRule="nonzero"/></clipPath></defs>
@@ -374,7 +254,8 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                             </div>
                         ) :
                         <div className="flex flex-row gap-2 cursor-pointer text-text-secondary fill-text-secondary hover:fill-accent-red hover:text-accent-red duration-75 ease-in"
-                             onClick={() => {handleLike(post.id, loggedInUser, posts, setPosts);}}>
+                             onClick={() => { API.handleLike(post.id, loggedInUser, posts, setPosts);}}
+                             title="Like">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M7.78125 4C4.53699 4 2 6.81981 2 10.1559C2 11.8911 2.27768 13.32 3.31283 14.8234C4.3005 16.258 5.9429 17.7056 8.49134 19.6155L12 22L15.5084 19.6158C18.057 17.7058 19.6995 16.258 20.6872 14.8234C21.7223 13.32 22 11.8911 22 10.1559C22 6.81982 19.463 4 16.2188 4C14.5909 4 13.1818 4.66321 12 5.86323C10.8182 4.66321 9.40906 4 7.78125 4ZM7.78125 6C5.77551 6 4 7.7855 4 10.1559C4 10.7049 4.03107 11.1875 4.10853 11.6325C4.23826 12.378 4.49814 13.0182 4.96014 13.6893C5.74532 14.8297 7.14861 16.11 9.69156 18.0157L12 19.7494L14.3084 18.0157C16.8514 16.11 18.2547 14.8297 19.0399 13.6893C19.7777 12.6176 20 11.6245 20 10.1559C20 7.7855 18.2245 6 16.2188 6C14.9831 6 13.8501 6.58627 12.8033 7.99831C12.6147 8.25274 12.3167 8.40277 12 8.40277C11.6833 8.40277 11.3853 8.25274 11.1967 7.99831C10.1499 6.58627 9.01689 6 7.78125 6Z"/>
                             </svg>
@@ -387,7 +268,8 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                     {/* Bookmark (already bookmarked) */}
                     { loggedInUser && loggedInUser.bookmarks.indexOf(post.id) !== -1 ? (
                             <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
-                                 onClick={() => {handleUnBookmark(post.id, loggedInUser, setUser);}}>
+                                 onClick={() => { API.handleUnBookmark(post.id, loggedInUser, setUser);}}
+                                 title="Unbookmark">
                                 <svg className="fill-accent-blue" width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
                                     <clipPath id="42f0bbd39a"><path d="M 182.03125 162 L 628 162 L 628 600.941406 L 182.03125 600.941406 Z M 182.03125 162 " clipRule="nonzero"/></clipPath>
                                     <clipPath id="e1a312a0d5"><path d="M 220.28125 162 L 589.71875 162 C 599.863281 162 609.59375 166.03125 616.765625 173.203125 C 623.9375 180.375 627.96875 190.105469 627.96875 200.25 L 627.96875 562.691406 C 627.96875 572.835938 623.9375 582.5625 616.765625 589.738281 C 609.59375 596.910156 599.863281 600.941406 589.71875 600.941406 L 220.28125 600.941406 C 210.136719 600.941406 200.40625 596.910156 193.234375 589.738281 C 186.0625 582.5625 182.03125 572.835938 182.03125 562.691406 L 182.03125 200.25 C 182.03125 190.105469 186.0625 180.375 193.234375 173.203125 C 200.40625 166.03125 210.136719 162 220.28125 162 Z M 220.28125 162 " clipRule="nonzero"/></clipPath>
@@ -405,7 +287,8 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                             </div>
                         ) :
                         <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
-                             onClick={() => {handleBookmark(post.id, loggedInUser, setUser);}}>
+                             onClick={() => { API.handleBookmark(post.id, loggedInUser, setUser);}}
+                             title="Bookmark">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M9.78799 3H14.212C15.0305 2.99999 15.7061 2.99998 16.2561 3.04565C16.8274 3.0931 17.3523 3.19496 17.8439 3.45035C18.5745 3.82985 19.1702 4.42553 19.5497 5.1561C19.805 5.64774 19.9069 6.17258 19.9544 6.74393C20 7.29393 20 7.96946 20 8.78798V17.6227C20 18.5855 20 19.3755 19.9473 19.9759C19.8975 20.5418 19.7878 21.2088 19.348 21.6916C18.8075 22.2847 18.0153 22.5824 17.218 22.4919C16.5691 22.4182 16.0473 21.9884 15.6372 21.5953C15.2022 21.1783 14.6819 20.5837 14.0479 19.8591L13.6707 19.428C13.2362 18.9314 12.9521 18.6081 12.7167 18.3821C12.4887 18.1631 12.3806 18.1107 12.3262 18.0919C12.1148 18.019 11.8852 18.019 11.6738 18.0919C11.6194 18.1107 11.5113 18.1631 11.2833 18.3821C11.0479 18.6081 10.7638 18.9314 10.3293 19.428L9.95209 19.8591C9.31809 20.5837 8.79784 21.1782 8.36276 21.5953C7.95272 21.9884 7.43089 22.4182 6.78196 22.4919C5.9847 22.5824 5.19246 22.2847 4.65205 21.6916C4.21218 21.2088 4.10248 20.5418 4.05275 19.9759C3.99997 19.3755 3.99998 18.5855 4 17.6227V8.78799C3.99999 7.96947 3.99998 7.29393 4.04565 6.74393C4.0931 6.17258 4.19496 5.64774 4.45035 5.1561C4.82985 4.42553 5.42553 3.82985 6.1561 3.45035C6.64774 3.19496 7.17258 3.0931 7.74393 3.04565C8.29393 2.99998 8.96947 2.99999 9.78799 3ZM7.90945 5.03879C7.46401 5.07578 7.23663 5.1428 7.07805 5.22517C6.71277 5.41493 6.41493 5.71277 6.22517 6.07805C6.1428 6.23663 6.07578 6.46401 6.03879 6.90945C6.0008 7.36686 6 7.95898 6 8.83V17.5726C6 18.5978 6.00094 19.2988 6.04506 19.8008C6.08138 20.2139 6.13928 20.3436 6.14447 20.3594C6.2472 20.4633 6.39033 20.5171 6.53606 20.5065C6.55034 20.4981 6.67936 20.4386 6.97871 20.1516C7.34245 19.8029 7.80478 19.2759 8.4799 18.5044L8.85192 18.0792C9.25094 17.6232 9.59229 17.233 9.89819 16.9393C10.2186 16.6317 10.5732 16.3559 11.0214 16.2013C11.6555 15.9825 12.3445 15.9825 12.9786 16.2013C13.4268 16.3559 13.7814 16.6317 14.1018 16.9393C14.4077 17.233 14.7491 17.6232 15.1481 18.0792L15.5201 18.5044C16.1952 19.2759 16.6576 19.8029 17.0213 20.1516C17.3206 20.4386 17.4497 20.4981 17.4639 20.5065C17.6097 20.5171 17.7528 20.4633 17.8555 20.3594C17.8607 20.3436 17.9186 20.2139 17.9549 19.8008C17.9991 19.2988 18 18.5978 18 17.5726V8.83C18 7.95898 17.9992 7.36686 17.9612 6.90945C17.9242 6.46401 17.8572 6.23663 17.7748 6.07805C17.5851 5.71277 17.2872 5.41493 16.9219 5.22517C16.7634 5.1428 16.536 5.07578 16.0905 5.03879C15.6331 5.0008 15.041 5 14.17 5H9.83C8.95898 5 8.36686 5.0008 7.90945 5.03879Z"
                                 />
@@ -413,10 +296,12 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
                         </div>
                     }
 
-                    {/* Share */}
-                    <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3">
+                    {/* Thread Playlist */}
+                    <div className="fill-text-secondary duration-75 ease-in hover:fill-accent-green cursor-pointer flex flex-row gap-3"
+                        onClick={() => { API.handleThreadPlaylist(post.id, loggedInUser)}}
+                        title="Thread Playlist">
                         <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M1 18.5088C1 13.1679 4.90169 8.77098 9.99995 7.84598V5.51119C9.99995 3.63887 12.1534 2.58563 13.6313 3.73514L21.9742 10.224C23.1323 11.1248 23.1324 12.8752 21.9742 13.7761L13.6314 20.2649C12.1534 21.4144 10 20.3612 10 18.4888V16.5189C7.74106 16.9525 5.9625 18.1157 4.92778 19.6838C4.33222 20.5863 3.30568 20.7735 2.55965 20.5635C1.80473 20.3511 1.00011 19.6306 1 18.5088ZM12.4034 5.31385C12.2392 5.18613 11.9999 5.30315 11.9999 5.51119V9.41672C11.9999 9.55479 11.8873 9.66637 11.7493 9.67008C8.09094 9.76836 4.97774 12.0115 3.66558 15.1656C3.46812 15.6402 3.31145 16.1354 3.19984 16.6471C3.07554 17.217 3.00713 17.8072 3.00053 18.412C3.00018 18.4442 3 18.4765 3 18.5088C3.00001 18.6437 3.18418 18.6948 3.25846 18.5822C3.27467 18.5577 3.29101 18.5332 3.30747 18.5088C3.30748 18.5088 3.30746 18.5088 3.30747 18.5088C3.63446 18.0244 4.01059 17.5765 4.42994 17.168C4.71487 16.8905 5.01975 16.6313 5.34276 16.3912C7.05882 15.1158 9.28642 14.3823 11.7496 14.3357C11.8877 14.3331 12 14.4453 12 14.5834V18.4888C12 18.6969 12.2393 18.8139 12.4035 18.6862L20.7463 12.1973C20.875 12.0973 20.875 11.9028 20.7463 11.8027L12.4034 5.31385Z"/>
+                            <path fillRule="evenodd" clipRule="evenodd" d="M20.9997 15.0241C21.0014 15.2321 20.9961 15.4612 20.979 15.703C20.913 16.6399 20.6569 17.9858 19.7103 18.9324C19.0746 19.5681 18.223 19.9579 17.3286 19.9968C16.4302 20.0358 15.5573 19.7157 14.9208 19.0792C14.2843 18.4427 13.9641 17.5697 14.0032 16.6714C14.0421 15.777 14.4319 14.9254 15.0676 14.2897C16.0142 13.3431 17.3601 13.0869 18.297 13.021C18.5481 13.0033 18.7856 12.9982 19 13.0005V9.18045L8.99999 10.8471V17L8.99971 17.0241C9.00135 17.2322 8.99605 17.4612 8.97903 17.703C8.91305 18.6399 8.65691 19.9858 7.71027 20.9324C7.07458 21.5681 6.22297 21.9579 5.32858 21.9968C4.43025 22.0358 3.5573 21.7157 2.9208 21.0792C2.28431 20.4427 1.96413 19.5697 2.00319 18.6714C2.04208 17.777 2.43187 16.9254 3.06755 16.2897C4.01419 15.3431 5.36012 15.0869 6.297 15.021C6.54813 15.0033 6.7856 14.9982 6.99999 15.0005V7.54137C6.99999 5.58601 8.41364 3.91725 10.3424 3.5958L17.5068 2.40173C19.3354 2.09696 21 3.50709 21 5.36091V15C21 15.0081 20.9999 15.0161 20.9997 15.0241ZM19 5.36091C19 4.74297 18.4451 4.27293 17.8356 4.37452L10.6712 5.56858C9.70682 5.72931 8.99999 6.56369 8.99999 7.54137V8.81953L19 7.15286V5.36091ZM6.43749 17.016C5.63783 17.0723 4.9048 17.2809 4.48177 17.7039C4.18336 18.0023 4.01746 18.3867 4.0013 18.7583C3.98532 19.1259 4.11526 19.4452 4.33502 19.665C4.55477 19.8847 4.87407 20.0147 5.24171 19.9987C5.61329 19.9825 5.99765 19.8166 6.29606 19.5182C6.71908 19.0952 6.92765 18.3622 6.98397 17.5625C6.99803 17.3629 7.00166 17.1725 6.99935 17.0006C6.82744 16.9983 6.63713 17.002 6.43749 17.016ZM16.4818 15.7039C16.9048 15.2809 17.6378 15.0723 18.4375 15.016C18.6371 15.002 18.8274 14.9983 18.9993 15.0006C19.0017 15.1725 18.998 15.3629 18.984 15.5625C18.9277 16.3622 18.7191 17.0952 18.2961 17.5182C17.9977 17.8166 17.6133 17.9825 17.2417 17.9987C16.8741 18.0147 16.5548 17.8847 16.335 17.665C16.1153 17.4452 15.9853 17.1259 16.0013 16.7583C16.0175 16.3867 16.1834 16.0023 16.4818 15.7039Z"/>
                         </svg>
                     </div>
                 </div>
@@ -426,67 +311,11 @@ export const ParentPostBase = (post: Post, postUser: User, loggedInUser: User | 
 }
 
 export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
-    let editMode = false;
-
-    function handlePopup() {
-        let popup = document.getElementById("editPopup" + post.id);
-        if (popup != null) {
-            if (popup.style.visibility == "hidden") {
-                popup.style.visibility = "visible";
-            } else {
-                popup.style.visibility = "hidden";
-            }
-        }
-        return;
-    }
-
     return (
         <div
             key={post.id}
             className="bg-background-secondary p-4 rounded-lg mb-6 relative truncate"
         >
-            {/* Edit button (only for our own posts)*/}
-            {loggedInUser != null && postUser.id === loggedInUser.id && (
-                <div>
-                    <div className="flex flex-col invisible right-4 z-20 text-text-main fill-text-main text-md rounded-xl absolute bg-background-tertiary"
-                        onMouseLeave={() => {
-                            handlePopup();
-                            editMode = false;
-                        }}
-                         id={"editPopup" + post.id}
-                    >
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pt-4 pb-2 rounded-t-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                            onClick={() => {
-                                editMode = true;
-                                console.log("Edit mode");
-                            }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M20.5337 3.3916C20.2236 3.08142 19.9559 2.81378 19.7193 2.60738C19.4702 2.39007 19.2019 2.1918 18.876 2.05679C18.1409 1.75231 17.3149 1.75231 16.5799 2.05679C16.2539 2.1918 15.9856 2.39007 15.7365 2.60738C15.4999 2.81378 15.2323 3.08141 14.9221 3.39159L8.93751 9.37615C8.52251 9.79078 8.20882 10.1042 7.97173 10.477C7.77111 10.7924 7.61569 11.1344 7.51002 11.4929C7.38514 11.9167 7.35534 12.3591 7.31592 12.9444L7.1842 14.8876C7.17485 15.0247 7.16396 15.1845 7.16666 15.3246C7.16974 15.4838 7.18962 15.7203 7.30999 15.9677C7.45687 16.2697 7.70083 16.5137 8.00282 16.6606C8.25029 16.7809 8.48679 16.8008 8.64598 16.8039C8.78602 16.8066 8.94585 16.7957 9.08298 16.7863L11.0261 16.6546C11.6114 16.6152 12.0539 16.5854 12.4776 16.4605C12.8362 16.3549 13.1782 16.1994 13.4936 15.9988C13.8664 15.7617 14.1798 15.448 14.5944 15.033L20.579 9.04845C20.8891 8.73829 21.1568 8.47067 21.3632 8.23405C21.5805 7.98491 21.7788 7.71662 21.9138 7.39069C22.2182 6.65561 22.2182 5.82968 21.9138 5.09459C21.7788 4.76867 21.5805 4.50038 21.3632 4.25124C21.1568 4.01464 20.8892 3.74704 20.579 3.43691L20.5337 3.3916ZM18.1106 3.90455C18.1522 3.92179 18.2324 3.96437 18.4046 4.11458C18.5836 4.27072 18.803 4.48928 19.1421 4.82843C19.4813 5.16758 19.6998 5.3869 19.856 5.56591C20.0062 5.73813 20.0488 5.81835 20.066 5.85996C20.1675 6.10499 20.1675 6.3803 20.066 6.62533C20.0488 6.66694 20.0062 6.74716 19.856 6.91938C19.7482 7.04288 19.6108 7.18558 19.4245 7.37359L16.597 4.54602C16.785 4.35976 16.9277 4.22231 17.0512 4.11458C17.2234 3.96437 17.3036 3.92179 17.3452 3.90455C17.5903 3.80306 17.8656 3.80306 18.1106 3.90455ZM15.1823 5.9598L18.0107 8.78823L13.2465 13.5525C12.7366 14.0624 12.5842 14.207 12.4202 14.3112C12.2625 14.4116 12.0915 14.4893 11.9122 14.5421C11.7258 14.597 11.5167 14.6168 10.7973 14.6655L9.19649 14.7741L9.30502 13.1732C9.3538 12.4538 9.37351 12.2447 9.42845 12.0583C9.48128 11.879 9.55899 11.708 9.6593 11.5503C9.76359 11.3863 9.90816 11.234 10.418 10.7241L15.1823 5.9598Z"/>
-                                <path d="M11.0055 2C9.61949 1.99999 8.51721 1.99999 7.62839 2.0738C6.71811 2.14939 5.94253 2.30755 5.23415 2.67552C4.1383 3.24478 3.24477 4.1383 2.67552 5.23416C2.30755 5.94253 2.14939 6.71811 2.0738 7.6284C1.99999 8.51721 1.99999 9.61949 2 11.0055V12.9945C1.99999 14.3805 1.99999 15.4828 2.0738 16.3716C2.14939 17.2819 2.30755 18.0575 2.67552 18.7659C3.24477 19.8617 4.1383 20.7552 5.23415 21.3245C5.94253 21.6925 6.71811 21.8506 7.62839 21.9262C8.5172 22 9.61946 22 11.0054 22H13.0438C14.4068 22 15.4909 22 16.3654 21.9286C17.261 21.8554 18.0247 21.7023 18.7239 21.346C19.8529 20.7708 20.7708 19.8529 21.346 18.7239C21.7023 18.0247 21.8554 17.261 21.9286 16.3654C22 15.4909 22 14.4069 22 13.0439V13C22 12.4477 21.5523 12 21 12C20.4477 12 20 12.4477 20 13C20 14.4166 19.9992 15.419 19.9352 16.2026C19.8721 16.9745 19.7527 17.4457 19.564 17.816C19.1805 18.5686 18.5686 19.1805 17.816 19.564C17.4457 19.7527 16.9745 19.8721 16.2026 19.9352C15.419 19.9992 14.4166 20 13 20H11.05C9.60949 20 8.59025 19.9992 7.79391 19.9331C7.00955 19.8679 6.53142 19.7446 6.1561 19.5497C5.42553 19.1702 4.82985 18.5745 4.45035 17.8439C4.25538 17.4686 4.13208 16.9905 4.06694 16.2061C4.0008 15.4097 4 14.3905 4 12.95V11.05C4 9.60949 4.0008 8.59026 4.06694 7.79392C4.13208 7.00955 4.25538 6.53142 4.45035 6.15611C4.82985 5.42553 5.42553 4.82985 6.1561 4.45035C6.53142 4.25539 7.00955 4.13208 7.79391 4.06694C8.59025 4.00081 9.60949 4 11.05 4H12C12.5523 4 13 3.55229 13 3C13 2.44772 12.5523 2 12 2L11.0055 2Z"/>
-                            </svg>
-                            <p>Edit</p>
-                        </div>
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pb-4 pt-2 rounded-b-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                             onClick={() => {
-                                 handleDeletePost(post.id, loggedInUser, posts, setPosts, null)
-                             }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M7.10002 5H3C2.44772 5 2 5.44772 2 6C2 6.55228 2.44772 7 3 7H4.06055L4.88474 20.1871C4.98356 21.7682 6.29471 23 7.8789 23H16.1211C17.7053 23 19.0164 21.7682 19.1153 20.1871L19.9395 7H21C21.5523 7 22 6.55228 22 6C22 5.44772 21.5523 5 21 5H19.0073C19.0018 4.99995 18.9963 4.99995 18.9908 5H16.9C16.4367 2.71776 14.419 1 12 1C9.58104 1 7.56329 2.71776 7.10002 5ZM9.17071 5H14.8293C14.4175 3.83481 13.3062 3 12 3C10.6938 3 9.58254 3.83481 9.17071 5ZM17.9355 7H6.06445L6.88085 20.0624C6.91379 20.5894 7.35084 21 7.8789 21H16.1211C16.6492 21 17.0862 20.5894 17.1192 20.0624L17.9355 7ZM14.279 10.0097C14.83 10.0483 15.2454 10.5261 15.2068 11.0771L14.7883 17.0624C14.7498 17.6134 14.2719 18.0288 13.721 17.9903C13.17 17.9517 12.7546 17.4739 12.7932 16.9229L13.2117 10.9376C13.2502 10.3866 13.7281 9.97122 14.279 10.0097ZM9.721 10.0098C10.2719 9.97125 10.7498 10.3866 10.7883 10.9376L11.2069 16.923C11.2454 17.4739 10.83 17.9518 10.2791 17.9903C9.72811 18.0288 9.25026 17.6134 9.21173 17.0625L8.79319 11.0771C8.75467 10.5262 9.17006 10.0483 9.721 10.0098Z"/>
-                            </svg>
-                            <p>Delete</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handlePopup}
-                        className="absolute right-6 fill-text-secondary cursor-pointer hover:fill-accent-blue transition-colors ease-in duration-75"
-                    >
-                        <svg width="23px" height="23px" viewBox="0 0 16 16">
-                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-                        </svg>
-                    </button>
-                </div>
-                    )}
-
             {ParentPostBase(post, postUser, loggedInUser, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
 
             {/* Comments */}
@@ -498,20 +327,6 @@ export const ParentPost = (post: Post, postUser: User, loggedInUser: User | null
 }
 
 export const ParentRepost = (post: Post, postUser: User, profileUser: User, loggedInUser: User | null, posts: Array<PackagedPost>, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any) => {
-    let editMode = false;
-
-    function handlePopup() {
-        let popup = document.getElementById("editPopup" + post.id);
-        if (popup != null) {
-            if (popup.style.visibility == "hidden") {
-                popup.style.visibility = "visible";
-            } else {
-                popup.style.visibility = "hidden";
-            }
-        }
-        return;
-    }
-
     return (
         <div
             key={post.id}
@@ -531,47 +346,6 @@ export const ParentRepost = (post: Post, postUser: User, profileUser: User, logg
                 </Link>
             </div>
 
-            {/* Edit button (only for our own posts)*/}
-            {loggedInUser != null && postUser.id === loggedInUser.id && (
-                <div>
-                    <div className="flex flex-col invisible right-4 z-20 text-text-main fill-text-main text-md rounded-xl absolute bg-background-tertiary"
-                         onMouseLeave={() => {
-                             handlePopup();
-                             editMode = false;
-                         }}
-                         id={"editPopup" + post.id}
-                    >
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pt-4 pb-2 rounded-t-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                             onClick={() => {
-                                 if (editMode) editMode = true;
-                             }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M20.5337 3.3916C20.2236 3.08142 19.9559 2.81378 19.7193 2.60738C19.4702 2.39007 19.2019 2.1918 18.876 2.05679C18.1409 1.75231 17.3149 1.75231 16.5799 2.05679C16.2539 2.1918 15.9856 2.39007 15.7365 2.60738C15.4999 2.81378 15.2323 3.08141 14.9221 3.39159L8.93751 9.37615C8.52251 9.79078 8.20882 10.1042 7.97173 10.477C7.77111 10.7924 7.61569 11.1344 7.51002 11.4929C7.38514 11.9167 7.35534 12.3591 7.31592 12.9444L7.1842 14.8876C7.17485 15.0247 7.16396 15.1845 7.16666 15.3246C7.16974 15.4838 7.18962 15.7203 7.30999 15.9677C7.45687 16.2697 7.70083 16.5137 8.00282 16.6606C8.25029 16.7809 8.48679 16.8008 8.64598 16.8039C8.78602 16.8066 8.94585 16.7957 9.08298 16.7863L11.0261 16.6546C11.6114 16.6152 12.0539 16.5854 12.4776 16.4605C12.8362 16.3549 13.1782 16.1994 13.4936 15.9988C13.8664 15.7617 14.1798 15.448 14.5944 15.033L20.579 9.04845C20.8891 8.73829 21.1568 8.47067 21.3632 8.23405C21.5805 7.98491 21.7788 7.71662 21.9138 7.39069C22.2182 6.65561 22.2182 5.82968 21.9138 5.09459C21.7788 4.76867 21.5805 4.50038 21.3632 4.25124C21.1568 4.01464 20.8892 3.74704 20.579 3.43691L20.5337 3.3916ZM18.1106 3.90455C18.1522 3.92179 18.2324 3.96437 18.4046 4.11458C18.5836 4.27072 18.803 4.48928 19.1421 4.82843C19.4813 5.16758 19.6998 5.3869 19.856 5.56591C20.0062 5.73813 20.0488 5.81835 20.066 5.85996C20.1675 6.10499 20.1675 6.3803 20.066 6.62533C20.0488 6.66694 20.0062 6.74716 19.856 6.91938C19.7482 7.04288 19.6108 7.18558 19.4245 7.37359L16.597 4.54602C16.785 4.35976 16.9277 4.22231 17.0512 4.11458C17.2234 3.96437 17.3036 3.92179 17.3452 3.90455C17.5903 3.80306 17.8656 3.80306 18.1106 3.90455ZM15.1823 5.9598L18.0107 8.78823L13.2465 13.5525C12.7366 14.0624 12.5842 14.207 12.4202 14.3112C12.2625 14.4116 12.0915 14.4893 11.9122 14.5421C11.7258 14.597 11.5167 14.6168 10.7973 14.6655L9.19649 14.7741L9.30502 13.1732C9.3538 12.4538 9.37351 12.2447 9.42845 12.0583C9.48128 11.879 9.55899 11.708 9.6593 11.5503C9.76359 11.3863 9.90816 11.234 10.418 10.7241L15.1823 5.9598Z"/>
-                                <path d="M11.0055 2C9.61949 1.99999 8.51721 1.99999 7.62839 2.0738C6.71811 2.14939 5.94253 2.30755 5.23415 2.67552C4.1383 3.24478 3.24477 4.1383 2.67552 5.23416C2.30755 5.94253 2.14939 6.71811 2.0738 7.6284C1.99999 8.51721 1.99999 9.61949 2 11.0055V12.9945C1.99999 14.3805 1.99999 15.4828 2.0738 16.3716C2.14939 17.2819 2.30755 18.0575 2.67552 18.7659C3.24477 19.8617 4.1383 20.7552 5.23415 21.3245C5.94253 21.6925 6.71811 21.8506 7.62839 21.9262C8.5172 22 9.61946 22 11.0054 22H13.0438C14.4068 22 15.4909 22 16.3654 21.9286C17.261 21.8554 18.0247 21.7023 18.7239 21.346C19.8529 20.7708 20.7708 19.8529 21.346 18.7239C21.7023 18.0247 21.8554 17.261 21.9286 16.3654C22 15.4909 22 14.4069 22 13.0439V13C22 12.4477 21.5523 12 21 12C20.4477 12 20 12.4477 20 13C20 14.4166 19.9992 15.419 19.9352 16.2026C19.8721 16.9745 19.7527 17.4457 19.564 17.816C19.1805 18.5686 18.5686 19.1805 17.816 19.564C17.4457 19.7527 16.9745 19.8721 16.2026 19.9352C15.419 19.9992 14.4166 20 13 20H11.05C9.60949 20 8.59025 19.9992 7.79391 19.9331C7.00955 19.8679 6.53142 19.7446 6.1561 19.5497C5.42553 19.1702 4.82985 18.5745 4.45035 17.8439C4.25538 17.4686 4.13208 16.9905 4.06694 16.2061C4.0008 15.4097 4 14.3905 4 12.95V11.05C4 9.60949 4.0008 8.59026 4.06694 7.79392C4.13208 7.00955 4.25538 6.53142 4.45035 6.15611C4.82985 5.42553 5.42553 4.82985 6.1561 4.45035C6.53142 4.25539 7.00955 4.13208 7.79391 4.06694C8.59025 4.00081 9.60949 4 11.05 4H12C12.5523 4 13 3.55229 13 3C13 2.44772 12.5523 2 12 2L11.0055 2Z"/>
-                            </svg>
-                            <p>Edit</p>
-                        </div>
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pb-4 pt-2 rounded-b-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                             onClick={() => {
-                                 handleDeletePost(post.id, loggedInUser, posts, setPosts, null)
-                             }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M7.10002 5H3C2.44772 5 2 5.44772 2 6C2 6.55228 2.44772 7 3 7H4.06055L4.88474 20.1871C4.98356 21.7682 6.29471 23 7.8789 23H16.1211C17.7053 23 19.0164 21.7682 19.1153 20.1871L19.9395 7H21C21.5523 7 22 6.55228 22 6C22 5.44772 21.5523 5 21 5H19.0073C19.0018 4.99995 18.9963 4.99995 18.9908 5H16.9C16.4367 2.71776 14.419 1 12 1C9.58104 1 7.56329 2.71776 7.10002 5ZM9.17071 5H14.8293C14.4175 3.83481 13.3062 3 12 3C10.6938 3 9.58254 3.83481 9.17071 5ZM17.9355 7H6.06445L6.88085 20.0624C6.91379 20.5894 7.35084 21 7.8789 21H16.1211C16.6492 21 17.0862 20.5894 17.1192 20.0624L17.9355 7ZM14.279 10.0097C14.83 10.0483 15.2454 10.5261 15.2068 11.0771L14.7883 17.0624C14.7498 17.6134 14.2719 18.0288 13.721 17.9903C13.17 17.9517 12.7546 17.4739 12.7932 16.9229L13.2117 10.9376C13.2502 10.3866 13.7281 9.97122 14.279 10.0097ZM9.721 10.0098C10.2719 9.97125 10.7498 10.3866 10.7883 10.9376L11.2069 16.923C11.2454 17.4739 10.83 17.9518 10.2791 17.9903C9.72811 18.0288 9.25026 17.6134 9.21173 17.0625L8.79319 11.0771C8.75467 10.5262 9.17006 10.0483 9.721 10.0098Z"/>
-                            </svg>
-                            <p>Delete</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handlePopup}
-                        className="absolute right-6 fill-text-secondary cursor-pointer hover:fill-accent-blue transition-colors ease-in duration-75"
-                    >
-                        <svg width="23px" height="23px" viewBox="0 0 16 16">
-                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-                        </svg>
-                    </button>
-                </div>
-            )}
-
             {ParentPostBase(post, postUser, loggedInUser, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)}
 
             {/* Comments */}
@@ -583,119 +357,65 @@ export const ParentRepost = (post: Post, postUser: User, profileUser: User, logg
 }
 
 export const ChildPost = (parentPost: Post | null, post: Post, postUser: User, loggedInUser: User | null,  posts: Array<PackagedPost>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any) => {
-    let editMode = false;
-
-    function handlePopup() {
-        let popup = document.getElementById("editPopup" + post.id);
-        if (popup != null) {
-            if (popup.style.visibility == "hidden") {
-                popup.style.visibility = "visible";
-            } else {
-                popup.style.visibility = "hidden";
-            }
-        }
-        return;
-    }
-
     return (
         <div
             key={post.id}
             className="relative bg-background-secondary p-4 rounded-lg mb-4"
         >
-
-            {/* Edit button (only for our own posts)*/}
-            {loggedInUser != null && postUser.id === loggedInUser.id && (
-                <div>
-                    <div className="flex flex-col invisible right-4 z-20 text-text-main fill-text-main text-md rounded-xl absolute bg-background-tertiary"
-                         onMouseLeave={() => {
-                             handlePopup();
-                             editMode = false;
-                         }}
-                         id={"editPopup" + post.id}
-                    >
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pt-4 pb-2 rounded-t-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                             onClick={() => {
-                                 if (editMode) editMode = true;
-                             }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M20.5337 3.3916C20.2236 3.08142 19.9559 2.81378 19.7193 2.60738C19.4702 2.39007 19.2019 2.1918 18.876 2.05679C18.1409 1.75231 17.3149 1.75231 16.5799 2.05679C16.2539 2.1918 15.9856 2.39007 15.7365 2.60738C15.4999 2.81378 15.2323 3.08141 14.9221 3.39159L8.93751 9.37615C8.52251 9.79078 8.20882 10.1042 7.97173 10.477C7.77111 10.7924 7.61569 11.1344 7.51002 11.4929C7.38514 11.9167 7.35534 12.3591 7.31592 12.9444L7.1842 14.8876C7.17485 15.0247 7.16396 15.1845 7.16666 15.3246C7.16974 15.4838 7.18962 15.7203 7.30999 15.9677C7.45687 16.2697 7.70083 16.5137 8.00282 16.6606C8.25029 16.7809 8.48679 16.8008 8.64598 16.8039C8.78602 16.8066 8.94585 16.7957 9.08298 16.7863L11.0261 16.6546C11.6114 16.6152 12.0539 16.5854 12.4776 16.4605C12.8362 16.3549 13.1782 16.1994 13.4936 15.9988C13.8664 15.7617 14.1798 15.448 14.5944 15.033L20.579 9.04845C20.8891 8.73829 21.1568 8.47067 21.3632 8.23405C21.5805 7.98491 21.7788 7.71662 21.9138 7.39069C22.2182 6.65561 22.2182 5.82968 21.9138 5.09459C21.7788 4.76867 21.5805 4.50038 21.3632 4.25124C21.1568 4.01464 20.8892 3.74704 20.579 3.43691L20.5337 3.3916ZM18.1106 3.90455C18.1522 3.92179 18.2324 3.96437 18.4046 4.11458C18.5836 4.27072 18.803 4.48928 19.1421 4.82843C19.4813 5.16758 19.6998 5.3869 19.856 5.56591C20.0062 5.73813 20.0488 5.81835 20.066 5.85996C20.1675 6.10499 20.1675 6.3803 20.066 6.62533C20.0488 6.66694 20.0062 6.74716 19.856 6.91938C19.7482 7.04288 19.6108 7.18558 19.4245 7.37359L16.597 4.54602C16.785 4.35976 16.9277 4.22231 17.0512 4.11458C17.2234 3.96437 17.3036 3.92179 17.3452 3.90455C17.5903 3.80306 17.8656 3.80306 18.1106 3.90455ZM15.1823 5.9598L18.0107 8.78823L13.2465 13.5525C12.7366 14.0624 12.5842 14.207 12.4202 14.3112C12.2625 14.4116 12.0915 14.4893 11.9122 14.5421C11.7258 14.597 11.5167 14.6168 10.7973 14.6655L9.19649 14.7741L9.30502 13.1732C9.3538 12.4538 9.37351 12.2447 9.42845 12.0583C9.48128 11.879 9.55899 11.708 9.6593 11.5503C9.76359 11.3863 9.90816 11.234 10.418 10.7241L15.1823 5.9598Z"/>
-                                <path d="M11.0055 2C9.61949 1.99999 8.51721 1.99999 7.62839 2.0738C6.71811 2.14939 5.94253 2.30755 5.23415 2.67552C4.1383 3.24478 3.24477 4.1383 2.67552 5.23416C2.30755 5.94253 2.14939 6.71811 2.0738 7.6284C1.99999 8.51721 1.99999 9.61949 2 11.0055V12.9945C1.99999 14.3805 1.99999 15.4828 2.0738 16.3716C2.14939 17.2819 2.30755 18.0575 2.67552 18.7659C3.24477 19.8617 4.1383 20.7552 5.23415 21.3245C5.94253 21.6925 6.71811 21.8506 7.62839 21.9262C8.5172 22 9.61946 22 11.0054 22H13.0438C14.4068 22 15.4909 22 16.3654 21.9286C17.261 21.8554 18.0247 21.7023 18.7239 21.346C19.8529 20.7708 20.7708 19.8529 21.346 18.7239C21.7023 18.0247 21.8554 17.261 21.9286 16.3654C22 15.4909 22 14.4069 22 13.0439V13C22 12.4477 21.5523 12 21 12C20.4477 12 20 12.4477 20 13C20 14.4166 19.9992 15.419 19.9352 16.2026C19.8721 16.9745 19.7527 17.4457 19.564 17.816C19.1805 18.5686 18.5686 19.1805 17.816 19.564C17.4457 19.7527 16.9745 19.8721 16.2026 19.9352C15.419 19.9992 14.4166 20 13 20H11.05C9.60949 20 8.59025 19.9992 7.79391 19.9331C7.00955 19.8679 6.53142 19.7446 6.1561 19.5497C5.42553 19.1702 4.82985 18.5745 4.45035 17.8439C4.25538 17.4686 4.13208 16.9905 4.06694 16.2061C4.0008 15.4097 4 14.3905 4 12.95V11.05C4 9.60949 4.0008 8.59026 4.06694 7.79392C4.13208 7.00955 4.25538 6.53142 4.45035 6.15611C4.82985 5.42553 5.42553 4.82985 6.1561 4.45035C6.53142 4.25539 7.00955 4.13208 7.79391 4.06694C8.59025 4.00081 9.60949 4 11.05 4H12C12.5523 4 13 3.55229 13 3C13 2.44772 12.5523 2 12 2L11.0055 2Z"/>
-                            </svg>
-                            <p>Edit</p>
-                        </div>
-                        <div className="flex flex-row cursor-pointer gap-3 w-full px-4 pb-4 pt-2 rounded-b-xl text-center items-center hover:bg-background-fourth transition-colors duration-75 ease-in"
-                             onClick={() => {
-                                 handleDeletePost(post.id, loggedInUser, posts, setPosts, parentPost)
-                             }}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M7.10002 5H3C2.44772 5 2 5.44772 2 6C2 6.55228 2.44772 7 3 7H4.06055L4.88474 20.1871C4.98356 21.7682 6.29471 23 7.8789 23H16.1211C17.7053 23 19.0164 21.7682 19.1153 20.1871L19.9395 7H21C21.5523 7 22 6.55228 22 6C22 5.44772 21.5523 5 21 5H19.0073C19.0018 4.99995 18.9963 4.99995 18.9908 5H16.9C16.4367 2.71776 14.419 1 12 1C9.58104 1 7.56329 2.71776 7.10002 5ZM9.17071 5H14.8293C14.4175 3.83481 13.3062 3 12 3C10.6938 3 9.58254 3.83481 9.17071 5ZM17.9355 7H6.06445L6.88085 20.0624C6.91379 20.5894 7.35084 21 7.8789 21H16.1211C16.6492 21 17.0862 20.5894 17.1192 20.0624L17.9355 7ZM14.279 10.0097C14.83 10.0483 15.2454 10.5261 15.2068 11.0771L14.7883 17.0624C14.7498 17.6134 14.2719 18.0288 13.721 17.9903C13.17 17.9517 12.7546 17.4739 12.7932 16.9229L13.2117 10.9376C13.2502 10.3866 13.7281 9.97122 14.279 10.0097ZM9.721 10.0098C10.2719 9.97125 10.7498 10.3866 10.7883 10.9376L11.2069 16.923C11.2454 17.4739 10.83 17.9518 10.2791 17.9903C9.72811 18.0288 9.25026 17.6134 9.21173 17.0625L8.79319 11.0771C8.75467 10.5262 9.17006 10.0483 9.721 10.0098Z"/>
-                            </svg>
-                            <p>Delete</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={handlePopup}
-                        className="absolute right-6 fill-text-secondary cursor-pointer hover:fill-accent-blue transition-colors ease-in duration-75"
-                    >
-                        <svg width="23px" height="23px" viewBox="0 0 16 16">
-                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-                        </svg>
-                    </button>
-                </div>
-            )}
-
-            {PostBase(post, postUser, renderTextWithHashtags)}
+            {PostBase(post, posts, loggedInUser, postUser, renderTextWithHashtags, setPosts, parentPost)}
 
             <div className="flex flex-row align-baseline mt-5 justify-end">
-                <div className="flex flex-row gap-20 ml-4 mr-10">
 
+                <div className="w-1/4 justify-between flex flex-row mr-2">
                     {/* Like (already liked) */}
                     {loggedInUser != null && post.likeIds.indexOf(loggedInUser.id) !== -1 ? (
-                        <div className="flex flex-row gap-2 cursor-pointer"
-                             onClick={() => {handleUnlike(post.id, loggedInUser, posts, setPosts);}}>
-                            <svg className="fill-accent-red" width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
+                        <div className="flex flex-row gap-2 cursor-pointer fill-accent-red text-accent-red"
+                             onClick={() => {API.handleUnlike(post.id, loggedInUser, posts, setPosts);}}
+                             title="Unlike">
+                            <svg className="mr-auto" width="20px" height="20px" viewBox="0 0 810 809.999993" version="1.0"><defs>
                                 <clipPath id="6c326d0963"><path d="M 92 177.246094 L 729 177.246094 L 729 713.253906 L 92 713.253906 Z M 92 177.246094 " clipRule="nonzero"/></clipPath>
                                 <clipPath id="54e3de31d4"><path d="M 116.566406 262.828125 C 66.722656 344.660156 101.289062 424.304688 147.066406 466.578125 L 414.730469 713.253906 L 676.746094 467.457031 C 719.320312 421.984375 735.175781 373.75 726.578125 320.039062 C 714.058594 245.742188 650.320312 188.097656 571.582031 179.863281 C 523.289062 174.945312 476.640625 187.996094 440.230469 217.0625 C 430.433594 224.878906 421.671875 233.621094 414.039062 243.125 C 404.984375 232.304688 394.363281 222.410156 382.351562 213.636719 C 340.484375 183.074219 287.1875 171.140625 235.996094 180.375 C 187.511719 189.371094 143.988281 219.414062 116.566406 262.828125 Z M 116.566406 262.828125 " clipRule="nonzero"/></clipPath></defs>
                                 <path d="M 262.617188 135 C 153.125 135 67.5 230.167969 67.5 342.761719 C 67.5 401.324219 76.871094 449.550781 111.808594 500.289062 C 145.140625 548.707031 200.574219 597.5625 286.582031 662.023438 L 405 742.5 L 523.410156 662.035156 C 609.421875 597.570312 664.859375 548.707031 698.191406 500.289062 C 733.128906 449.550781 742.5 401.324219 742.5 342.761719 C 742.5 230.167969 656.875 135 547.382812 135 C 492.441406 135 444.886719 157.382812 405 197.882812 C 365.113281 157.382812 317.554688 135 262.617188 135 Z M 262.617188 202.5 C 194.921875 202.5 135 262.761719 135 342.761719 C 135 361.289062 136.046875 377.578125 138.664062 392.597656 C 143.042969 417.757812 151.8125 439.363281 167.40625 462.015625 C 193.90625 500.503906 241.265625 543.710938 327.089844 608.03125 L 405 666.542969 L 482.910156 608.03125 C 568.734375 543.710938 616.097656 500.503906 642.597656 462.015625 C 667.496094 425.84375 675 392.328125 675 342.761719 C 675 262.761719 615.078125 202.5 547.382812 202.5 C 505.679688 202.5 467.441406 222.285156 432.113281 269.941406 C 425.746094 278.53125 415.6875 283.59375 405 283.59375 C 394.3125 283.59375 384.253906 278.53125 377.886719 269.941406 C 342.558594 222.285156 304.320312 202.5 262.617188 202.5 Z M 262.617188 202.5 " fillOpacity="1" fillRule="evenodd"/>
                                 <g clipPath="url(#6c326d0963)"><g clipPath="url(#54e3de31d4)">
                                     <path d="M 91.285156 177.246094 L 729.890625 177.246094 L 729.890625 713.253906 L 91.285156 713.253906 Z M 91.285156 177.246094 " fillOpacity="1" fillRule="nonzero"/></g></g>
                             </svg>
-                            <p className="text-sm text-accent-red">{post.likeIds.length}</p>
+                            <p className="text-sm">{post.likeIds.length}</p>
                         </div>
                     ) :
                         <div className="flex flex-row gap-2 cursor-pointer text-text-secondary fill-text-secondary hover:fill-accent-red hover:text-accent-red duration-75 ease-in"
-                             onClick={() => {handleLike(post.id, loggedInUser, posts, setPosts);}}>
-                            <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                             onClick={() => {API.handleLike(post.id, loggedInUser, posts, setPosts);}}
+                             title="Like">
+                            <svg className="mr-auto" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M7.78125 4C4.53699 4 2 6.81981 2 10.1559C2 11.8911 2.27768 13.32 3.31283 14.8234C4.3005 16.258 5.9429 17.7056 8.49134 19.6155L12 22L15.5084 19.6158C18.057 17.7058 19.6995 16.258 20.6872 14.8234C21.7223 13.32 22 11.8911 22 10.1559C22 6.81982 19.463 4 16.2188 4C14.5909 4 13.1818 4.66321 12 5.86323C10.8182 4.66321 9.40906 4 7.78125 4ZM7.78125 6C5.77551 6 4 7.7855 4 10.1559C4 10.7049 4.03107 11.1875 4.10853 11.6325C4.23826 12.378 4.49814 13.0182 4.96014 13.6893C5.74532 14.8297 7.14861 16.11 9.69156 18.0157L12 19.7494L14.3084 18.0157C16.8514 16.11 18.2547 14.8297 19.0399 13.6893C19.7777 12.6176 20 11.6245 20 10.1559C20 7.7855 18.2245 6 16.2188 6C14.9831 6 13.8501 6.58627 12.8033 7.99831C12.6147 8.25274 12.3167 8.40277 12 8.40277C11.6833 8.40277 11.3853 8.25274 11.1967 7.99831C10.1499 6.58627 9.01689 6 7.78125 6Z"/>
                             </svg>
                             <p className="text-sm">{post.likeIds.length}</p>
                         </div>
                     }
-                </div>
 
-                <div className="flex flex-row gap-3 mr-4">
                     {/* Bookmark (already bookmarked) */}
                     { loggedInUser && loggedInUser.bookmarks.indexOf(post.id) !== -1 ? (
-                        <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
-                             onClick={() => {handleUnBookmark(post.id, loggedInUser, setUser);}}>
-                            <svg className="fill-accent-blue" width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
-                                <clipPath id="42f0bbd39a"><path d="M 182.03125 162 L 628 162 L 628 600.941406 L 182.03125 600.941406 Z M 182.03125 162 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="e1a312a0d5"><path d="M 220.28125 162 L 589.71875 162 C 599.863281 162 609.59375 166.03125 616.765625 173.203125 C 623.9375 180.375 627.96875 190.105469 627.96875 200.25 L 627.96875 562.691406 C 627.96875 572.835938 623.9375 582.5625 616.765625 589.738281 C 609.59375 596.910156 599.863281 600.941406 589.71875 600.941406 L 220.28125 600.941406 C 210.136719 600.941406 200.40625 596.910156 193.234375 589.738281 C 186.0625 582.5625 182.03125 572.835938 182.03125 562.691406 L 182.03125 200.25 C 182.03125 190.105469 186.0625 180.375 193.234375 173.203125 C 200.40625 166.03125 210.136719 162 220.28125 162 Z M 220.28125 162 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="c7ae287a16"><path d="M 167 480 L 381 480 L 381 726 L 167 726 Z M 167 480 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="37cce30e0d"><path d="M 167.933594 480.6875 L 381.085938 598.109375 L 278.492188 784.34375 L 65.339844 666.921875 Z M 167.933594 480.6875 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="8d262d0206"><path d="M 171.757812 725.546875 L 380.773438 597.9375 L 167.933594 480.6875 Z M 171.757812 725.546875 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="951f95fecf"><path d="M 423 479 L 636 479 L 636 725 L 423 725 Z M 423 479 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="20ec417e27"><path d="M 423.480469 598.828125 L 635.613281 479.574219 L 739.808594 664.921875 L 527.671875 784.171875 Z M 423.480469 598.828125 " clipRule="nonzero"/></clipPath>
-                                <clipPath id="8b8040f67b"><path d="M 633.585938 724.632812 L 635.304688 479.75 L 423.480469 598.828125 Z M 633.585938 724.632812 " clipRule="nonzero"/></clipPath></defs>
-                                <path d="M 330.34375 101.25 L 479.65625 101.25 C 507.28125 101.25 530.082031 101.25 548.644531 102.789062 C 567.925781 104.390625 585.640625 107.828125 602.230469 116.449219 C 626.890625 129.257812 646.996094 149.363281 659.800781 174.019531 C 668.417969 190.609375 671.859375 208.324219 673.460938 227.609375 C 675 246.171875 675 268.96875 675 296.59375 L 675 594.765625 C 675 627.261719 675 653.921875 673.222656 674.1875 C 671.539062 693.285156 667.839844 715.796875 652.996094 732.089844 C 634.753906 752.109375 608.015625 762.15625 581.109375 759.101562 C 559.207031 756.613281 541.597656 742.109375 527.753906 728.839844 C 513.074219 714.769531 495.515625 694.699219 474.117188 670.246094 L 461.386719 655.695312 C 446.722656 638.933594 437.132812 628.023438 429.1875 620.394531 C 421.492188 613.003906 417.84375 611.234375 416.007812 610.601562 C 408.875 608.140625 401.125 608.140625 393.992188 610.601562 C 392.15625 611.234375 388.507812 613.003906 380.8125 620.394531 C 372.867188 628.023438 363.277344 638.933594 348.613281 655.695312 L 335.882812 670.246094 C 314.484375 694.699219 296.925781 714.765625 282.242188 728.839844 C 268.402344 742.109375 250.792969 756.613281 228.890625 759.101562 C 201.984375 762.15625 175.246094 752.109375 157.007812 732.089844 C 142.160156 715.796875 138.457031 693.285156 136.78125 674.1875 C 135 653.921875 135 627.261719 135 594.765625 L 135 296.59375 C 135 268.96875 135 246.171875 136.539062 227.609375 C 138.140625 208.324219 141.578125 190.609375 150.199219 174.019531 C 163.007812 149.363281 183.113281 129.257812 207.769531 116.449219 C 224.359375 107.828125 242.074219 104.390625 261.359375 102.789062 C 279.921875 101.25 302.71875 101.25 330.34375 101.25 Z M 266.945312 170.058594 C 251.910156 171.308594 244.234375 173.570312 238.882812 176.347656 C 226.554688 182.753906 216.503906 192.804688 210.097656 205.132812 C 207.320312 210.484375 205.058594 218.160156 203.808594 233.195312 C 202.527344 248.632812 202.5 268.617188 202.5 298.011719 L 202.5 593.074219 C 202.5 627.675781 202.53125 651.335938 204.019531 668.277344 C 205.246094 682.21875 207.199219 686.597656 207.375 687.128906 C 210.84375 690.636719 215.671875 692.453125 220.59375 692.09375 C 221.074219 691.8125 225.429688 689.804688 235.53125 680.117188 C 247.808594 668.347656 263.410156 650.5625 286.195312 624.523438 L 298.753906 610.171875 C 312.21875 594.78125 323.738281 581.613281 334.0625 571.703125 C 344.878906 561.320312 356.84375 552.011719 371.972656 546.792969 C 393.375 539.410156 416.625 539.410156 438.027344 546.792969 C 453.15625 552.011719 465.121094 561.320312 475.9375 571.703125 C 486.261719 581.613281 497.78125 594.78125 511.25 610.171875 L 523.804688 624.523438 C 546.589844 650.5625 562.195312 668.347656 574.46875 680.117188 C 584.570312 689.804688 588.925781 691.8125 589.40625 692.09375 C 594.328125 692.453125 599.15625 690.636719 602.625 687.128906 C 602.796875 686.597656 604.753906 682.21875 605.976562 668.277344 C 607.46875 651.335938 607.5 627.675781 607.5 593.074219 L 607.5 298.011719 C 607.5 268.617188 607.472656 248.632812 606.191406 233.195312 C 604.941406 218.160156 602.679688 210.484375 599.898438 205.132812 C 593.496094 192.804688 583.441406 182.753906 571.113281 176.347656 C 565.765625 173.570312 558.089844 171.308594 543.054688 170.058594 C 527.617188 168.777344 507.632812 168.75 478.238281 168.75 L 331.761719 168.75 C 302.367188 168.75 282.382812 168.777344 266.945312 170.058594 Z M 266.945312 170.058594 " fillOpacity="1" fillRule="nonzero"/><g clipPath="url(#42f0bbd39a)"><g clipPath="url(#e1a312a0d5)">
-                                    <path d="M 182.03125 162 L 627.828125 162 L 627.828125 600.941406 L 182.03125 600.941406 Z M 182.03125 162 " fillOpacity="1" fillRule="nonzero"/></g></g><g clipPath="url(#c7ae287a16)"><g clipPath="url(#37cce30e0d)"><g clipPath="url(#8d262d0206)">
-                                    <path d="M 167.933594 480.6875 L 381.085938 598.109375 L 278.492188 784.34375 L 65.339844 666.921875 Z M 167.933594 480.6875 " fillOpacity="1" fillRule="nonzero"/></g></g></g><g clipPath="url(#951f95fecf)"><g clipPath="url(#20ec417e27)"><g clipPath="url(#8b8040f67b)">
-                                    <path d="M 423.480469 598.828125 L 635.613281 479.574219 L 739.808594 664.921875 L 527.671875 784.171875 Z M 423.480469 598.828125 " fillOpacity="1" fillRule="nonzero"/></g></g></g>
-                            </svg>
-                        </div>
-                    ) :
-                        <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light flex flex-row gap-3 cursor-pointer"
-                             onClick={() => {handleBookmark(post.id, loggedInUser, setUser);}}>
+                            <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light cursor-pointer"
+                                 onClick={() => { API.handleUnBookmark(post.id, loggedInUser, setUser);}}
+                                 title="Unbookmark">
+                                <svg className="fill-accent-blue" width="20px" height="20px" zoomAndPan="magnify" viewBox="0 0 810 809.999993" preserveAspectRatio="xMidYMid meet" version="1.0"><defs>
+                                    <clipPath id="42f0bbd39a"><path d="M 182.03125 162 L 628 162 L 628 600.941406 L 182.03125 600.941406 Z M 182.03125 162 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="e1a312a0d5"><path d="M 220.28125 162 L 589.71875 162 C 599.863281 162 609.59375 166.03125 616.765625 173.203125 C 623.9375 180.375 627.96875 190.105469 627.96875 200.25 L 627.96875 562.691406 C 627.96875 572.835938 623.9375 582.5625 616.765625 589.738281 C 609.59375 596.910156 599.863281 600.941406 589.71875 600.941406 L 220.28125 600.941406 C 210.136719 600.941406 200.40625 596.910156 193.234375 589.738281 C 186.0625 582.5625 182.03125 572.835938 182.03125 562.691406 L 182.03125 200.25 C 182.03125 190.105469 186.0625 180.375 193.234375 173.203125 C 200.40625 166.03125 210.136719 162 220.28125 162 Z M 220.28125 162 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="c7ae287a16"><path d="M 167 480 L 381 480 L 381 726 L 167 726 Z M 167 480 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="37cce30e0d"><path d="M 167.933594 480.6875 L 381.085938 598.109375 L 278.492188 784.34375 L 65.339844 666.921875 Z M 167.933594 480.6875 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="8d262d0206"><path d="M 171.757812 725.546875 L 380.773438 597.9375 L 167.933594 480.6875 Z M 171.757812 725.546875 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="951f95fecf"><path d="M 423 479 L 636 479 L 636 725 L 423 725 Z M 423 479 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="20ec417e27"><path d="M 423.480469 598.828125 L 635.613281 479.574219 L 739.808594 664.921875 L 527.671875 784.171875 Z M 423.480469 598.828125 " clipRule="nonzero"/></clipPath>
+                                    <clipPath id="8b8040f67b"><path d="M 633.585938 724.632812 L 635.304688 479.75 L 423.480469 598.828125 Z M 633.585938 724.632812 " clipRule="nonzero"/></clipPath></defs>
+                                    <path d="M 330.34375 101.25 L 479.65625 101.25 C 507.28125 101.25 530.082031 101.25 548.644531 102.789062 C 567.925781 104.390625 585.640625 107.828125 602.230469 116.449219 C 626.890625 129.257812 646.996094 149.363281 659.800781 174.019531 C 668.417969 190.609375 671.859375 208.324219 673.460938 227.609375 C 675 246.171875 675 268.96875 675 296.59375 L 675 594.765625 C 675 627.261719 675 653.921875 673.222656 674.1875 C 671.539062 693.285156 667.839844 715.796875 652.996094 732.089844 C 634.753906 752.109375 608.015625 762.15625 581.109375 759.101562 C 559.207031 756.613281 541.597656 742.109375 527.753906 728.839844 C 513.074219 714.769531 495.515625 694.699219 474.117188 670.246094 L 461.386719 655.695312 C 446.722656 638.933594 437.132812 628.023438 429.1875 620.394531 C 421.492188 613.003906 417.84375 611.234375 416.007812 610.601562 C 408.875 608.140625 401.125 608.140625 393.992188 610.601562 C 392.15625 611.234375 388.507812 613.003906 380.8125 620.394531 C 372.867188 628.023438 363.277344 638.933594 348.613281 655.695312 L 335.882812 670.246094 C 314.484375 694.699219 296.925781 714.765625 282.242188 728.839844 C 268.402344 742.109375 250.792969 756.613281 228.890625 759.101562 C 201.984375 762.15625 175.246094 752.109375 157.007812 732.089844 C 142.160156 715.796875 138.457031 693.285156 136.78125 674.1875 C 135 653.921875 135 627.261719 135 594.765625 L 135 296.59375 C 135 268.96875 135 246.171875 136.539062 227.609375 C 138.140625 208.324219 141.578125 190.609375 150.199219 174.019531 C 163.007812 149.363281 183.113281 129.257812 207.769531 116.449219 C 224.359375 107.828125 242.074219 104.390625 261.359375 102.789062 C 279.921875 101.25 302.71875 101.25 330.34375 101.25 Z M 266.945312 170.058594 C 251.910156 171.308594 244.234375 173.570312 238.882812 176.347656 C 226.554688 182.753906 216.503906 192.804688 210.097656 205.132812 C 207.320312 210.484375 205.058594 218.160156 203.808594 233.195312 C 202.527344 248.632812 202.5 268.617188 202.5 298.011719 L 202.5 593.074219 C 202.5 627.675781 202.53125 651.335938 204.019531 668.277344 C 205.246094 682.21875 207.199219 686.597656 207.375 687.128906 C 210.84375 690.636719 215.671875 692.453125 220.59375 692.09375 C 221.074219 691.8125 225.429688 689.804688 235.53125 680.117188 C 247.808594 668.347656 263.410156 650.5625 286.195312 624.523438 L 298.753906 610.171875 C 312.21875 594.78125 323.738281 581.613281 334.0625 571.703125 C 344.878906 561.320312 356.84375 552.011719 371.972656 546.792969 C 393.375 539.410156 416.625 539.410156 438.027344 546.792969 C 453.15625 552.011719 465.121094 561.320312 475.9375 571.703125 C 486.261719 581.613281 497.78125 594.78125 511.25 610.171875 L 523.804688 624.523438 C 546.589844 650.5625 562.195312 668.347656 574.46875 680.117188 C 584.570312 689.804688 588.925781 691.8125 589.40625 692.09375 C 594.328125 692.453125 599.15625 690.636719 602.625 687.128906 C 602.796875 686.597656 604.753906 682.21875 605.976562 668.277344 C 607.46875 651.335938 607.5 627.675781 607.5 593.074219 L 607.5 298.011719 C 607.5 268.617188 607.472656 248.632812 606.191406 233.195312 C 604.941406 218.160156 602.679688 210.484375 599.898438 205.132812 C 593.496094 192.804688 583.441406 182.753906 571.113281 176.347656 C 565.765625 173.570312 558.089844 171.308594 543.054688 170.058594 C 527.617188 168.777344 507.632812 168.75 478.238281 168.75 L 331.761719 168.75 C 302.367188 168.75 282.382812 168.777344 266.945312 170.058594 Z M 266.945312 170.058594 " fillOpacity="1" fillRule="nonzero"/><g clipPath="url(#42f0bbd39a)"><g clipPath="url(#e1a312a0d5)">
+                                        <path d="M 182.03125 162 L 627.828125 162 L 627.828125 600.941406 L 182.03125 600.941406 Z M 182.03125 162 " fillOpacity="1" fillRule="nonzero"/></g></g><g clipPath="url(#c7ae287a16)"><g clipPath="url(#37cce30e0d)"><g clipPath="url(#8d262d0206)">
+                                        <path d="M 167.933594 480.6875 L 381.085938 598.109375 L 278.492188 784.34375 L 65.339844 666.921875 Z M 167.933594 480.6875 " fillOpacity="1" fillRule="nonzero"/></g></g></g><g clipPath="url(#951f95fecf)"><g clipPath="url(#20ec417e27)"><g clipPath="url(#8b8040f67b)">
+                                        <path d="M 423.480469 598.828125 L 635.613281 479.574219 L 739.808594 664.921875 L 527.671875 784.171875 Z M 423.480469 598.828125 " fillOpacity="1" fillRule="nonzero"/></g></g></g>
+                                </svg>
+                            </div>
+                        ) :
+                        <div className="fill-text-secondary duration-75 ease-in hover:text-accent-blue-light hover:fill-accent-blue-light cursor-pointer"
+                             onClick={() => { API.handleBookmark(post.id, loggedInUser, setUser);}}
+                             title="Bookmark">
                             <svg width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" clipRule="evenodd" d="M9.78799 3H14.212C15.0305 2.99999 15.7061 2.99998 16.2561 3.04565C16.8274 3.0931 17.3523 3.19496 17.8439 3.45035C18.5745 3.82985 19.1702 4.42553 19.5497 5.1561C19.805 5.64774 19.9069 6.17258 19.9544 6.74393C20 7.29393 20 7.96946 20 8.78798V17.6227C20 18.5855 20 19.3755 19.9473 19.9759C19.8975 20.5418 19.7878 21.2088 19.348 21.6916C18.8075 22.2847 18.0153 22.5824 17.218 22.4919C16.5691 22.4182 16.0473 21.9884 15.6372 21.5953C15.2022 21.1783 14.6819 20.5837 14.0479 19.8591L13.6707 19.428C13.2362 18.9314 12.9521 18.6081 12.7167 18.3821C12.4887 18.1631 12.3806 18.1107 12.3262 18.0919C12.1148 18.019 11.8852 18.019 11.6738 18.0919C11.6194 18.1107 11.5113 18.1631 11.2833 18.3821C11.0479 18.6081 10.7638 18.9314 10.3293 19.428L9.95209 19.8591C9.31809 20.5837 8.79784 21.1782 8.36276 21.5953C7.95272 21.9884 7.43089 22.4182 6.78196 22.4919C5.9847 22.5824 5.19246 22.2847 4.65205 21.6916C4.21218 21.2088 4.10248 20.5418 4.05275 19.9759C3.99997 19.3755 3.99998 18.5855 4 17.6227V8.78799C3.99999 7.96947 3.99998 7.29393 4.04565 6.74393C4.0931 6.17258 4.19496 5.64774 4.45035 5.1561C4.82985 4.42553 5.42553 3.82985 6.1561 3.45035C6.64774 3.19496 7.17258 3.0931 7.74393 3.04565C8.29393 2.99998 8.96947 2.99999 9.78799 3ZM7.90945 5.03879C7.46401 5.07578 7.23663 5.1428 7.07805 5.22517C6.71277 5.41493 6.41493 5.71277 6.22517 6.07805C6.1428 6.23663 6.07578 6.46401 6.03879 6.90945C6.0008 7.36686 6 7.95898 6 8.83V17.5726C6 18.5978 6.00094 19.2988 6.04506 19.8008C6.08138 20.2139 6.13928 20.3436 6.14447 20.3594C6.2472 20.4633 6.39033 20.5171 6.53606 20.5065C6.55034 20.4981 6.67936 20.4386 6.97871 20.1516C7.34245 19.8029 7.80478 19.2759 8.4799 18.5044L8.85192 18.0792C9.25094 17.6232 9.59229 17.233 9.89819 16.9393C10.2186 16.6317 10.5732 16.3559 11.0214 16.2013C11.6555 15.9825 12.3445 15.9825 12.9786 16.2013C13.4268 16.3559 13.7814 16.6317 14.1018 16.9393C14.4077 17.233 14.7491 17.6232 15.1481 18.0792L15.5201 18.5044C16.1952 19.2759 16.6576 19.8029 17.0213 20.1516C17.3206 20.4386 17.4497 20.4981 17.4639 20.5065C17.6097 20.5171 17.7528 20.4633 17.8555 20.3594C17.8607 20.3436 17.9186 20.2139 17.9549 19.8008C17.9991 19.2988 18 18.5978 18 17.5726V8.83C18 7.95898 17.9992 7.36686 17.9612 6.90945C17.9242 6.46401 17.8572 6.23663 17.7748 6.07805C17.5851 5.71277 17.2872 5.41493 16.9219 5.22517C16.7634 5.1428 16.536 5.07578 16.0905 5.03879C15.6331 5.0008 15.041 5 14.17 5H9.83C8.95898 5 8.36686 5.0008 7.90945 5.03879Z"
                                 />

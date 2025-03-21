@@ -4,96 +4,10 @@ import { User } from '../types';
 import { UserContext } from "../UserContext";
 import { IconArray, BannerArray } from "../UserContext";
 import * as API from "../api";
-import {BASE_URL, getUser} from "../api";
+import * as API_CUSTOM from "../api-customization";
 
 let NewIcon = -1;
 let NewBanner = -1;
-
-export async function requestCustomizeDisplayName(newName: string, user: User): Promise<any> {
-    const nameData = {
-        displayname: newName
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/displayname`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(nameData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeBio(newBio: string, user: User): Promise<any> {
-    const bioData = {
-        bio: newBio
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/bio`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(bioData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeSong(newSong: string, user: User): Promise<any> {
-    const songData = {
-        song: newSong
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/favsong`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(songData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeBanner(newBanner: number, user: User): Promise<any> {
-    const bannerData = {
-        banner: newBanner
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/banner`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(bannerData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
-export async function requestCustomizeIcon(newIcon: number, user: User): Promise<any> {
-    const iconData = {
-        icon: newIcon
-    };
-
-    const response = await fetch(`${BASE_URL}/customize/icon`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + user?.token
-        },
-        body: JSON.stringify(iconData),
-        credentials: "include",
-    });
-    return response.ok;
-}
-
 
 const handleIconClick = async (imgID: string) => {
     const img = document.getElementById(imgID);
@@ -140,7 +54,7 @@ const handleChangeIcon = async (icon: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (icon != user?.icon) {
-        let response = await requestCustomizeIcon(icon, user);
+        let response = await API_CUSTOM.requestCustomizeIcon(icon, user);
     }
 };
 
@@ -148,15 +62,15 @@ const handleChangeBanner = async (banner: number, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (banner != user?.banner) {
-        let response = await requestCustomizeBanner(banner, user);
+        let response = await API_CUSTOM.requestCustomizeBanner(banner, user);
     }
 };
 
 const handleChangeDisplayName = async (newName: string, user: User) => {
     if (!user) return; // Ensure user exists
 
-    if (newName.length > 0 && newName.length <= 40 && newName != user?.displayname) {
-        let response = await requestCustomizeDisplayName(newName, user);
+    if (newName.length >= 0 && newName.length <= 40 && newName != user?.displayname) {
+        let response = await API_CUSTOM.requestCustomizeDisplayName(newName, user);
     }
 };
 
@@ -164,7 +78,7 @@ const handleChangeBio = async (newBio: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newBio != null && newBio.length <= 250 && newBio != user?.bio) {
-        let response = await requestCustomizeBio(newBio, user);
+        let response = await API_CUSTOM.requestCustomizeBio(newBio, user);
     }
 };
 
@@ -172,7 +86,7 @@ const handleChangeSong = async (newSong: string, user: User) => {
     if (!user) return; // Ensure user exists
 
     if (newSong != null && newSong != user?.song) {
-        let response = await requestCustomizeSong(newSong, user);
+        let response = await API_CUSTOM.requestCustomizeSong(newSong, user);
     }
 };
 
@@ -267,7 +181,10 @@ const SettingsPage = () => {
                                         if (label) label.style.visibility = "visible";
 
                                         const userDN = document.getElementById("userDisplayname");
-                                        if (userDN) userDN.textContent = newDisplayName;
+                                        if (userDN) {
+                                            userDN.textContent = newDisplayName;
+                                            if (userDN.textContent === "") userDN.textContent = user?.username;
+                                        }
 
                                         user.displayname = newDisplayName;
                                         setUser(user);
@@ -421,6 +338,24 @@ const SettingsPage = () => {
                                 </p>
                             </button>
                         </div>
+                    </div>
+
+                    {/* Link with Spotify button */}
+                    <div className="flex flex-col items-start bg-background-secondary p-4 rounded-md my-10 gap-3">
+                        <div className="flex flex-row items-center gap-2 w-full fill-accent-green justify-items-start">
+                            <h2 className="text-text-main text-lg">Link with Spotify</h2>
+                            {/* Spotify logo (taken from their "Spotify for developers" website) */}
+                            <svg width="25px" height="25px" viewBox="0 0 236.05 225.25"><path d="m122.37,3.31C61.99.91,11.1,47.91,8.71,108.29c-2.4,60.38,44.61,111.26,104.98,113.66,60.38,2.4,111.26-44.6,113.66-104.98C229.74,56.59,182.74,5.7,122.37,3.31Zm46.18,160.28c-1.36,2.4-4.01,3.6-6.59,3.24-.79-.11-1.58-.37-2.32-.79-14.46-8.23-30.22-13.59-46.84-15.93-16.62-2.34-33.25-1.53-49.42,2.4-3.51.85-7.04-1.3-7.89-4.81-.85-3.51,1.3-7.04,4.81-7.89,17.78-4.32,36.06-5.21,54.32-2.64,18.26,2.57,35.58,8.46,51.49,17.51,3.13,1.79,4.23,5.77,2.45,8.91Zm14.38-28.72c-2.23,4.12-7.39,5.66-11.51,3.43-16.92-9.15-35.24-15.16-54.45-17.86-19.21-2.7-38.47-1.97-57.26,2.16-1.02.22-2.03.26-3.01.12-3.41-.48-6.33-3.02-7.11-6.59-1.01-4.58,1.89-9.11,6.47-10.12,20.77-4.57,42.06-5.38,63.28-2.4,21.21,2.98,41.46,9.62,60.16,19.74,4.13,2.23,5.66,7.38,3.43,11.51Zm15.94-32.38c-2.1,4.04-6.47,6.13-10.73,5.53-1.15-.16-2.28-.52-3.37-1.08-19.7-10.25-40.92-17.02-63.07-20.13-22.15-3.11-44.42-2.45-66.18,1.97-5.66,1.15-11.17-2.51-12.32-8.16-1.15-5.66,2.51-11.17,8.16-12.32,24.1-4.89,48.74-5.62,73.25-2.18,24.51,3.44,47.99,10.94,69.81,22.29,5.12,2.66,7.11,8.97,4.45,14.09Z"/></svg>
+                        </div>
+
+                        <button className="bg-accent-green px-6 py-2 w-full rounded-xl hover:bg-accent-green-light text-text-main hover:text-text-tertiary transition-colors"
+                            onClick={() => {
+                                API.linkWithSpotify();
+                            }}>
+                            <p>
+                                Link
+                            </p>
+                        </button>
                     </div>
 
                 </div>

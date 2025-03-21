@@ -4,6 +4,7 @@ import {IconArray, UserContext} from "../UserContext";
 import { getUserActivity, RestoreUser} from "../api";
 import { PackagedUserAlert, User} from "../types";
 import {Link} from "react-router-dom";
+import * as COMMON from "../common";
 
 const ActivityPage = () => {
   const { user, setUser } = useContext(UserContext);
@@ -71,7 +72,7 @@ const ActivityPage = () => {
                                 alt="User icon"
                             />
                           </Link>
-                          <div className="flex flex-col text-white gap-2 w-full text-center content-center">
+                          <div className="flex flex-col text-white gap-1 w-full text-center content-center">
                             <div className="flex flex-row">
                               <Link to={"/profile/" + alert.user.username}
                                     className="hover:underline hover:decoration-text-main text-center content-center">
@@ -84,7 +85,7 @@ const ActivityPage = () => {
                               {alert.type == "like" && (<p className="text-center content-center ml-1">liked your post!</p>)}
                               {alert.type == "follow" && (<p className="text-center content-center ml-1">followed you!</p>)}
                             </div>
-                            <p className="text-text-secondary text-left text-sm">{new Date(alert.created_at).toLocaleString().trim()}</p>
+                            <p className="text-text-secondary text-left text-sm">{COMMON.formatDate(new Date(alert.created_at))}</p>
                           </div>
                         </div>
                     ))
