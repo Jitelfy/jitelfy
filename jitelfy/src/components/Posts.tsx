@@ -5,6 +5,22 @@ import Comments from "./Comments";
 import React from "react";
 import * as API from "../api";
 
+const formatDate = (date: Date) => {
+    let newDate = date.toLocaleString();
+    newDate = newDate.slice(0, 16) + newDate.slice(19);
+
+    /* Make time prettier */
+    if (newDate.slice(-4) === "p.m.") {
+        newDate = newDate.slice(0, -4);
+        newDate = newDate.concat("PM");
+    } else {
+        newDate = newDate.slice(0, -4);
+        newDate = newDate.concat("AM");
+    }
+
+    return newDate;
+}
+
 const toggleComments = (postId: string, openComments: Set<string>, setOpenComments: (c: Set<string>) => any) => {
     const newSet = new Set(openComments);
     if (newSet.has(postId)) {
@@ -150,7 +166,7 @@ export const PostBase = (post: Post, posts: Array<PackagedPost>, loggedInUser: U
                         </p>
                     </Link>
                     <p className="text-text-secondary text-sm">
-                        {new Date(post.time).toLocaleString()}
+                        {formatDate(new Date(post.time)).toString()}
                     </p>
                 </div>
             </div>
