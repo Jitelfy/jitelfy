@@ -32,6 +32,7 @@ const ProfilePage = () => {
     const [totalReposts, setTotalReposts] = useState<number>(0);
     const [highestLikeCount, setHighestLikeCount] = useState<number>(0);
     const [totalComment, setTotalComment] = useState<number>(0);
+    const [totalBookmarks, setTotalBookmarks] = useState<number>(0)
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
@@ -130,17 +131,25 @@ const ProfilePage = () => {
 
                     console.log(userData);
 
-                    const likes = fetched.filter(p => p.post.userid === userData?.id).reduce((sum, post) => sum + post.post.likeIds.length, 0);
+                    // all posts have a parent id of "000000000000000000000000" 
+                    const userPosts = fetched.filter(p => p.post.userid === userData?.id && p.post.parentid === "000000000000000000000000")
+                    const userComments = fetched.filter(p => p.post.userid === userData?.id && p.post.parentid !== "000000000000000000000000")
+                    
+                    const likes = userPosts.reduce((sum, post) => sum + post.post.likeIds.length, 0);
                     const highestLike = Math.max(...fetched.map(p => p.post.likeIds.length), 0);
-                    const userposts = fetched.filter(p => p.post.userid === userData?.id).length;
-                    const totalComments = fetched.filter(p => p.post.userid === userData?.id).reduce((sum, post) => sum + post.post.childids, 0);
+                    const totalPosts = userPosts.length;
+                    const totalComments = userComments.length
                     const reposts = user.reposts.length;
+                    const bookmarks = user.bookmarks.length;
+
+                    console.log(user.bookmarks)
 
                     setTotalLikes(likes);
                     setHighestLikeCount(highestLike);
-                    setTotalUserposts(userposts);
-                    setTotalReposts(reposts);
+                    setTotalUserposts(totalPosts);
                     setTotalComment(totalComments);
+                    setTotalReposts(reposts);
+                    setTotalBookmarks(bookmarks)
                     // TODO: Get this user's followers & following
                 }
             }
@@ -291,18 +300,18 @@ const ProfilePage = () => {
                             <div className="flex-1 bg-background-tertiary p-4 rounded-md">
                                 <h3 className="text-text-main text-lg font-bold mb-3">Music</h3>
                                 <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Total likes:</span>
-                                    <span className="text-text-main">{totalLikes}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Highest like count:</span>
-                                    <span className="text-text-main">{highestLikeCount}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Total reposts:</span>
-                                    <span className="text-text-main">{totalReposts}</span>
-                                </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Post Shared:</span>
+                                        <span className="text-text-main">{totalUserposts}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Comments Shared:</span>
+                                        <span className="text-text-main">{totalComment}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Things Saved:</span>
+                                        <span className="text-text-main">{totalBookmarks}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -310,14 +319,18 @@ const ProfilePage = () => {
                             <div className="flex-1 bg-background-tertiary p-4 rounded-md">
                                 <h3 className="text-text-main text-lg font-bold mb-3">Social</h3>
                                 <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Total Posts and Comments</span>
-                                    <span className="text-text-main">{totalUserposts}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-text-secondary">Total Amount of Interactions of Posts:</span>
-                                    <span className="text-text-main">{totalComment}</span>
-                                </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Total reposts:</span>
+                                        <span className="text-text-main">{totalReposts}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Total likes:</span>
+                                        <span className="text-text-main">{totalLikes}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-text-secondary">Highest like count:</span>
+                                        <span className="text-text-main">{highestLikeCount}</span>
+                                    </div>
                                 </div>
                             </div>
                             </div>
