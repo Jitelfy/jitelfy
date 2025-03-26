@@ -26,6 +26,11 @@ const ProfilePage = () => {
     const [showPosts, setShowPosts] = useState<Boolean>(true);
     const [showComments, setShowComments] = useState<Boolean>(false);
 
+    const [stats, setStats] = useState<Boolean>(false);
+    const [totalLikes, setTotalLikes] = useState<number>(0);
+    const [totalUserposts, setTotalUserposts] = useState<number>(0);
+    const [totalReposts, setTotalReposts] = useState<number>(0);
+
     const { username } = useParams(); // Grab the dynamic username from the URL
     
     const handleToggleFollow = async () => {
@@ -123,6 +128,13 @@ const ProfilePage = () => {
 
                     console.log(userData);
 
+                    const likes = fetched.filter(p => p.post.userid === userData?.id).reduce((sum, post) => sum + post.post.likeIds.length, 0);
+                    const userposts = fetched.filter(p => p.post.userid === userData?.id).length;
+                    const reposts = user.reposts.length;
+
+                    setTotalLikes(likes);
+                    setTotalUserposts(userposts);
+                    setTotalReposts(reposts);
                     // TODO: Get this user's followers & following
                 }
             }
@@ -257,6 +269,7 @@ const ProfilePage = () => {
                     {/* SVG for showing profile stats */}
                     <svg
                         className="self-end mt-5"
+                        onClick={() => setStats(!stats)}
                         fill="white" width="25px" height="25px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
                         <g stroke="none" strokeWidth="1" fillRule="evenodd">
                             <g id="ic_fluent_poll_24_regular" fillRule="nonzero">
@@ -265,6 +278,22 @@ const ProfilePage = () => {
                             </g>
                         </g>
                     </svg>
+                    {stats && (
+                        <div className="flex flex-row w-full justify-between px-10 mt-5">
+                        <div className="flex flex-col items-center">
+                            <p className="text-text-main text-lg font-bold">{totalUserposts}</p>
+                            <p className="text-text-secondary text-sm">Posts</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <p className="text-text-main text-lg font-bold">{totalLikes}</p>
+                            <p className="text-text-secondary text-sm">Likes</p>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <p className="text-text-main text-lg font-bold">{totalReposts}</p>
+                            <p className="text-text-secondary text-sm">Reposts</p>
+                        </div>
+                    </div>
+                        )}
                 </div>
 
                 {/* Button to choose user posts or replies */}
