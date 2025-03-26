@@ -95,14 +95,25 @@ const ExplorePage = () => {
         };
 
         const fetchUsersData = async () => {
+            if (!user) return;
+
             const fetched = await API.getUsers();
+            // We need all the data of the logged-in user (to determine who we follow)
+            const loggedInUser = await API.getUser(user.id);
+
             //const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
             setUsers(fetched);
+
+            // Snatch the following/followers of the logged-in user
+            user.followers = loggedInUser.followers;
+            user.following = loggedInUser.following;
+            setUser(user);
         };
 
         if (user == null) {
             restore();
         }
+
         fetchPostsData();
         fetchUsersData();
 
