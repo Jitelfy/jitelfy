@@ -322,15 +322,15 @@ const ProfilePage = () => {
                                 <h3 className="text-text-main text-lg font-bold mb-3">Music</h3>
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
-                                        <span className="text-text-secondary">Post Shared:</span>
+                                        <span className="text-text-secondary">Posts shared:</span>
                                         <span className="text-text-main">{totalUserposts}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-text-secondary">Comments Shared:</span>
+                                        <span className="text-text-secondary">Comments shared:</span>
                                         <span className="text-text-main">{totalComment}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-text-secondary">Total Saves:</span>
+                                        <span className="text-text-secondary">Total saves:</span>
                                         <span className="text-text-main">{totalBookmarks}</span>
                                     </div>
                                 </div>
