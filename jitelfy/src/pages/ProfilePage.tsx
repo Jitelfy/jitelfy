@@ -131,18 +131,17 @@ const ProfilePage = () => {
 
                     console.log(userData);
 
+                    const userInfo = fetched.filter(p => p.post.userid === userData?.id)
                     // all posts have a parent id of "000000000000000000000000" 
-                    const userPosts = fetched.filter(p => p.post.userid === userData?.id && p.post.parentid === "000000000000000000000000")
-                    const userComments = fetched.filter(p => p.post.userid === userData?.id && p.post.parentid !== "000000000000000000000000")
+                    const userPosts = userInfo.filter(p => p.post.parentid === "000000000000000000000000")
+                    const userComments = userInfo.filter(p => p.post.parentid !== "000000000000000000000000")
                     
-                    const likes = userPosts.reduce((sum, post) => sum + post.post.likeIds.length, 0);
-                    const highestLike = Math.max(...fetched.map(p => p.post.likeIds.length), 0);
+                    const likes = userInfo.reduce((sum, post) => sum + post.post.likeIds.length, 0);
+                    const highestLike = Math.max(...userInfo.map(p => p.post.likeIds.length), 0);
                     const totalPosts = userPosts.length;
                     const totalComments = userComments.length
                     const reposts = user.reposts.length;
                     const bookmarks = user.bookmarks.length;
-
-                    console.log(user.bookmarks)
 
                     setTotalLikes(likes);
                     setHighestLikeCount(highestLike);
@@ -161,7 +160,7 @@ const ProfilePage = () => {
         }
         fetchUser();
 
-    }, [user, username, flairFilter]); // Run when username changes
+    }, [user, username, flairFilter, userData]); // Run when username changes
 
     if (user == null || userData == null) {
         return (
