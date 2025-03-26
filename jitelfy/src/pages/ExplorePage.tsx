@@ -1,17 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import { Quicklinks, FriendActivity } from "../components/Sidebars";
+import {useSearchParams} from "react-router-dom";
 import { UserContext} from "../UserContext";
 import {PackagedPost, User} from "../types";
+
 import * as API from "../api";
 import * as POST from "../components/Posts"
-import {useSearchParams} from "react-router-dom";
+import * as USER from "../components/Users"
 
 let fetchedPosts: Array<PackagedPost>;
-
 
 const ExplorePage = () => {
     const { user, setUser } = useContext(UserContext);
     const [posts, setPosts] = useState<Array<PackagedPost>>([]);
+    const [users, setUsers] = useState<Array<User>>([]);
 
     // Search input (search bar)
     const [userSearchInput, setUserSearchInput] = useState("");
@@ -92,10 +94,17 @@ const ExplorePage = () => {
             setPosts(filtered);
         };
 
+        const fetchUsersData = async () => {
+            const fetched = await API.getUsers();
+            //const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
+            setUsers(fetched);
+        };
+
         if (user == null) {
             restore();
         }
         fetchPostsData();
+        fetchUsersData();
 
     }, [user, flairFilter, searchInput]);
 
@@ -191,9 +200,9 @@ const ExplorePage = () => {
                         </div>
                     )}
 
-                    {
-                        POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments, () => true)
-                    }
+                    { searchPosts && POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments, () => true) }
+                    { searchUsers && USER.mapUsers(users, user, setUser, (u) => u.username != user.username)}
+
                 </div>
             </div>
 
