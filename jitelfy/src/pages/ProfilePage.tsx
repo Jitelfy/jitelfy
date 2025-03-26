@@ -30,6 +30,8 @@ const ProfilePage = () => {
     const [totalLikes, setTotalLikes] = useState<number>(0);
     const [totalUserposts, setTotalUserposts] = useState<number>(0);
     const [totalReposts, setTotalReposts] = useState<number>(0);
+    const [highestLikeCount, setHighestLikeCount] = useState<number>(0);
+    const [totalComment, setTotalComment] = useState<number>(0);
 
     const { username } = useParams(); // Grab the dynamic username from the URL
     
@@ -129,12 +131,16 @@ const ProfilePage = () => {
                     console.log(userData);
 
                     const likes = fetched.filter(p => p.post.userid === userData?.id).reduce((sum, post) => sum + post.post.likeIds.length, 0);
+                    const highestLike = Math.max(...fetched.map(p => p.post.likeIds.length), 0);
                     const userposts = fetched.filter(p => p.post.userid === userData?.id).length;
+                    const totalComments = fetched.filter(p => p.post.userid === userData?.id).reduce((sum, post) => sum + post.post.childids, 0);
                     const reposts = user.reposts.length;
 
                     setTotalLikes(likes);
+                    setHighestLikeCount(highestLike);
                     setTotalUserposts(userposts);
                     setTotalReposts(reposts);
+                    setTotalComment(totalComments);
                     // TODO: Get this user's followers & following
                 }
             }
@@ -279,40 +285,71 @@ const ProfilePage = () => {
                         </g>
                     </svg>
                     {stats && (
-                        <div className="flex flex-row w-full justify-between px-10 mt-5">
-                        <div className="flex flex-col items-center">
-                            <p className="text-text-main text-lg font-bold">{totalUserposts}</p>
-                            <p className="text-text-secondary text-sm">Posts</p>
+                        <div className="w-full px-10 mt-5">
+                            <div className="flex justify-between gap-8">
+                            {/* Music Stats Column */}
+                            <div className="flex-1 bg-background-tertiary p-4 rounded-md">
+                                <h3 className="text-text-main text-lg font-bold mb-3">Music</h3>
+                                <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-text-secondary">Total likes:</span>
+                                    <span className="text-text-main">{totalLikes}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-text-secondary">Highest like count:</span>
+                                    <span className="text-text-main">{highestLikeCount}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-text-secondary">Total reposts:</span>
+                                    <span className="text-text-main">{totalReposts}</span>
+                                </div>
+                                </div>
+                            </div>
+
+                            {/* Social Stats Column */}
+                            <div className="flex-1 bg-background-tertiary p-4 rounded-md">
+                                <h3 className="text-text-main text-lg font-bold mb-3">Social</h3>
+                                <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-text-secondary">Total Posts and Comments</span>
+                                    <span className="text-text-main">{totalUserposts}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-text-secondary">Total Amount of Interactions of Posts:</span>
+                                    <span className="text-text-main">{totalComment}</span>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
                         </div>
-                        <div className="flex flex-col items-center">
-                            <p className="text-text-main text-lg font-bold">{totalLikes}</p>
-                            <p className="text-text-secondary text-sm">Likes</p>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <p className="text-text-main text-lg font-bold">{totalReposts}</p>
-                            <p className="text-text-secondary text-sm">Reposts</p>
-                        </div>
-                    </div>
                         )}
                 </div>
 
                 {/* Button to choose user posts or replies */}
                 <div className="flex flex-row justify-evenly mb-8">
-                    <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
-                                                    : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
-                            onClick={toggleShowPosts}>
-                        <p className="text-md">
-                            Posts
-                        </p>
-                    </button>
+                    {stats ? (
+                        <button className="w-full text-text-main p-3 bg-accent-blue rounded-md cursor-default">
+                        Statistics
+                        </button>
+                    ) : (
+                    <>                    
+                        <button className={!showPosts ? "w-full text-text-main p-3 bg-background-tertiary rounded-l-md border-r-2 border-background-secondary hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                        : "w-full text-text-main p-3 bg-accent-blue rounded-l-md border-r-2 border-background-secondary hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
+                                onClick={toggleShowPosts}>
+                            <p className="text-md">
+                                Posts
+                            </p>
+                        </button>
 
-                    <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
-                                                        : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
-                             onClick={toggleShowComments}>
-                        <p className="text-md">
-                            Comments
-                        </p>
-                    </button>
+                        <button  className={!showComments ? "w-full text-text-main p-3 bg-background-tertiary rounded-r-md hover:bg-background-fourth transition-colors ease-in duration-75 cursor-pointer"
+                                                            : "w-full text-text-main p-3 bg-accent-blue hover:bg-accent-blue-light transition-colors ease-in duration-75 cursor-pointer"}
+                                onClick={toggleShowComments}>
+                            <p className="text-md">
+                                Comments
+                            </p>
+                        </button>
+                    </>
+                    )}
                 </div>
 
                 {flairFilter && (
