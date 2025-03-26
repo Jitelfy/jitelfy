@@ -52,25 +52,29 @@ const ExplorePage = () => {
         setSearchParams({ flair });
     };
 
+    const filterUsers = (users: Array<User>, input: string) => {
+        let filteredUsers = users;
+
+        // Username, display name, and bio
+        if (input) {
+            filteredUsers = filteredUsers.filter(u => u.username.toLowerCase().includes(input.toLowerCase()) ||
+                u.displayname.toLowerCase().includes(input.toLowerCase()) ||
+                u.bio.toLowerCase().includes(input.toLowerCase()));
+        }
+
+        return filteredUsers;
+    }
+
     const filterPosts = (posts: Array<PackagedPost>, flairFilter: string, input: string) => {
         let filteredPosts = posts;
 
-        // moved flairs here
+        // Post flairs
         if (flairFilter) {
             filteredPosts = filteredPosts.filter(p => p.post.text.includes(`#${flairFilter}`));
         }
+
         if (input) {
-            // username
-            if (input.startsWith("@")) {
-                const usernameSearch = input.slice(1).toLowerCase();
-                filteredPosts = filteredPosts.filter(p => p.user.username.toLowerCase().includes(usernameSearch));
-            } else {
-                // text and displayname
-                filteredPosts = filteredPosts.filter(p => 
-                    p.post.text.toLowerCase().includes(input.toLowerCase()) ||
-                    p.user.displayname.toLowerCase().includes(input.toLowerCase())
-                );
-            }
+            filteredPosts = filteredPosts.filter(p => p.post.text.toLowerCase().includes(input.toLowerCase()));
         }
 
         return filteredPosts;
@@ -85,7 +89,10 @@ const ExplorePage = () => {
         };
 
         const fetchPostsData = async () => {
+            if (!user) return;
+
             const fetched = await API.getPosts();
+
             fetched.sort(
                 (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
             );
@@ -97,17 +104,18 @@ const ExplorePage = () => {
         const fetchUsersData = async () => {
             if (!user) return;
 
-            const fetched = await API.getUsers();
+            const fetchedUsers = await API.getUsers();
             // We need all the data of the logged-in user (to determine who we follow)
             const loggedInUser = await API.getUser(user.id);
-
-            //const filtered = filterPosts(fetchedPosts, flairFilter, searchInput);
-            setUsers(fetched);
 
             // Snatch the following/followers of the logged-in user
             user.followers = loggedInUser.followers;
             user.following = loggedInUser.following;
             setUser(user);
+
+            // Filter users by search input
+            const filtered = filterUsers(fetchedUsers, searchInput);
+            setUsers(filtered);
         };
 
         if (user == null) {
@@ -197,7 +205,7 @@ const ExplorePage = () => {
                         </button>
                     </div>
 
-                    {flairFilter && (
+                    {flairFilter && searchPosts && (
                         <div className="flex flex-row justify-between items-center px-8 py-3 my-4 border-y border-background-secondary">
                             <p className="text-white">
                                 Filtering posts by hashtag: <strong>#{flairFilter}</strong>
@@ -212,7 +220,7 @@ const ExplorePage = () => {
                     )}
 
                     { searchPosts && POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments, () => true) }
-                    { searchUsers && USER.mapUsers(users, user, setUser, (u) => u.username != user.username)}
+                    { searchUsers && USER.mapUsers(users, user, setUser, () => true)}
 
                 </div>
             </div>
