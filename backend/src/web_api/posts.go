@@ -846,7 +846,7 @@ func GetAllPostsFromUserBackend(id primitive.ObjectID) []PostUserPackage {
 	var user BaseUser
 	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
 
-	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}})
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}, {Key: "parentid", Value: primitive.NilObjectID}})
 	var result []Post
 	cursor.All(context.TODO(), &result)
 
