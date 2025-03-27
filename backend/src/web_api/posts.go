@@ -900,5 +900,6 @@ func GetFeed(c echo.Context) error {
 	for _, followingID := range user.Following {
 		feed = append(feed, GetAllPostsFromUserBackend(followingID))
 	}
+	feed = append(feed, GetAllPostsFromUserBackend(userId))
 	return c.JSON(http.StatusOK, feed)
 }
