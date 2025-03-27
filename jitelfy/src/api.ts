@@ -25,6 +25,14 @@ export async function getPosts(): Promise<PackagedPost[]> {
 }
 
 /**
+ * Gets all users.
+ */
+export async function getUsers(): Promise<User[]> {
+  const response = await getContent("/user/all");
+  return JSON.parse(response);
+}
+
+/**
  * Gets all posts from a user.
  * @param userID the ID of the user to get posts from
  */
