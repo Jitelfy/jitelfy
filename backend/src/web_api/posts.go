@@ -839,6 +839,47 @@ func GetSongOfTheDay(c echo.Context) error {
 	return c.JSON(http.StatusOK, SOTD)
 }
 
+func GetAllPostsFromUserBackend(id primitive.ObjectID) []PostUserPackage {
+
+	var userId = id
+
+	var user BaseUser
+	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
+
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}})
+	var result []Post
+	cursor.All(context.TODO(), &result)
+
+	// Also fetch reposts for the user.
+	var repostGroup PostGroup
+	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
+		for _, repId := range repostGroup.PostIds {
+			var repPost Post
+			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+				result = append(result, repPost)
+			}
+		}
+	}
+
+	var packagedresults = make([]PostUserPackage, len(result))
+	for i, currpost := range result {
+		var postUser BaseUser
+		// Use the fetched profile user if the post was created by them;
+		// otherwise, fetch the original data from the og poster
+		if currpost.UserId == user.Id {
+			postUser = user
+		} else {
+			UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+		}
+		packagedresults[i] = PostUserPackage{
+			Userjson: postUser,
+			Postjson: currpost,
+		}
+	}
+
+	return packagedresults
+}
+
 func GetFeed(c echo.Context) error {
 	var user User
 	userStringID, err := UserIdFromCookie(c)
@@ -855,4 +896,12 @@ func GetFeed(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
 	}
+	var feed [][]PostUserPackage
+	for _, followingID := range user.Following {
+		var following User
+		filter := bson.D{{Key: "_id", Value: followingID}}
+		result := UserColl.FindOne(context.TODO(), filter)
+		err = result.Decode(&following)
+	}
+
 }
