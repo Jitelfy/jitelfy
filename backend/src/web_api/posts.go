@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -837,4 +837,22 @@ func GetSongOfTheDay(c echo.Context) error {
 
 	// Return that randomly cohsen song
 	return c.JSON(http.StatusOK, SOTD)
+}
+
+func GetFeed(c echo.Context) error {
+	var user User
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to get string id from cookie")
+	}
+	userId, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
+	}
+	filter := bson.D{{Key: "_id", Value: userId}}
+	result := UserColl.FindOne(context.TODO(), filter)
+	err = result.Decode(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
+	}
 }
