@@ -898,10 +898,7 @@ func GetFeed(c echo.Context) error {
 	}
 	var feed [][]PostUserPackage
 	for _, followingID := range user.Following {
-		var following User
-		filter := bson.D{{Key: "_id", Value: followingID}}
-		result := UserColl.FindOne(context.TODO(), filter)
-		err = result.Decode(&following)
+		feed = append(feed, GetAllPostsFromUserBackend(followingID))
 	}
-
+	return c.JSON(http.StatusOK, feed)
 }
