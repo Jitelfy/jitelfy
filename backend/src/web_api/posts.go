@@ -896,10 +896,11 @@ func GetFeed(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
 	}
-	var feed [][]PostUserPackage
+	feed := GetAllPostsFromUserBackend(user.Id)
 	for _, followingID := range user.Following {
-		feed = append(feed, GetAllPostsFromUserBackend(followingID))
+		for _, post := range GetAllPostsFromUserBackend(followingID) {
+			feed = append(feed, post)
+		}
 	}
-	feed = append(feed, GetAllPostsFromUserBackend(userId))
 	return c.JSON(http.StatusOK, feed)
 }
