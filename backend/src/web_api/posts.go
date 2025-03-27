@@ -880,6 +880,7 @@ func GetAllPostsFromUserBackend(id primitive.ObjectID) []PostUserPackage {
 	return packagedresults
 }
 
+// joe
 func GetFeed(c echo.Context) error {
 	var user User
 	userStringID, err := UserIdFromCookie(c)
