@@ -123,7 +123,11 @@ const FeedPage = () => {
           setUser(userjson);
         }
       }
-      const fetched = await API.getPosts();
+      if (!user) return;
+
+      /* Only show feed to logged-in users */
+      const fetched: PackagedPost[] = await API.getFeed();
+      console.log(fetched);
       fetched.sort(
           (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
