@@ -16,10 +16,16 @@ const toggleComments = (postId: string, openComments: Set<string>, setOpenCommen
     setOpenComments(newSet);
 };
 
-export const mapPosts = (posts: Array<PackagedPost>, user: User | null, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any,  filter:(post: PackagedPost) => boolean) => {
+export const mapPosts = (posts: Array<PackagedPost>, user: User, openComments: Set<string>, renderTextWithHashtags: (text: string) => any, setUser: (user: User) => any, setPosts: (p: Array<PackagedPost>) => any, setOpenComments:(c: Set<string>) => any,  filter:(post: PackagedPost) => boolean) => {
     return (
         posts.filter(filter).map((post) => (
-            post.post.childids !== -1 ? ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+            /* Was the post deleted since being loaded? */
+            post.post.childids !== -1 ? (
+                    /* Is the post a repost? */
+                    user.reposts.includes(post.post.id) ?
+                        ParentRepost(post.post, post.user, user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                        : ParentPost(post.post, post.user, user, posts, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments)
+                )
                 : <p className="text-text-secondary text-sm mb-4 mt-2">This post has been deleted.</p>
         ))
     )

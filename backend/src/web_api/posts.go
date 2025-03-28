@@ -33,6 +33,9 @@ type Post struct {
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
 	Song     string               `json:"song" bson:"song"`
+	Repost   bool                 `json:"repost"`
+	RepostDN string               `json:"repostDN"`
+	RepostUser string             `json:"repostuser"`
 }
 
 type PostGroup struct {
@@ -186,6 +189,7 @@ func CreatePost(c echo.Context) error {
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     song,
+		Repost:   false,
 	}
 
 	if newPost.ParentId != primitive.NilObjectID {
@@ -247,6 +251,7 @@ func CreateComment(c echo.Context) error {
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     post.Song,
+		Repost:   false,
 	}
 
 	// Marshal and insert into the database
@@ -771,6 +776,12 @@ func GetAllPostsFromUser(c echo.Context) error {
 		for _, repId := range repostGroup.PostIds {
 			var repPost Post
 			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+			    repPost.Repost = true // Indicate that this is a repost
+
+			    // Specify the details of the user that reposted it
+			    repPost.RepostDN =  user.DisplayName
+			    repPost.RepostUser = user.Username
+
 				result = append(result, repPost)
 			}
 		}
@@ -850,12 +861,20 @@ func GetAllPostsFromUserBackend(id primitive.ObjectID) []PostUserPackage {
 	var result []Post
 	cursor.All(context.TODO(), &result)
 
-	// Also fetch reposts for the user.
+	// Also fetch reposts for the user. Add a flag that this post is a repost.
 	var repostGroup PostGroup
 	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
 		for _, repId := range repostGroup.PostIds {
 			var repPost Post
 			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+
+			    // Indicate that this is a repost
+			    repPost.Repost = true;
+
+			    // Specify the details of the user that reposted it
+                repPost.RepostDN =  user.DisplayName
+                repPost.RepostUser = user.Username
+
 				result = append(result, repPost)
 			}
 		}

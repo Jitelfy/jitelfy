@@ -10,5 +10,5 @@ import { format, formatDistance, subDays } from "date-fns";
  */
 export const formatDate = (date: Date) => {
     /* Make time prettier */
-    return format(date, "MMM dd, yyyy HH:mm b");
+    return format(date, "MMM dd, yyyy h:mm a");
 }
