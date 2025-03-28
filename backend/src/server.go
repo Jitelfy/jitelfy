@@ -84,6 +84,7 @@ func main() {
 	router.POST("/posts/unrepost/:id", web_api.DeleteRepost)
 	router.GET("/users/reposts/:id", web_api.GetAllReposts)
 	router.GET("/sotd", web_api.GetSongOfTheDay)
+	router.GET("/feed", web_api.GetFeed)
 
 	router.GET("/spotify/sauth", web_api.SpotifyHandler)
 	router.GET("/spotify/refresh", web_api.SpotifyRefreshHandler)
@@ -115,7 +116,7 @@ func main() {
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"http://localhost:*"}, // placeholder for local vite
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Authorization"},
-		ExposeHeaders:     []string{"Location"},
+		ExposeHeaders:    []string{"Location"},
 		AllowCredentials: true,
 	}))
 	router.Use(echojwt.WithConfig(echojwt.Config{

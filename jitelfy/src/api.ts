@@ -17,6 +17,15 @@ export async function getContent(path: string): Promise<string> {
 }
 
 /**
+ * Gets a user's feed. This includes all posts/reposts by the user and all users that
+ * they follow.
+ */
+export async function getFeed(): Promise<PackagedPost[]> {
+  const response = await getContent("/feed");
+  return JSON.parse(response);
+}
+
+/**
  * Gets all top-level (parent) posts.
  */
 export async function getPosts(): Promise<PackagedPost[]> {

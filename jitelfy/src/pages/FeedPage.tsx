@@ -123,14 +123,29 @@ const FeedPage = () => {
           setUser(userjson);
         }
       }
-      const fetched = await API.getPosts();
+      if (!user) return;
+
+      /* Only show feed to logged-in users */
+      const fetched: PackagedPost[] = await API.getFeed();
+
+      /* Sort chronologically */
       fetched.sort(
           (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
-      fetchedPosts = fetched;
+
+      /* Remove duplicate posts (keep only the first instance) */
+      fetchedPosts = [];
+      fetched.forEach((post) => {
+        if(!fetchedPosts.find(p => p.post.id === post.post.id)) {
+          fetchedPosts.push(post);
+        }
+      })
+
+      /* Filter posts */
       const filtered = flairFilter
           ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
           : fetchedPosts;
+
       setPosts(filtered);
     };
     fetchPostsData();
@@ -218,8 +233,15 @@ const FeedPage = () => {
                 </div>
             )}
 
+            { posts.length <= 0 && (
+                <div>
+                  <p className="text-background-tertiary text-center mt-40">Nothing to see here yet...</p>
+                  <p className="text-background-tertiary text-center">Try following someone or creating a post!</p>
+                </div>
+            )}
+
             {
-              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
+              user && POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
             }
           </div>
         </div>
