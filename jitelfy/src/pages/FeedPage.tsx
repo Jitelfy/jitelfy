@@ -233,6 +233,13 @@ const FeedPage = () => {
                 </div>
             )}
 
+            { posts.length <= 0 && (
+                <div>
+                  <p className="text-background-tertiary text-center mt-40">Nothing to see here yet...</p>
+                  <p className="text-background-tertiary text-center">Try following someone or creating a post!</p>
+                </div>
+            )}
+
             {
               user && POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
             }
