@@ -128,14 +128,24 @@ const FeedPage = () => {
       /* Only show feed to logged-in users */
       const fetched: PackagedPost[] = await API.getFeed();
 
-      /* Sort, remove duplicates, and filter the posts */
+      /* Sort chronologically */
       fetched.sort(
           (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
-      fetchedPosts = fetched;
+
+      /* Remove duplicate posts (keep only the first instance) */
+      fetchedPosts = [];
+      fetched.forEach((post) => {
+        if(!fetchedPosts.find(p => p.post.id === post.post.id)) {
+          fetchedPosts.push(post);
+        }
+      })
+
+      /* Filter posts */
       const filtered = flairFilter
           ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
           : fetchedPosts;
+
       setPosts(filtered);
     };
     fetchPostsData();

@@ -116,20 +116,32 @@ const ProfilePage = () => {
                 // Fetching user data
                 const profileUser = await getUser(username);
                 setUserData(profileUser);
+
                 if (profileUser && user) {
                     setIsFollowing(profileUser.followers && profileUser.followers.indexOf(user.id) !== -1);
 
-                    // Get this user's posts
+                    /* Get all user's posts */
                     const fetched = await API.getPostsByUser(profileUser.id);
                     fetched.sort(
                         (a, b) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
                     );
+
+                    /* Remove duplicate posts (keep only the first instance) */
+                    let fetchedPosts = Array<PackagedPost>();
+                    fetched.forEach((post) => {
+                        if(!fetchedPosts.find(p => p.post.id === post.post.id)) {
+                            fetchedPosts.push(post);
+                        }
+                    })
+
+                    /* Filter posts */
                     const filtered = flairFilter
-                        ? fetched.filter(p => p.post.text.includes(`#${flairFilter}`))
-                        : fetched;
+                        ? fetchedPosts.filter(p => p.post.text.includes(`#${flairFilter}`))
+                        : fetchedPosts;
                     setPosts(filtered);
 
                     const userInfo = fetched.filter(p => p.post.userid === userData?.id)
+
                     // all posts have a parent id of "000000000000000000000000" 
                     const userPosts = userInfo.filter(p => p.post.parentid === "000000000000000000000000")
                     const userComments = userInfo.filter(p => p.post.parentid !== "000000000000000000000000")
