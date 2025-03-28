@@ -127,7 +127,8 @@ const FeedPage = () => {
 
       /* Only show feed to logged-in users */
       const fetched: PackagedPost[] = await API.getFeed();
-      console.log(fetched);
+
+      /* Sort, remove duplicates, and filter the posts */
       fetched.sort(
           (a: PackagedPost, b: PackagedPost) => new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
       );
@@ -223,7 +224,7 @@ const FeedPage = () => {
             )}
 
             {
-              POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
+              user && POST.mapPosts(posts, user, openComments, renderTextWithHashtags, setUser, setPosts, setOpenComments,  () => true)
             }
           </div>
         </div>

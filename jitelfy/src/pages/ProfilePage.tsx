@@ -129,8 +129,6 @@ const ProfilePage = () => {
                         : fetched;
                     setPosts(filtered);
 
-                    console.log(userData);
-
                     const userInfo = fetched.filter(p => p.post.userid === userData?.id)
                     // all posts have a parent id of "000000000000000000000000" 
                     const userPosts = userInfo.filter(p => p.post.parentid === "000000000000000000000000")
