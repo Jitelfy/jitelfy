@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 var PostColl *mongo.Collection
 var RepostColl *mongo.Collection
 var BookmarkColl *mongo.Collection
+var SOTDColl *mongo.Collection
 
 type Post struct {
 	Id       primitive.ObjectID   `json:"id" bson:"_id"`
@@ -31,18 +33,25 @@ type Post struct {
 	Text     string               `json:"text" bson:"text"`
 	Embed    string               `json:"embed" bson:"embed"`
 	Song     string               `json:"song" bson:"song"`
+	Repost   bool                 `json:"repost"`
+	RepostDN string               `json:"repostDN"`
+	RepostUser string             `json:"repostuser"`
 }
 
 type PostGroup struct {
-	Id       primitive.ObjectID   `json:"id" bson:"_id"`
-	UserId   primitive.ObjectID   `json:"userid" bson:"userid"`
-	PostIds  []primitive.ObjectID `json:"postids" bson:"postids"`
+	Id      primitive.ObjectID   `json:"id" bson:"_id"`
+	UserId  primitive.ObjectID   `json:"userid" bson:"userid"`
+	PostIds []primitive.ObjectID `json:"postids" bson:"postids"`
 }
 
-
 type PostUserPackage struct {
-	Postjson Post `json:"post"`
+	Postjson Post     `json:"post"`
 	Userjson BaseUser `json:"user"`
+}
+
+type CompleteSinglePost struct {
+	Post     PostUserPackage   `json:"post"`
+	Comments []PostUserPackage `json:"comments"`
 }
 
 /* I think this will be faster with many many posts but right now
@@ -154,6 +163,10 @@ func CreatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "top level posts must have song")
 	}
 
+	if len(post.Text) > 280 {
+		return c.JSON(http.StatusBadRequest, "post text too long")
+	}
+
 	if !strings.Contains(post.Song, "https://open.spotify.com/track/") {
 		return c.JSON(http.StatusBadRequest, "invalid song link")
 	}
@@ -176,6 +189,7 @@ func CreatePost(c echo.Context) error {
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     song,
+		Repost:   false,
 	}
 
 	if newPost.ParentId != primitive.NilObjectID {
@@ -206,13 +220,17 @@ func CreateComment(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid json")
 	}
 
-	// Conver song url to an embed
+	// Convert song url to an embed
 	if post.Song != "" {
 		if strings.Contains(post.Song, "https://open.spotify.com/track/") {
 			post.Song = strings.Replace(post.Song, "/track/", "/embed/track/", 1)
 		} else if !strings.Contains(post.Song, "https://open.spotify.com/embed/track/") {
 			return c.JSON(http.StatusBadRequest, "invalid song link")
 		}
+	}
+
+	if len(post.Text) > 280 {
+		return c.JSON(http.StatusBadRequest, "post text too long")
 	}
 
 	// Get the user ID from the token
@@ -233,6 +251,7 @@ func CreateComment(c echo.Context) error {
 		Text:     post.Text,
 		Embed:    post.Embed,
 		Song:     post.Song,
+		Repost:   false,
 	}
 
 	// Marshal and insert into the database
@@ -303,7 +322,6 @@ func GetComments(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, packagedresults)
 }
-
 
 func purgePost(post Post) error {
 	post_filter := bson.D{{Key: "postids", Value: bson.D{{Key: "$elemMatch", Value: bson.D{{Key: "$eq", Value: post.Id}}}}}}
@@ -424,7 +442,7 @@ func DeletePost(c echo.Context) error {
 	if <-ch == -1 {
 		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
-		if post.ParentId != primitive.NilObjectID && <-ch == -1 {
+	if post.ParentId != primitive.NilObjectID && <-ch == -1 {
 		return c.JSON(http.StatusInternalServerError, "failed to delete post")
 	}
 
@@ -534,7 +552,7 @@ func BookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post bookmarked",
+		"message":                  "post bookmarked",
 		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
@@ -562,7 +580,7 @@ func UnbookmarkPost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
-		"message":          "post unbookmarked",
+		"message":                  "post unbookmarked",
 		"total bookmarks for user": strconv.Itoa(len(bookmarks.PostIds)),
 	})
 }
@@ -645,7 +663,7 @@ func MakeRepost(c echo.Context) error {
 		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not repost post: " + err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not repost post: "+err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -679,7 +697,7 @@ func DeleteRepost(c echo.Context) error {
 		updateOpts,
 	).Decode(&repost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, "could not unrepost post: " + err.Error())
+		return c.JSON(http.StatusInternalServerError, "could not unrepost post: "+err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{
@@ -758,6 +776,12 @@ func GetAllPostsFromUser(c echo.Context) error {
 		for _, repId := range repostGroup.PostIds {
 			var repPost Post
 			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+			    repPost.Repost = true // Indicate that this is a repost
+
+			    // Specify the details of the user that reposted it
+			    repPost.RepostDN =  user.DisplayName
+			    repPost.RepostUser = user.Username
+
 				result = append(result, repPost)
 			}
 		}
@@ -780,4 +804,123 @@ func GetAllPostsFromUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, packagedresults)
+}
+
+/* Struct to store the SOTD */
+type SongOfTheDay struct {
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Song        string             `bson:"song" json:"song"`
+	LastUpdated time.Time          `bson:"lastUpdated" json:"lastUpdated"`
+}
+
+func GetSongOfTheDay(c echo.Context) error {
+
+	var SOTD SongOfTheDay
+
+	// This is just to initialise the time
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// If a song exists for today then just return it instantly
+	//If the stored song's lastupdated is more than 24 hours, it fetches a new song
+	if err := SOTDColl.FindOne(context.TODO(), bson.M{"lastUpdated": bson.M{"$gte": todayStart}}).Decode(&SOTD); err == nil {
+		return c.JSON(http.StatusOK, SOTD)
+	}
+
+	// If not, then get all the posts that exist
+	cursor, err := PostColl.Find(context.TODO(), bson.M{"song": bson.M{"$ne": ""}})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to fetch songs")
+	}
+	var posts []Post
+	if err = cursor.All(context.TODO(), &posts); err != nil || len(posts) == 0 {
+		return c.JSON(http.StatusInternalServerError, "no songs available")
+	}
+
+	// Pick one song at random as today's SOTD
+	SOTD = SongOfTheDay{
+		Song:        posts[rand.Intn(len(posts))].Song,
+		LastUpdated: now,
+	}
+	if _, err := SOTDColl.InsertOne(context.TODO(), SOTD); err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to store song of the day")
+	}
+
+	// Return that randomly cohsen song
+	return c.JSON(http.StatusOK, SOTD)
+}
+
+func GetAllPostsFromUserBackend(id primitive.ObjectID) []PostUserPackage {
+
+	var userId = id
+
+	var user BaseUser
+	UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: userId}}).Decode(&user)
+
+	var cursor, _ = PostColl.Find(context.TODO(), bson.D{{Key: "userid", Value: userId}, {Key: "parentid", Value: primitive.NilObjectID}})
+	var result []Post
+	cursor.All(context.TODO(), &result)
+
+	// Also fetch reposts for the user. Add a flag that this post is a repost.
+	var repostGroup PostGroup
+	if RepostColl.FindOne(context.TODO(), bson.D{{Key: "userid", Value: userId}}).Decode(&repostGroup) == nil {
+		for _, repId := range repostGroup.PostIds {
+			var repPost Post
+			if PostColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: repId}}).Decode(&repPost) == nil {
+
+			    // Indicate that this is a repost
+			    repPost.Repost = true;
+
+			    // Specify the details of the user that reposted it
+                repPost.RepostDN =  user.DisplayName
+                repPost.RepostUser = user.Username
+
+				result = append(result, repPost)
+			}
+		}
+	}
+
+	var packagedresults = make([]PostUserPackage, len(result))
+	for i, currpost := range result {
+		var postUser BaseUser
+		// Use the fetched profile user if the post was created by them;
+		// otherwise, fetch the original data from the og poster
+		if currpost.UserId == user.Id {
+			postUser = user
+		} else {
+			UserColl.FindOne(context.TODO(), bson.D{{Key: "_id", Value: currpost.UserId}}).Decode(&postUser)
+		}
+		packagedresults[i] = PostUserPackage{
+			Userjson: postUser,
+			Postjson: currpost,
+		}
+	}
+
+	return packagedresults
+}
+
+// joe
+func GetFeed(c echo.Context) error {
+	var user User
+	userStringID, err := UserIdFromCookie(c)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to get string id from cookie")
+	}
+	userId, err := primitive.ObjectIDFromHex(userStringID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
+	}
+	filter := bson.D{{Key: "_id", Value: userId}}
+	result := UserColl.FindOne(context.TODO(), filter)
+	err = result.Decode(&user)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "failed to parse user id")
+	}
+	feed := GetAllPostsFromUserBackend(user.Id)
+	for _, followingID := range user.Following {
+		for _, post := range GetAllPostsFromUserBackend(followingID) {
+			feed = append(feed, post)
+		}
+	}
+	return c.JSON(http.StatusOK, feed)
 }

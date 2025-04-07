@@ -48,10 +48,28 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     const data = await res.json();
     data.sort(
       (a: PackagedPost, b: PackagedPost) =>
-        new Date(b.post.time).getTime() - new Date(a.post.time).getTime()
+        new Date(a.post.time).getTime() - new Date(b.post.time).getTime()
     );
     setComments(data);
   };
+
+  function charCounterComment(inputField: HTMLElement | null) {
+    if (!inputField) return;
+
+    const currentText = (document.getElementById("commentText" + parentId) as HTMLInputElement).value;
+
+    let currentLength;
+    if (currentText) {
+         currentLength = currentText.length;
+    } else {
+        currentLength = 0;
+    }
+
+    const charCount = document.getElementById("charCountComment" + parentId);
+    if (!charCount) return;
+
+    charCount.innerText = currentLength + "/280";
+  }
 
   useEffect(() => {
     fetchComments();
@@ -60,8 +78,6 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
-    if (!newCommentText) return;
 
     const commentData = {
       userid: user.id,
@@ -83,8 +99,8 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
     if (res.ok) {
       const newComment = await res.json();
       setComments((prev) => [
-        { post: newComment, user: user },
         ...prev,
+        { post: newComment, user: user },
       ]);
 
       {/* Mock add comment number to post so we don't have to reload */}
@@ -93,6 +109,11 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
       setNewCommentText("");
       setNewCommentSong("");
+
+      const charCount = document.getElementById("charCountComment" + parentId);
+      if (!charCount) return;
+
+      charCount.innerText = "0/280";
     }
   };
 
@@ -111,12 +132,18 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
             />
             <div className="flex flex-col w-full items-center justify-end gap-3">
               <textarea
+                id={"commentText" + parentId}
                 value={newCommentText}
-                onChange={(e) => setNewCommentText(e.target.value)}
+                onChange={(e) => {
+                  setNewCommentText(e.target.value);
+                  charCounterComment(document.getElementById("commentText" + parentId))
+                }}
                 placeholder="What's on your mind?"
                 className="resize-none whitespace-pre-wrap bg-background-main w-full mt-1 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                 rows={3}
+                maxLength={280}
               ></textarea>
+
               <input
                 type="url"
                 value={newCommentSong}
@@ -129,12 +156,15 @@ const Comments: React.FC<CommentsProps> = ({ parentId, parentPost, setUser }) =>
 
           <hr className="border-1 mt-4 border-background-tertiary"></hr>
 
-          <div className="flex justify-end mt-3">
-            <button
-              onClick={handleSubmitComment}
-              className="bg-accent-blue-light text-text-main px-6 py-2 rounded-xl hover:bg-accent-blue"
-            >
-              Post
+          <div className="flex items-center justify-end gap-3 mt-3">
+            <p id={"charCountComment" + parentId}
+               className="text-text-secondary text-sm text-center">0/280</p>
+
+            <button className="bg-accent-blue px-6 py-2 rounded-xl hover:bg-accent-blue-light transition-colors ease-in duration-75"
+                    onClick={handleSubmitComment}>
+              <p className="text-text-main">
+                Post
+              </p>
             </button>
           </div>
         </div>

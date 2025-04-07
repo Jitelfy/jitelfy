@@ -8,6 +8,9 @@ export interface Post {
     text: string;
     embed: string;
     song: string;
+    repost: boolean;
+    repostDN: string;
+    repostuser: string;
 }
 
 export interface User {

@@ -4,7 +4,7 @@ import {BASE_URL, getUser} from '../api';
 import {PackagedPost, User} from '../types';
 import { IconArray } from "../UserContext";
 import {useEffect, useState} from "react";
-
+import { SongOfTheDay } from './SOTD';
 
 export const FriendActivity = (user: User | null) => {
     const [friends, setFriends] = useState<User[]>([]);
@@ -42,44 +42,54 @@ export const FriendActivity = (user: User | null) => {
     }
 
     return (
-      <div className="flex flex-col w-1/4 min-w-64 bg-background-secondary p-6 z-20 overflow-auto rounded-l-lg">
-          <h1 className="text-text-main text-2xl mb-4">Friend Activity</h1>
-
-          {/* Friend activity */}
-          { friends.length == 0 && (
-              <p className="text-text-secondary text-center h-full content-center">No recent friend activity...</p>
-          )}
-
-          {friends.map((friend) => {
-              return (
-              <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
-                  {/* Friend's profile picture and username */}
-                  <div className="flex flex-row items-center text-text-main">
-                      <Link to={"/profile/" + friend.username}>
-                          <img
-                              className="size-11 rounded-full mr-3"
-                              src={IconArray[friend.icon]}
-                              alt={friend.displayname}
-                          ></img>
-                      </Link>
-                      <Link to={"/profile/" + friend.username} className="flex flex-col w-full hover:underline hover:decoration-text-secondary">
-                          <p className="text-text-main"><b>{friend.displayname}</b></p>
-                          <p className="text-text-secondary text-sm">@{friend.username}</p>
-                      </Link>
-                  </div>
-
-                  {/* Friend's profile song */}
-                  <div className="mt-4">
-                      <iframe
-                          src={friend.song}
-                          className="w-full h-20"
-                          title="Friend song"
-                          allowFullScreen
-                      ></iframe>
-                  </div>
+      <div className="flex flex-col w-1/4 min-w-64 bg-background-secondary justify-start h-full p-6 z-20 overflow-auto rounded-l-lg">
+          <div className="overflow-y-auto hide-scrollbar mb-10">
+              <div className="fixed z-20 bg-background-secondary opacity-95 w-full">
+                  <h1 className="text-text-main text-2xl mb-3">Friend Activity</h1>
               </div>
-              )
-          })}
+
+              {/* Friend activity */}
+              { friends.length == 0 && (
+                  <p className="text-text-secondary text-center mt-24 content-center">No recent friend activity...</p>
+              )}
+
+              <div className="mt-14">
+                  {friends.map((friend) => {
+                      return (
+                      <div className="flex flex-col w-fill bg-background-tertiary mt-5 p-4 rounded-lg">
+                          {/* Friend's profile picture and username */}
+                          <div className="flex flex-row items-center text-text-main">
+                              <Link to={"/profile/" + friend.username}>
+                                  <img
+                                      className="size-11 rounded-full mr-5"
+                                      src={IconArray[friend.icon]}
+                                      alt={friend.displayname}
+                                  ></img>
+                              </Link>
+                              <Link to={"/profile/" + friend.username} className="flex flex-col w-full hover:underline hover:decoration-text-secondary">
+                                  <p className="text-text-main"><b>{friend.displayname}</b></p>
+                                  <p className="text-text-secondary text-sm">@{friend.username}</p>
+                              </Link>
+                          </div>
+
+                          {/* Friend's profile song */}
+                          <div className="mt-4">
+                              <iframe
+                                  src={friend.song}
+                                  className="w-full h-20"
+                                  title="Friend song"
+                                  allowFullScreen
+                              ></iframe>
+                          </div>
+                      </div>
+                      )
+                  })}
+              </div>
+          </div>
+
+          <hr className="border-1 border-background-tertiary mb-5 mt-auto"/>
+
+          <SongOfTheDay />
       </div>
     )}
 
@@ -232,6 +242,7 @@ const ProfileButton = (user: User | null) => {
                     <div className="flex justify-start items-start justify-items-start pr-5 flex-row truncate">
                         {/* Profile picture */}
                         <img
+                            id = "userIcon"
                             className="size-14 rounded-full mb-2 mr-3"
                             src={IconArray[user?.icon]}
                             alt={user?.displayname}
@@ -239,7 +250,7 @@ const ProfileButton = (user: User | null) => {
 
                         {/* Username, display name */}
                         <div className="justify-start">
-                            <p className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname}</p>
+                            <p id="userDisplayname" className="text-text-main font-bold max-w-fit whitespace-nowrap overflow-ellipsis">{user?.displayname || user.username}</p>
                             <p className="text-text-secondary overflow-ellipsis">@{user?.username}</p>
                         </div>
 

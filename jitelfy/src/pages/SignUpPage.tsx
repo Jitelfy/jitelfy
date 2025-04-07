@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BASE_URL } from "../api";
 import {BannerArray, IconArray, UserContext} from "../UserContext";
 import {User} from "../types";
-import {requestCustomizeBanner, requestCustomizeBio, requestCustomizeIcon} from "./SettingsPage";
+import * as API_CUSTOM from "../api-customization";
 
 let NewIcon = -1;
 let NewBanner = -1;
@@ -153,6 +153,7 @@ const SignUpPage = () => {
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="w-full p-3 mb-4 mt-3 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={40}
                   />
 
                   {/* Username Input */}
@@ -162,6 +163,7 @@ const SignUpPage = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       className="w-full p-3 mb-4 border border-background-tertiary rounded-lg text-text-main bg-background-main focus:outline-none focus:ring-2 focus:ring-accent"
+                      maxLength={20}
                   />
 
                   {/* Password Input */}
@@ -250,7 +252,12 @@ const SignUpPage = () => {
 
                   <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                           onClick={() => {
-                            requestCustomizeIcon(NewIcon, user);
+                            API_CUSTOM.requestCustomizeIcon(NewIcon, user);
+
+                            /* Make icon show once logged in */
+                            user.icon = NewIcon;
+                            setUser(user);
+
                             setNewAccountCustomization(signupStage.BANNER);
                           }}>
                     <p className="">
@@ -297,7 +304,7 @@ const SignUpPage = () => {
 
                       <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                               onClick={() => {
-                                requestCustomizeBanner(NewBanner, user);
+                                API_CUSTOM.requestCustomizeBanner(NewBanner, user);
                                 setNewAccountCustomization(signupStage.BIO);
                               }}>
                         <p className="">
@@ -323,6 +330,7 @@ const SignUpPage = () => {
                         onChange={(e) => setNewBio(e.target.value)}
                         rows={10}
                         className="resize-none whitespace-pre-wrap bg-background-main w-full mt-2 text-text-main rounded-lg border border-background-tertiary p-2 focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                        maxLength={160}
                     >
                     </textarea>
 
@@ -338,7 +346,7 @@ const SignUpPage = () => {
 
                       <button className="text-text-main w-1/4 bg-accent-blue-light px-6 py-2 rounded-xl hover:bg-accent-blue transition-colors"
                               onClick={() => {
-                                requestCustomizeBio(newBio, user);
+                                API_CUSTOM.requestCustomizeBio(newBio, user);
                                 setNewAccountCustomization(signupStage.FINISH);
                               }}>
                         <p className="">
