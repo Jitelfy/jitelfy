@@ -314,18 +314,18 @@ func Login(c echo.Context) error {
 		ch <- TOKEN_SUCCESS
 	}()
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		switch errCode := <-ch; errCode {
 		case INVALID_USERNAME:
-			return c.JSON(http.StatusUnauthorized, "Invalid username.")
+			return c.JSON(http.StatusUnauthorized, "Invalid username or password.")
 		case INVALID_PASSWORD:
-			return c.JSON(http.StatusUnauthorized, "Invalid password.")
+			return c.JSON(http.StatusUnauthorized, "Invalid username or password.")
 		case BAD_PW:
-			return c.JSON(http.StatusUnauthorized, "Invalid password.")
+			return c.JSON(http.StatusUnauthorized, "Invalid username or password.")
 		case BAD_USERID:
-			return c.JSON(http.StatusUnauthorized, "Invalid username.")
+			return c.JSON(http.StatusUnauthorized, "Invalid username or password.")
 		case NO_TOKEN: // if token validation failed it should probably be considered the same way
-			return c.JSON(http.StatusUnauthorized, "Token validation failed.")
+			return c.JSON(http.StatusUnauthorized, "Invalid username or password.")
 		case NO_BOOKMARKS:
 			return c.JSON(http.StatusInternalServerError, "Internal server error (NO_BOOKMARKS)")
 		case NO_ALERTS:

@@ -16,7 +16,7 @@ import (
 const (
 	clientID     = "7f5165967f284534862eeee3a57f49f6"
 	clientSecret = "702a0f6d19b54fbe875176cc48554e88"
-	redirectURI  = "http://localhost:8080/spotify/callback"
+	redirectURI  = "https://mafjre94nh.execute-api.us-west-2.amazonaws.com/spotify/callback"
 	authURL      = "https://accounts.spotify.com/authorize"
 	tokenURL     = "https://accounts.spotify.com/api/token"
 )
@@ -98,7 +98,7 @@ func SpotifyCallbackHandler(c echo.Context) error {
 	}
 
 	// also returning this
-	return c.Redirect(http.StatusPermanentRedirect, "http://localhost:5173/settings")
+	return c.Redirect(http.StatusPermanentRedirect, "https://d3oiamcw3gvayn.cloudfront.net/settings")
 }
 
 func SpotifyRefreshHandler(c echo.Context) error {
