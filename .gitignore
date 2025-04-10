@@ -3,3 +3,4 @@ backend/src/bootstrap.zip
 backend/src/bootstrap
 jitelfy/build
 .idea
+backend/src/.env
