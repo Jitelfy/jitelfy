@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"server/web_api"
+
 	"github.com/labstack/gommon/log"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2/clientcredentials"
-	"server/web_api"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -21,13 +23,12 @@ func main() {
 
 	// mongodb
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI("mongodb+srv://jitelfy:JitelfyForever33@jitelfycluster.hgw9u.mongodb.net/" +
-		"?retryWrites=true&w=majority&appName=JitelfyCluster").SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(os.Getenv("MONGODB_URI")).SetServerAPIOptions(serverAPI)
 
 	// spotify
 	authConfig := &clientcredentials.Config{
-		ClientID:     "7f5165967f284534862eeee3a57f49f6",
-		ClientSecret: "702a0f6d19b54fbe875176cc48554e88",
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
 		TokenURL:     spotifyauth.TokenURL,
 	}
 	accessToken, err := authConfig.Token(context.Background())
