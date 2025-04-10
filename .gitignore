@@ -6,3 +6,5 @@ jitelfy/src/components/*.js
 jitelfy/src/*.js
 jitelfy/build
 .idea
+backend/src/.env
+.env

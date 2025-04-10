@@ -4,6 +4,8 @@ go 1.23.0
 
 toolchain go1.23.4
 
+godebug netdns=cgo
+
 require (
 	github.com/aws/aws-lambda-go v1.47.0
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
