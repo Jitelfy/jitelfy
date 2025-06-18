@@ -8,14 +8,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
+	"os"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 const (
-	clientID     = "7f5165967f284534862eeee3a57f49f6"
-	clientSecret = "702a0f6d19b54fbe875176cc48554e88"
 	redirectURI  = "http://localhost:8080/spotify/callback"
 	authURL      = "https://accounts.spotify.com/authorize"
 	tokenURL     = "https://accounts.spotify.com/api/token"
@@ -30,6 +29,7 @@ type TokenResponse struct {
 }
 
 func SpotifyHandler(c echo.Context) error {
+	clientID := os.Getenv("SPOTIFY_ID")
 	scope := "user-read-private user-read-email playlist-modify-private playlist-modify-public playlist-read-private user-read-playback-position user-top-read user-read-recently-played"
 	userStringID, err := UserIdFromCookie(c)
 	if err != nil {
@@ -47,6 +47,8 @@ func SpotifyHandler(c echo.Context) error {
 }
 
 func SpotifyCallbackHandler(c echo.Context) error {
+	clientID := os.Getenv("SPOTIFY_ID")
+	clientSecret := os.Getenv("SPOTIFY_SECRET")
 	state := c.QueryParam("state")
 	userObjectID, err := primitive.ObjectIDFromHex(state)
 	if err != nil {
@@ -102,6 +104,8 @@ func SpotifyCallbackHandler(c echo.Context) error {
 }
 
 func SpotifyRefreshHandler(c echo.Context) error {
+	clientID := os.Getenv("SPOTIFY_ID")
+	clientSecret := os.Getenv("SPOTIFY_SECRET")
 	userStringID, err := UserIdFromCookie(c)
 	if err != nil {
 		return c.String(http.StatusUnauthorized, "cookie fail")
